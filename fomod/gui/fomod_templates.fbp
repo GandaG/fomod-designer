@@ -42,7 +42,7 @@
             <property name="id">wxID_ANY</property>
             <property name="maximum_size"></property>
             <property name="minimum_size"></property>
-            <property name="name">welcome</property>
+            <property name="name">intro</property>
             <property name="pos"></property>
             <property name="size">500,400</property>
             <property name="style">wxCAPTION|wxCLOSE_BOX|wxMINIMIZE_BOX|wxSYSTEM_MENU</property>
@@ -90,7 +90,7 @@
             <event name="OnUpdateUI"></event>
             <object class="wxBoxSizer" expanded="1">
                 <property name="minimum_size"></property>
-                <property name="name">bSizer2</property>
+                <property name="name">layout</property>
                 <property name="orient">wxVERTICAL</property>
                 <property name="permission">none</property>
                 <object class="sizeritem" expanded="1">
@@ -310,7 +310,7 @@
                         <property name="minimize_button">0</property>
                         <property name="minimum_size"></property>
                         <property name="moveable">1</property>
-                        <property name="name">new</property>
+                        <property name="name">not_implemented_text</property>
                         <property name="pane_border">0</property>
                         <property name="pane_position"></property>
                         <property name="pane_size"></property>
@@ -531,7 +531,7 @@
             <event name="OnUpdateUI"></event>
             <object class="wxBoxSizer" expanded="1">
                 <property name="minimum_size"></property>
-                <property name="name">bSizer5</property>
+                <property name="name">layout</property>
                 <property name="orient">wxVERTICAL</property>
                 <property name="permission">none</property>
                 <object class="sizeritem" expanded="1">
@@ -619,7 +619,7 @@
                 </object>
                 <object class="sizeritem" expanded="1">
                     <property name="border">10</property>
-                    <property name="flag">wxALIGN_CENTER_HORIZONTAL|wxBOTTOM</property>
+                    <property name="flag">wxALIGN_CENTER_HORIZONTAL|wxALL</property>
                     <property name="proportion">0</property>
                     <object class="wxButton" expanded="1">
                         <property name="BottomDockable">1</property>
@@ -650,7 +650,7 @@
                         <property name="gripper">0</property>
                         <property name="hidden">0</property>
                         <property name="id">wxID_ANY</property>
-                        <property name="label">Ok :&apos;(</property>
+                        <property name="label">Ok  :&apos;(</property>
                         <property name="max_size"></property>
                         <property name="maximize_button">0</property>
                         <property name="maximum_size"></property>
