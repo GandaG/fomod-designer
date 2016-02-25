@@ -11,10 +11,10 @@ import wx
 import wx.xrc
 
 ###########################################################################
-## Class root
+## Class welcome
 ###########################################################################
 
-class root ( wx.Frame ):
+class welcome ( wx.Frame ):
 	
 	def __init__( self, parent ):
 		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"FOMOD Designer", pos = wx.DefaultPosition, size = wx.Size( 500,400 ), style = wx.CAPTION|wx.CLOSE_BOX|wx.MINIMIZE_BOX|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL )
@@ -65,8 +65,58 @@ class root ( wx.Frame ):
 		self.Layout()
 		
 		self.Centre( wx.BOTH )
+		
+		# Connect Events
+		self.new.Bind( wx.EVT_BUTTON, self.new_package )
+		self.open.Bind( wx.EVT_BUTTON, self.open_package )
 	
 	def __del__( self ):
 		pass
+	
+	
+	# Virtual event handlers, overide them in your derived class
+	def new_package( self, event ):
+		event.Skip()
+	
+	def open_package( self, event ):
+		event.Skip()
+	
+
+###########################################################################
+## Class not_implemented
+###########################################################################
+
+class not_implemented ( wx.Frame ):
+	
+	def __init__( self, parent ):
+		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Not Implemented!", pos = wx.DefaultPosition, size = wx.Size( 370,127 ), style = wx.CAPTION|wx.CLOSE_BOX|wx.TAB_TRAVERSAL )
+		
+		self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
+		
+		bSizer5 = wx.BoxSizer( wx.VERTICAL )
+		
+		self.m_staticText4 = wx.StaticText( self, wx.ID_ANY, u"Sorry, this part hasn't been implemented yet!", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticText4.Wrap( -1 )
+		bSizer5.Add( self.m_staticText4, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.BOTTOM|wx.TOP, 20 )
+		
+		self.ok = wx.Button( self, wx.ID_ANY, u"Ok :'(", wx.DefaultPosition, wx.DefaultSize, 0 )
+		bSizer5.Add( self.ok, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.BOTTOM, 10 )
+		
+		
+		self.SetSizer( bSizer5 )
+		self.Layout()
+		
+		self.Centre( wx.BOTH )
+		
+		# Connect Events
+		self.ok.Bind( wx.EVT_BUTTON, self.exit_window )
+	
+	def __del__( self ):
+		pass
+	
+	
+	# Virtual event handlers, overide them in your derived class
+	def exit_window( self, event ):
+		event.Skip()
 	
 
