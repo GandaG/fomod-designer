@@ -14,11 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from gui import intro
+import wx
+import template
 
 
 def main():
-    intro.main()
+    #mandatory in wx, create an app, False stands for not deteriction stdin/stdout
+    #refer manual for details
+    app = wx.App(False)
 
-if __name__ == "__main__":
-    main()
+    #create an object of root
+    frame = template.root(None)
+    #show the frame
+    frame.Show(True)
+    #start the applications
+    app.MainLoop()
+
