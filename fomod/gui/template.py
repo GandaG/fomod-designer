@@ -9,6 +9,7 @@
 
 import wx
 import wx.xrc
+import wx.propgrid as pg
 
 ###########################################################################
 ## Class intro
@@ -147,26 +148,66 @@ class main ( wx.Frame ):
 		
 		self.main_statusbar = self.CreateStatusBar( 3, wx.ST_SIZEGRIP, wx.ID_ANY )
 		self.main_toolbar = self.CreateToolBar( wx.TB_HORIZONTAL, wx.ID_ANY ) 
-		self.new_item = self.main_toolbar.AddLabelTool( wx.ID_ANY, u"New", wx.Bitmap( u"gui/logos/1456477402_add.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, u"Create a new package.", u"Create a new package.", None ) 
+		self.new_item = self.main_toolbar.AddLabelTool( wx.ID_ANY, u"New", wx.Bitmap( u"fomod/gui/logos/1456477402_add.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, u"NEW", u"Create a new package.", None ) 
 		
-		self.open_item = self.main_toolbar.AddLabelTool( wx.ID_ANY, u"Open", wx.Bitmap( u"gui/logos/1456477639_file.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None ) 
+		self.open_item = self.main_toolbar.AddLabelTool( wx.ID_ANY, u"Open", wx.Bitmap( u"fomod/gui/logos/1456477639_file.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, u"OPEN", u"Open a different package.", None ) 
 		
-		self.save_item = self.main_toolbar.AddLabelTool( wx.ID_ANY, u"Save", wx.Bitmap( u"gui/logos/1456477689_disc-floopy.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None ) 
+		self.save_item = self.main_toolbar.AddLabelTool( wx.ID_ANY, u"Save", wx.Bitmap( u"fomod/gui/logos/1456477689_disc-floopy.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, u"SAVE", u"Save current package.", None ) 
 		
-		self.saveas_item = self.main_toolbar.AddLabelTool( wx.ID_ANY, u"Save As", wx.Bitmap( u"gui/logos/1456477799_disc-cd.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None ) 
-		
-		self.main_toolbar.AddSeparator()
-		
-		self.delete_item = self.main_toolbar.AddLabelTool( wx.ID_ANY, u"Delete", wx.Bitmap( u"gui/logos/1456477717_error.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None ) 
-		
-		self.refresh_item = self.main_toolbar.AddLabelTool( wx.ID_ANY, u"Refresh", wx.Bitmap( u"gui/logos/1456477730_refresh.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None ) 
+		self.saveas_item = self.main_toolbar.AddLabelTool( wx.ID_ANY, u"Save As", wx.Bitmap( u"fomod/gui/logos/1456477799_disc-cd.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, u"SAVE AS", u"Save current package as...", None ) 
 		
 		self.main_toolbar.AddSeparator()
 		
-		self.options_item = self.main_toolbar.AddLabelTool( wx.ID_ANY, u"Options", wx.Bitmap( u"gui/logos/1456477700_configuration.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None ) 
+		self.delete_item = self.main_toolbar.AddLabelTool( wx.ID_ANY, u"Delete", wx.Bitmap( u"fomod/gui/logos/1456477717_error.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, u"DELETE", u"Delete item.", None ) 
+		
+		self.refresh_item = self.main_toolbar.AddLabelTool( wx.ID_ANY, u"Refresh", wx.Bitmap( u"fomod/gui/logos/1456477730_refresh.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, u"REFRESH", u"Refresh designer view.", None ) 
+		
+		self.main_toolbar.AddSeparator()
+		
+		self.options_item = self.main_toolbar.AddLabelTool( wx.ID_ANY, u"Options", wx.Bitmap( u"fomod/gui/logos/1456477700_configuration.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, u"OPTIONS", u"Open the options menu.", None ) 
 		
 		self.main_toolbar.Realize() 
 		
+		main_layout = wx.BoxSizer( wx.HORIZONTAL )
+		
+		bSizer7 = wx.BoxSizer( wx.VERTICAL )
+		
+		self.m_treeCtrl3 = wx.TreeCtrl( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TR_DEFAULT_STYLE )
+		bSizer7.Add( self.m_treeCtrl3, 1, wx.ALL|wx.EXPAND, 5 )
+		
+		
+		main_layout.Add( bSizer7, 1, wx.EXPAND, 5 )
+		
+		bSizer4 = wx.BoxSizer( wx.VERTICAL )
+		
+		self.m_toolBar2 = wx.ToolBar( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TB_HORIZONTAL ) 
+		self.m_tool11 = self.m_toolBar2.AddLabelTool( wx.ID_ANY, u"tool", wx.NullBitmap, wx.NullBitmap, wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None ) 
+		
+		self.m_toolBar2.Realize() 
+		
+		bSizer4.Add( self.m_toolBar2, 0, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.TOP, 5 )
+		
+		bSizer6 = wx.BoxSizer( wx.HORIZONTAL )
+		
+		self.m_choicebook1 = wx.Choicebook( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.CHB_TOP )
+		self.m_panel7 = wx.Panel( self.m_choicebook1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
+		self.m_choicebook1.AddPage( self.m_panel7, u"Designer", False )
+		self.m_panel8 = wx.Panel( self.m_choicebook1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
+		self.m_choicebook1.AddPage( self.m_panel8, u"XML", False )
+		bSizer6.Add( self.m_choicebook1, 3, wx.EXPAND |wx.ALL, 5 )
+		
+		self.m_propertyGrid8 = pg.PropertyGrid(self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.propgrid.PG_DEFAULT_STYLE)
+		bSizer6.Add( self.m_propertyGrid8, 1, wx.BOTTOM|wx.EXPAND|wx.RIGHT|wx.TOP, 5 )
+		
+		
+		bSizer4.Add( bSizer6, 1, wx.EXPAND, 5 )
+		
+		
+		main_layout.Add( bSizer4, 4, wx.EXPAND|wx.LEFT|wx.RIGHT, 5 )
+		
+		
+		self.SetSizer( main_layout )
+		self.Layout()
 		
 		self.Centre( wx.BOTH )
 	

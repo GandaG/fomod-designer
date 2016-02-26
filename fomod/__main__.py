@@ -14,11 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from gui import intro
+from gui import mainframe
 
 
 def main():
-    intro.main()
+    mainframe.main()
 
 if __name__ == "__main__":
     main()
