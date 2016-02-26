@@ -18,17 +18,9 @@ import wx
 import template
 
 
-class Intro(template.intro):
+class Mainframe(template.main):
     def __init__(self, parent):
-        template.intro.__init__(self, parent)
-
-    def new_package(self, event):
-        import generic
-        generic.not_implemented()
-
-    def open_package(self, event):
-        import generic
-        generic.not_implemented()
+        template.main.__init__(self, parent)
 
 
 def main():
@@ -37,7 +29,7 @@ def main():
     app = wx.App(False)
 
     # create an object of root
-    frame = Intro(None)
+    frame = Mainframe(None)
     # show the frame
     frame.Show(True)
     # start the applications
