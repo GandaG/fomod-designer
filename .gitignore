@@ -63,3 +63,7 @@ target/
 
 #PyCharm
 .idea/
+
+#Vagrant
+.vagrant/
+
