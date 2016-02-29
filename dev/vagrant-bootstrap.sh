@@ -9,6 +9,13 @@ sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev \
  libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev libncursesw5-dev
 sudo apt-get install -y python-dev
 
+# shorten the command prompt
+
+echo 'function parse_git_branch { 
+   git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1)/' 
+} 
+export PS1="\u@ \$(parse_git_branch)\w\\$ "' >> /home/vagrant/.bashrc
+
 # configure git so you don't have to go back and forward all the time.
 
 git config --global user.email "gandaganza@gmail.com"
