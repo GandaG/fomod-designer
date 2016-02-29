@@ -37,13 +37,28 @@ pyenv virtualenv 2.7.11 fomod-editor
 # install external dependencies
 
 sudo apt-get install -y libxml2-dev libxslt-dev
+
+# install sip from source - package for some reason doesn't work in a venv
+
+originaldir="$PWD"
+cd /vagrant
+wget http://sourceforge.net/projects/pyqt/files/sip/sip-4.17/sip-4.17.tar.gz
+tar xzf sip-4.17.tar.gz
+cd sip-4.17
+python configure.py
+make
+make install
+cd ..
+rm -rf sip-4.17*
+cd $originaldir
+
+# install pyqt
+
 sudo apt-get install -y qttools5-dev-tools qtcreator python-pyqt5
 
 # link qt to the venv
 
 cp -r /usr/lib/python2.7/dist-packages/PyQt5 \
- /home/vagrant/.pyenv/versions/fomod-editor/lib/python2.7/site-packages/
-cp /usr/lib/python2.7/dist-packages/sip* \
  /home/vagrant/.pyenv/versions/fomod-editor/lib/python2.7/site-packages/
 
 # move to the project folder and install the pip reqs
