@@ -9,6 +9,12 @@ sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev \
  libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev libncursesw5-dev
 sudo apt-get install -y python-dev
 
+# configure git so you don't have to go back and forward all the time.
+
+git config --global user.email "gandaganza@gmail.com"
+git config --global user.name "Daniel Nunes"
+git config --global core.editor nano
+
 # get pyenv - I hate messing with system python on ubuntu
 
 git clone https://github.com/yyuu/pyenv.git /home/vagrant/.pyenv
