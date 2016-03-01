@@ -11,10 +11,15 @@ sudo apt-get install -y python-dev
 
 # shorten the command prompt
 
-echo 'function parse_git_branch { 
-   git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1)/' 
+echo 'parse_git_branch() {
+     git branch 2> /dev/null | sed -e '\''/^[^*]/d'\'' -e '\''s/* \(.*\)/ (\1)/'\''
 } 
-export PS1="\u@ \$(parse_git_branch)\w\\$ "' >> /home/vagrant/.bashrc
+export PS1="\[\033[38;5;10m\]\u@ \$(parse_git_branch)\w\\$ \[$(tput sgr0)\]"' >> /home/vagrant/.bashrc
+
+parse_git_branch() {
+     git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ (\1)/'
+}
+export PS1="\[\033[38;5;10m\]\u@ \$(parse_git_branch)\w\\$ \[$(tput sgr0)\]"
 
 # configure git so you don't have to go back and forward all the time.
 
@@ -25,9 +30,12 @@ git config --global core.editor nano
 # get pyenv - I hate messing with system python on ubuntu
 
 git clone https://github.com/yyuu/pyenv.git /home/vagrant/.pyenv
-echo 'export PYENV_ROOT="$HOME/.pyenv"' >> /home/vagrant/.bashrc
-echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> /home/vagrant/.bashrc
-echo 'eval "$(pyenv init -)"' >> /home/vagrant/.bashrc
+{
+    echo 'export PYENV_ROOT="$HOME/.pyenv"'
+    echo 'export PATH="$PYENV_ROOT/bin:$PATH"'
+    echo 'eval "$(pyenv init -)"' 
+} >> /home/vagrant/.bashrc
+
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
@@ -54,20 +62,20 @@ sudo apt-get install -y libxml2-dev libxslt-dev
 # install sip from source - package for some reason doesn't work in a venv
 
 originaldir="$PWD"
-cd /vagrant
+cd /vagrant || exit
 wget http://sourceforge.net/projects/pyqt/files/sip/sip-4.17/sip-4.17.tar.gz
 tar xzf sip-4.17.tar.gz
-cd sip-4.17
+cd sip-4.17 || exit
 python configure.py
 make
 make install
 cd ..
 rm -rf sip-4.17*
-cd $originaldir
+cd "$originaldir" || exit
 
 # install pyqt
 
-sudo apt-get install -y qttools5-dev-tools qtcreator python-pyqt5
+sudo apt-get install -y qttools5-dev-tools qtcreator python-pyqt5 pyqt5-dev-tools
 
 # link qt to the venv
 
@@ -76,5 +84,5 @@ cp -r /usr/lib/python2.7/dist-packages/PyQt5 \
 
 # move to the project folder and install the pip reqs
 
-cd /vagrant
+cd /vagrant || exit
 pip install -r reqs.txt
