@@ -14,31 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import wx
-import template
-
-
-class Intro(template.intro):
-    def __init__(self, parent):
-        template.intro.__init__(self, parent)
-
-    def new_package(self, event):
-        import generic
-        generic.not_implemented()
-
-    def open_package(self, event):
-        import generic
-        generic.not_implemented()
-
 
 def main():
-    # mandatory in wx, create an app, False stands for not deteriction stdin/stdout
-    # refer manual for details
-    app = wx.App(False)
-
-    # create an object of root
-    frame = Intro(None)
-    # show the frame
-    frame.Show(True)
-    # start the applications
-    app.MainLoop()
+    pass

@@ -14,23 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import wx
-import template
-
-
-class Mainframe(template.main):
-    def __init__(self, parent):
-        template.main.__init__(self, parent)
-
 
 def main():
-    # mandatory in wx, create an app, False stands for not deteriction stdin/stdout
-    # refer manual for details
-    app = wx.App(False)
-
-    # create an object of root
-    frame = Mainframe(None)
-    # show the frame
-    frame.Show(True)
-    # start the applications
-    app.MainLoop()
+    pass

@@ -14,17 +14,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import template
 
-
-class NotImplemented(template.not_implemented):
-    def __init__(self, parent):
-        template.not_implemented.__init__(self, parent)
-
-    def exit_window(self, event):
-        self.Close()
-
-
-def not_implemented():
-    frame = NotImplemented(None)
-    frame.Show(True)
