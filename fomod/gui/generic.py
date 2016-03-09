@@ -15,20 +15,24 @@
 # limitations under the License.
 
 from PyQt5 import QtWidgets, QtGui, QtCore
-import templates.notimplemented as ni
+import templates.notimplemented as template
 
 
-class NotImplementedDialog(QtWidgets.QDialog, ni.Ui_Dialog):
+class NotImplementedDialog(QtWidgets.QDialog, template.Ui_Dialog):
     def __init__(self):
         super(NotImplementedDialog, self).__init__()
         self.setupUi(self)
 
-        self.label_2.setPixmap(QtGui.QPixmap("logos/1456477754_user-admin.png"))
+        if __name__ == "__main__":
+            self.label_2.setPixmap(QtGui.QPixmap("fomod/gui/logos/1456477754_user-admin.png"))
+        else:
+            self.label_2.setPixmap(QtGui.QPixmap("logos/1456477754_user-admin.png"))
 
         self.pushButton.clicked.connect(self.ok)
 
     def ok(self):
         self.hide()
+
         if __name__ == "__main__":
             QtCore.QCoreApplication.instance().quit()
 
@@ -41,5 +45,6 @@ def main():
     sys.exit(app.exec_())
 
 
+# For testing and debugging.
 if __name__ == "__main__":
     main()
