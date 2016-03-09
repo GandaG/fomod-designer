@@ -14,23 +14,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-from PyQt5 import QtWidgets, uic
+from PyQt5 import QtWidgets, QtGui, QtCore
+import templates.notimplemented as ni
 
 
-qtCreatorFile = "templates/notimplemented.ui"
-
-Ui_MainWindow, QtBaseClass = uic.loadUiType(qtCreatorFile)
-
-
-class NotImplementedDialog(QtWidgets.QMainWindow, Ui_MainWindow):
+class NotImplementedDialog(QtWidgets.QDialog, ni.Ui_Dialog):
     def __init__(self):
-        QtWidgets.QMainWindow.__init__(self)
-        Ui_MainWindow.__init__(self)
+        super(NotImplementedDialog, self).__init__()
         self.setupUi(self)
+
+        self.label_2.setPixmap(QtGui.QPixmap("logos/1456477754_user-admin.png"))
+
+        self.pushButton.clicked.connect(self.ok)
+
+    def ok(self):
+        self.hide()
+        if __name__ == "__main__":
+            QtCore.QCoreApplication.instance().quit()
 
 
 def main():
+    import sys
     app = QtWidgets.QApplication(sys.argv)
     window = NotImplementedDialog()
     window.show()
