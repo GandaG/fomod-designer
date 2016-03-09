@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'templates/notimplemented.ui'
+# Form implementation generated from reading ui file 'fomod/gui/templates/notimplemented.ui'
 #
 # Created by: PyQt5 UI code generator 5.4.2
 #

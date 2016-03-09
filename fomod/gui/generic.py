@@ -23,28 +23,23 @@ class NotImplementedDialog(QtWidgets.QDialog, template.Ui_Dialog):
         super(NotImplementedDialog, self).__init__()
         self.setupUi(self)
 
-        if __name__ == "__main__":
-            self.label_2.setPixmap(QtGui.QPixmap("fomod/gui/logos/1456477754_user-admin.png"))
-        else:
-            self.label_2.setPixmap(QtGui.QPixmap("logos/1456477754_user-admin.png"))
+        self.label_2.setPixmap(QtGui.QPixmap("fomod/gui/logos/1456477754_user-admin.png"))
 
         self.pushButton.clicked.connect(self.ok)
 
     def ok(self):
-        self.hide()
-
-        if __name__ == "__main__":
-            QtCore.QCoreApplication.instance().quit()
+        self.close()
 
 
 def main():
     window = NotImplementedDialog()
-    window.show()
+    window.exec_()
 
 
 # For testing and debugging.
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
-    main()
+    window = NotImplementedDialog()
+    window.show()
     sys.exit(app.exec_())
