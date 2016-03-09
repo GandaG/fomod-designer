@@ -14,6 +14,40 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from PyQt5 import QtWidgets
+import templates.intro as template
+
+
+class IntroWindow(QtWidgets.QMainWindow, template.Ui_MainWindow):
+    def __init__(self):
+        super(IntroWindow, self).__init__()
+        self.setupUi(self)
+
+        if __name__ != "__main__":
+            from fomod import __version__
+            self.version.setText("Version %s" % __version__)
+
+        self.new_button.clicked.connect(self.new)
+        self.open_button.clicked.connect(self.open)
+
+    def new(self):
+        import generic
+        generic.main()
+
+    def open(self):
+        import generic
+        generic.main()
+
 
 def main():
-    pass
+    window = IntroWindow()
+    window.exec_()
+
+
+# For testing and debugging.
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    window = IntroWindow()
+    window.show()
+    sys.exit(app.exec_())
