@@ -38,13 +38,13 @@ class NotImplementedDialog(QtWidgets.QDialog, template.Ui_Dialog):
 
 
 def main():
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
     window = NotImplementedDialog()
     window.show()
-    sys.exit(app.exec_())
 
 
 # For testing and debugging.
 if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
     main()
+    sys.exit(app.exec_())
