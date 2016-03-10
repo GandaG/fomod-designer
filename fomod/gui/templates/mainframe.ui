@@ -16,34 +16,16 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout_3">
     <item>
-     <widget class="QFrame" name="frame">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-        <horstretch>5</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
+     <widget class="QLabel" name="preview_label">
+      <property name="text">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The preview is not ready yet!&lt;/p&gt;&lt;p&gt;Meanwhile, try to install your mod using NMM or MO to check if everything is ok.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
-      <property name="frameShape">
-       <enum>QFrame::StyledPanel</enum>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
       </property>
-      <property name="frameShadow">
-       <enum>QFrame::Raised</enum>
+      <property name="wordWrap">
+       <bool>true</bool>
       </property>
-      <layout class="QVBoxLayout" name="verticalLayout">
-       <item>
-        <widget class="QLabel" name="label_3">
-         <property name="text">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The preview is not ready yet!&lt;/p&gt;&lt;p&gt;Meanwhile, try to install your mod using NMM or MO to check if everything is ok.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-         <property name="wordWrap">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-      </layout>
      </widget>
     </item>
    </layout>
@@ -115,8 +97,11 @@
    <addaction name="separator"/>
    <addaction name="action_Refresh"/>
    <addaction name="action_Delete"/>
+   <addaction name="separator"/>
+   <addaction name="action_About"/>
+   <addaction name="actionHe_lp"/>
   </widget>
-  <widget class="QDockWidget" name="dockWidget">
+  <widget class="QDockWidget" name="property_editor">
    <property name="allowedAreas">
     <set>Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
    </property>
@@ -129,7 +114,7 @@
    <widget class="QWidget" name="dockWidgetContents">
     <layout class="QVBoxLayout" name="verticalLayout_2">
      <item>
-      <widget class="QTreeWidget" name="treeWidget">
+      <widget class="QTreeWidget" name="property_editor_view">
        <property name="tabKeyNavigation">
         <bool>false</bool>
        </property>
@@ -196,7 +181,7 @@
     </layout>
    </widget>
   </widget>
-  <widget class="QDockWidget" name="dockWidget_2">
+  <widget class="QDockWidget" name="object_tree">
    <property name="windowTitle">
     <string>Object Tree</string>
    </property>
@@ -206,7 +191,7 @@
    <widget class="QWidget" name="dockWidgetContents_2">
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QTreeView" name="treeView">
+      <widget class="QTreeView" name="object_tree_view">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -227,7 +212,7 @@
     </layout>
    </widget>
   </widget>
-  <widget class="QDockWidget" name="dockWidget_3">
+  <widget class="QDockWidget" name="object_box">
    <property name="allowedAreas">
     <set>Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
    </property>
@@ -240,7 +225,7 @@
    <widget class="QWidget" name="dockWidgetContents_3">
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
-      <widget class="QListWidget" name="listWidget"/>
+      <widget class="QListWidget" name="object_box_list"/>
      </item>
     </layout>
    </widget>
@@ -330,13 +315,27 @@
    </property>
   </action>
   <action name="action_About">
+   <property name="icon">
+    <iconset>
+     <normaloff>../logos/1457582962_notepad.png</normaloff>../logos/1457582962_notepad.png</iconset>
+   </property>
    <property name="text">
     <string>&amp;About</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+A</string>
+   </property>
   </action>
   <action name="actionHe_lp">
+   <property name="icon">
+    <iconset>
+     <normaloff>../logos/1457582991_info.png</normaloff>../logos/1457582991_info.png</iconset>
+   </property>
    <property name="text">
     <string>He&amp;lp</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+H</string>
    </property>
   </action>
  </widget>
