@@ -14,11 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from gui import intro
+from gui import mainframe
+from PyQt5 import QtWidgets
 
 
 def main():
-    intro.main()
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    window = mainframe.MainFrame()
+    window.show()
+    sys.exit(app.exec_())
 
 if __name__ == "__main__":
     main()
