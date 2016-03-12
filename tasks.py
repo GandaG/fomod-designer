@@ -21,6 +21,24 @@ from invoke import task, run
 def reload():
     run("vagrant destroy -f && vagrant up")
 
+
+@task
+def enter():
+    run("vagrant ssh -- -Xt 'cd /vagrant/; /bin/bash'")
+
+
 @task
 def genui():
-    run("find ./templates/* -name \"*.ui\" -exec pyuic5 {} -o \"${{}##*.}\".py \;")
+    from PyQt5 import uic
+    uic.compileUiDir("fomod/gui/templates")
+
+
+@task
+def clean():
+    run("rm -r dist/")
+    run("rm -r build/")
+
+
+@task(clean)
+def build():
+    run("pyinstaller -w --clean 'build.spec'")
