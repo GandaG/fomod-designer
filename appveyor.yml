@@ -1,5 +1,6 @@
 install:
   - set PATH=C:\Qt\5.5\mingw492_32\bin;C:\MinGW\msys\1.0\bin;C:\MinGW\bin;%PATH%
+  - where test
   - wget --no-check-certificate http://sourceforge.net/projects/pyqt/files/sip/sip-4.17/sip-4.17.zip
   - wget --no-check-certificate http://sourceforge.net/projects/pyqt/files/PyQt5/PyQt-5.5.1/PyQt-gpl-5.5.1.zip
   - unzip sip-4.17.zip
