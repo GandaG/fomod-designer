@@ -1,8 +1,18 @@
 install:
-  - set PATH=C:\Miniconda-x64;C:\Miniconda-x64\Scripts;%PATH%
-  - conda create -yn fomod-editor python=2.7
-  - activate fomod-editor
-  - conda install -c https://conda.anaconda.org/mmcauliffe pyqt5
+  - set PATH=C:\Qt\5.5\mingw492_32\bin;C:\MinGW\bin;%PATH%
+  - wget http://sourceforge.net/projects/pyqt/files/sip/sip-4.17/sip-4.17.zip
+  - wget http://sourceforge.net/projects/pyqt/files/PyQt5/PyQt-5.5.1/PyQt-gpl-5.5.1.zip
+  - unzip sip-4.17.zip
+  - unzip PyQt-gpl-5.5.1.zip
+  - cd sip-4.17
+  - python configure.py -p win32-g++
+  - mingw32-make
+  - mingw32-make install
+  - cd ../PyQt-gpl-5.5.1
+  - python configure.py --spec=win32-g++
+  - mingw32-make
+  - mingw32-make install
+  - cd ..
   - pip install -r reqs.txt
 
 build: off

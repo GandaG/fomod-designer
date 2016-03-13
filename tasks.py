@@ -35,10 +35,11 @@ def genui():
 
 @task
 def clean():
-    run("rm -r dist/")
-    run("rm -r build/")
+    run("rm -rf dist/")
+    run("rm -rf build/")
 
 
 @task(clean)
 def build():
     run("pyinstaller -w --clean 'build.spec'")
+    run("(cd dist/; zip -r designer.zip 'FOMOD Designer')")
