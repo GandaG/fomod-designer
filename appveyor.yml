@@ -1,5 +1,5 @@
 install:
-  - set PATH=C:\Miniconda;C:\Miniconda\Scripts;%PATH%
+  - set PATH=C:\Miniconda-x64;C:\Miniconda-x64\Scripts;%PATH%
   - conda create -yn fomod-editor python=2.7
   - activate fomod-editor
   - conda install -c https://conda.anaconda.org/mmcauliffe pyqt5
