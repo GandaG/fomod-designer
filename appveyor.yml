@@ -1,6 +1,5 @@
 install:
   - set PATH=C:\Qt\5.5\mingw492_32\bin;C:\MinGW\msys\1.0\bin;C:\MinGW\bin;%PATH%
-  - where test
   - wget --no-check-certificate http://sourceforge.net/projects/pyqt/files/sip/sip-4.17/sip-4.17.zip
   - wget --no-check-certificate http://sourceforge.net/projects/pyqt/files/PyQt5/PyQt-5.5.1/PyQt-gpl-5.5.1.zip
   - unzip sip-4.17.zip
@@ -15,7 +14,8 @@ install:
   - cd ../PyQt-gpl-5.5.1
   - python configure.py --spec=win32-g++ --confirm-license
   - set PATH_PREV=%PATH%
-  - set PATH=C:\Qt\5.5\mingw492_32\bin;C:\MinGW\bin
+  - set PATH=C:\Qt\5.5\mingw492_32\bin;C:\MinGW\msys\1.0\bin\;C:\MinGW\bin
+  - ren C:\MinGW\msys\1.0\bin\sh.exe itdoesntmatter.exe
   - mingw32-make
   - mingw32-make install
   - set PATH=%PATH_PREV%
