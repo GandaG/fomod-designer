@@ -6,12 +6,18 @@ install:
   - unzip PyQt-gpl-5.5.1.zip
   - cd sip-4.17
   - python configure.py -p win32-g++
+  - set PATH_PREV=%PATH%
+  - set PATH=C:\Qt\5.5\mingw492_32\bin;C:\MinGW\msys\1.0\bin;C:\MinGW\bin
   - mingw32-make
   - mingw32-make install
+  - set PATH=%PATH_PREV%
   - cd ../PyQt-gpl-5.5.1
   - python configure.py --spec=win32-g++
+  - set PATH_PREV=%PATH%
+  - set PATH=C:\Qt\5.5\mingw492_32\bin;C:\MinGW\msys\1.0\bin;C:\MinGW\bin
   - mingw32-make
   - mingw32-make install
+  - set PATH=%PATH_PREV%
   - cd ..
   - pip install -r reqs.txt
 
