@@ -43,7 +43,7 @@ def clean():
 def build():
     import platform
     import fomod
-    run("pyinstaller -w --clean 'build.spec'")
+    run("pyinstaller -w --clean build.spec")
     run("(cd dist/; zip -r designer-{}-{}_{}.zip 'FOMOD Designer')".format(fomod.__version__,
                                                                           platform.system().lower(),
                                                                           platform.architecture()[0]))
