@@ -9,6 +9,7 @@ install:
 build: off
 
 test_script:
+  - pwd
   - inv build
 
 artifacts:
