@@ -46,8 +46,8 @@ def build():
 
     if platform.system() == "Linux":
         run("pyinstaller -w --clean build-linux.spec")
-    elif platform.system() == "Windows":
-        run("pyinstaller -w --clean build-windows.spec")
+    #elif platform.system() == "Windows":
+    #    run("pyinstaller -w --clean build-windows.spec")
     else:
         run("pyinstaller -w --clean dev/pyinstaller-bootstrap.py")
 
