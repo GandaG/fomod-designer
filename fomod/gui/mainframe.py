@@ -15,7 +15,7 @@
 # limitations under the License.
 
 from PyQt5 import QtWidgets, QtGui
-import templates.mainframe as template
+from .templates import mainframe as template
 
 
 class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
@@ -79,39 +79,39 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
         self.action_About.triggered.connect(self.about)
 
     def new(self):
-        import generic
+        from . import generic
         generic.main()
 
     def open(self):
-        import generic
+        from . import generic
         generic.main()
 
     def save(self):
-        import generic
+        from . import generic
         generic.main()
 
     def save_as(self):
-        import generic
+        from . import generic
         generic.main()
 
     def options(self):
-        import generic
+        from . import generic
         generic.main()
 
     def refresh(self):
-        import generic
+        from . import generic
         generic.main()
 
     def delete(self):
-        import generic
+        from . import generic
         generic.main()
 
     def help(self):
-        import generic
+        from . import generic
         generic.main()
 
     def about(self):
-        import generic
+        from . import generic
         generic.main()
 
 

@@ -1,25 +1,9 @@
 install:
-  - set PATH=C:\Qt\5.5\mingw492_32\bin;C:\MinGW\msys\1.0\bin;C:\MinGW\bin;%PATH%
-  - wget --no-check-certificate http://sourceforge.net/projects/pyqt/files/sip/sip-4.17/sip-4.17.zip
-  - wget --no-check-certificate http://sourceforge.net/projects/pyqt/files/PyQt5/PyQt-5.5.1/PyQt-gpl-5.5.1.zip
-  - unzip sip-4.17.zip
-  - unzip PyQt-gpl-5.5.1.zip
-  - cd sip-4.17
-  - python configure.py -p win32-g++
-  - set PATH_PREV=%PATH%
-  - set PATH=C:\Qt\5.5\mingw492_32\bin;C:\MinGW\bin
-  - mingw32-make
-  - mingw32-make install
-  - set PATH=%PATH_PREV%
-  - cd ../PyQt-gpl-5.5.1
-  - python configure.py --spec=win32-g++ --confirm-license
-  - set PATH_PREV=%PATH%
-  - set PATH=C:\Qt\5.5\mingw492_32\bin;C:\MinGW\msys\1.0\bin\;C:\MinGW\bin
-  - ren C:\MinGW\msys\1.0\bin\sh.exe itdoesntmatter.exe
-  - mingw32-make
-  - mingw32-make install
-  - set PATH=%PATH_PREV%
-  - cd ..
+  - set PATH=C:\Miniconda-x64;C:\Miniconda-x64\Scripts;%PATH%
+  - conda create -y -n fomod-editor -c https://conda.anaconda.org/mmcauliffe pyqt5=5.5.1 python=3.5.1
+  - activate fomod-editor
+  - pip install pip -U
+  - pip install setuptools -U
   - pip install -r reqs.txt
 
 build: off
@@ -34,7 +18,7 @@ deploy:
   - provider: GitHub
     auth_token:
       secure: iMaZrvVT+OI/9jRs8LyOvmzVqIBa0/jpiK96wNzZww/KqKsMcferhIeSK7faNzOo
-    artifact: 'dist\FOMOD Designer'
+    artifact: 'dist\*.zip'
     force_update: true
     on:
       branch: master

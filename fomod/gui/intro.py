@@ -15,7 +15,7 @@
 # limitations under the License.
 
 from PyQt5 import QtWidgets
-import templates.intro as template
+from .templates import intro as template
 
 
 class IntroWindow(QtWidgets.QMainWindow, template.Ui_MainWindow):
@@ -31,11 +31,11 @@ class IntroWindow(QtWidgets.QMainWindow, template.Ui_MainWindow):
         self.open_button.clicked.connect(self.open)
 
     def new(self):
-        import generic
+        from . import generic
         generic.main()
 
     def open(self):
-        import generic
+        from . import generic
         generic.main()
 
 
