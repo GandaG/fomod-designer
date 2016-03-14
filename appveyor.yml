@@ -13,6 +13,7 @@ test_script:
 
 artifacts:
   - path: dist\*
+  - path: *.spec
 
 deploy:
   - provider: GitHub
