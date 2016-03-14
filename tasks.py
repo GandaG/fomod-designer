@@ -46,10 +46,11 @@ def build():
 
     if platform.system() == "Linux":
         run("pyinstaller -w --clean build-linux.spec")
-        run("(cd dist/; zip -r designer-{}-{}_{}.zip 'FOMOD Designer')".format(fomod.__version__,
+    elif platform.system() == "Windows":
+        run("pyinstaller -w --clean build-windows.spec")
+    else:
+        run("pyinstaller -w --clean dev/pyinstaller-bootstrap.py")
+
+    run("(cd dist/; zip -r designer-{}-{}_{}.zip 'FOMOD Designer')".format(fomod.__version__,
                                                                           platform.system().lower(),
                                                                           platform.architecture()[0]))
-    else:
-        run("pyinstaller -w --clean dev\\pyinstaller-bootstrap.py")
-
-
