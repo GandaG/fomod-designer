@@ -35,10 +35,28 @@ def genui():
 
 @task
 def clean():
-    run("rm -r dist/")
-    run("rm -r build/")
+    run("rm -rf dist/")
+    run("rm -rf build/")
 
 
 @task(clean)
 def build():
-    run("pyinstaller -w --clean 'build.spec'")
+    import platform
+    import fomod
+
+    if platform.system() == "Linux":
+        run("pyinstaller -w --clean build-linux.spec")
+
+    elif platform.system() == "Windows":
+        run("pyinstaller -w --clean build-windows.spec")
+        run("cd .\dist\ && "
+            "7z a designer-{}-windows_{}.zip \".\\FOMOD Designer\" && cd ..".format(fomod.__version__,
+                                                                                    platform.architecture()[0]))
+        return
+
+    else:
+        run("pyinstaller -w --clean dev/pyinstaller-bootstrap.py")
+
+    run("(cd dist/; zip -r designer-{}-{}_{}.zip 'FOMOD Designer')".format(fomod.__version__,
+                                                                           platform.system().lower(),
+                                                                           platform.architecture()[0]))

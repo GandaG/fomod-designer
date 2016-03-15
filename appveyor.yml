@@ -1,0 +1,25 @@
+install:
+  - set PATH=C:\Miniconda-x64;C:\Miniconda-x64\Scripts;%PATH%
+  - conda create -y -n fomod-editor -c https://conda.anaconda.org/mmcauliffe -c https://conda.anaconda.org/anaconda pyqt5=5.5.1 python=3.5.1 lxml=3.5.0
+  - activate fomod-editor
+  - pip install pip -U
+  - pip install setuptools -U
+  - pip install -r reqs.txt
+
+build: off
+
+test_script:
+  - inv build
+
+artifacts:
+  - path: dist\*
+
+deploy:
+  - provider: GitHub
+    auth_token:
+      secure: iMaZrvVT+OI/9jRs8LyOvmzVqIBa0/jpiK96wNzZww/KqKsMcferhIeSK7faNzOo
+    artifact: 'dist\*.zip'
+    force_update: true
+    on:
+      branch: master
+      appveyor_repo_tag: true

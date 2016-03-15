@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from PyQt5 import QtWidgets, QtGui, QtCore
-import templates.notimplemented as template
+from PyQt5 import QtWidgets, QtGui
+from .templates import notimplemented as template
 
 
 class NotImplementedDialog(QtWidgets.QDialog, template.Ui_Dialog):
