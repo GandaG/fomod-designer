@@ -49,9 +49,9 @@ def build():
 
     elif platform.system() == "Windows":
         run("pyinstaller -w --clean build-windows.spec")
-        run("cd dist\ && zip -r "
-            "designer-{}-windows_{}.zip 'FOMOD Designer' && cd ..".format(fomod.__version__,
-                                                                          platform.architecture()[0]))
+        run("cd .\dist\ && "
+            "7z a designer-{}-windows_{}.zip '.\dist\FOMOD Designer' && cd ..".format(fomod.__version__,
+                                                                                      platform.architecture()[0]))
         return
 
     else:
