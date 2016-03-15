@@ -50,10 +50,11 @@ def build():
         run("pyinstaller -w --clean build-linux.spec")
     elif platform.system() == "Windows":
         run("pyinstaller -w --clean build-windows.spec")
-        dist_folder = 'dist\\\\'
+        dist_folder = '.\\\\dist\\\\'
     else:
         run("pyinstaller -w --clean dev/pyinstaller-bootstrap.py")
 
+    run("ls")
     run("(cd {}; zip -r designer-{}-{}_{}.zip 'FOMOD Designer')".format(dist_folder,
                                                                         fomod.__version__,
                                                                         platform.system().lower(),
