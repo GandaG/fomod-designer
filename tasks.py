@@ -44,18 +44,19 @@ def build():
     import platform
     import fomod
 
-    dist_folder = "dist/"
-
     if platform.system() == "Linux":
         run("pyinstaller -w --clean build-linux.spec")
+
     elif platform.system() == "Windows":
         run("pyinstaller -w --clean build-windows.spec")
-        dist_folder = '.\\\\dist\\\\'
+        run("cd dist\ && zip -r "
+            "designer-{}-windows_{}.zip 'FOMOD Designer' && cd ..".format(fomod.__version__,
+                                                                          platform.architecture()[0]))
+        return
+
     else:
         run("pyinstaller -w --clean dev/pyinstaller-bootstrap.py")
 
-    run("ls")
-    run("(cd {}; zip -r designer-{}-{}_{}.zip 'FOMOD Designer')".format(dist_folder,
-                                                                        fomod.__version__,
-                                                                        platform.system().lower(),
-                                                                        platform.architecture()[0]))
+    run("(cd dist/; zip -r designer-{}-{}_{}.zip 'FOMOD Designer')".format(fomod.__version__,
+                                                                           platform.system().lower(),
+                                                                           platform.architecture()[0]))
