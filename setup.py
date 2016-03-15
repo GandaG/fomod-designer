@@ -21,7 +21,7 @@ from setuptools import setup
 
 setup(
     name='fomod-editor',
-    version='0.0.0',
+    version='0.0.1',
     license='Apache 2.0',
     description="",
     author='Daniel Nunes',
