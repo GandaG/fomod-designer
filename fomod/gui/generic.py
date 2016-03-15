@@ -14,16 +14,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .gui import mainframe
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtGui
+from .templates import notimplemented as template
+
+
+class NotImplementedDialog(QtWidgets.QDialog, template.Ui_Dialog):
+    def __init__(self):
+        super(NotImplementedDialog, self).__init__()
+        self.setupUi(self)
+
+        self.label_2.setPixmap(QtGui.QPixmap("fomod/gui/logos/1456477754_user-admin.png"))
+
+        self.pushButton.clicked.connect(self.ok)
+
+    def ok(self):
+        self.close()
 
 
 def main():
+    window = NotImplementedDialog()
+    window.exec_()
+
+
+# For testing and debugging.
+if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
-    window = mainframe.MainFrame()
+    window = NotImplementedDialog()
     window.show()
     sys.exit(app.exec_())
-
-if __name__ == "__main__":
-    main()

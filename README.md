@@ -1,4 +1,4 @@
-# FOMOD Visual Editor
+# FOMOD Designer
 
 *A visual editor to quickly create .fomod installers for Nexus based mods.*
 
@@ -8,7 +8,9 @@
 
 ## Installation
 
-*TODO*
+* Download the zip file corresponding to your OS from the [latest release](https://github.com/GandaG/fomod-editor/releases/latest);
+* Extract the folder within to a location of your choice;
+* Run the "designer" executable within the folder.
 
 ## Usage
 
@@ -24,8 +26,7 @@ Thank you, [contributors]!
 
 ## License
 
-FOMOD Visual Editor is Copyright (c) 2015 thoughtbot, inc.
-It is free software, and may be redistributed
+***FOMOD Designer*** is free software and may be redistributed
 under the terms specified in the [LICENSE] file.
 
   [LICENSE]: /LICENSE
