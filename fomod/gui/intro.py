@@ -16,6 +16,7 @@
 
 from PyQt5 import QtWidgets
 from .templates import intro as template
+from .. import __version__
 
 
 class IntroWindow(QtWidgets.QMainWindow, template.Ui_MainWindow):
@@ -23,9 +24,7 @@ class IntroWindow(QtWidgets.QMainWindow, template.Ui_MainWindow):
         super(IntroWindow, self).__init__()
         self.setupUi(self)
 
-        if __name__ != "__main__":
-            from fomod import __version__
-            self.version.setText("Version %s" % __version__)
+        self.version.setText("Version %s" % __version__)
 
         self.new_button.clicked.connect(self.new)
         self.open_button.clicked.connect(self.open)
