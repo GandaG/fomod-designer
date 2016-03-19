@@ -26,13 +26,13 @@ class ObjectBase(object):
             raise Exception("ObjectBase is not meant to be instanced. "
                             "You should be using a subclass instead.")
 
-        if properties is None:
+        if not properties:
             properties = {}
-        if default_children is None:
+        if not default_children:
             default_children = []
-        if allowed_children is None:
+        if not allowed_children:
             allowed_children = ()
-        if required_children is None:
+        if not required_children:
             required_children = ()
 
         self.name = name
