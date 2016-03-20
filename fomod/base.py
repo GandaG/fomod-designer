@@ -102,3 +102,5 @@ class PropertyBase(object):
         self.name = name
         self.tag = tag
         self.editable = editable
+
+        self.value = ""
