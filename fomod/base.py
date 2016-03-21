@@ -19,17 +19,16 @@ class ObjectBase(object):
     def __init__(self, name, tag, allowed_instances,
                  parent, allow_parent=True,
                  default_text="", allow_text=False,
-                 default_children=None, allowed_children=None,
-                 max_children=0, required_children=None,
-                 properties=None):
+                 allowed_children=None, max_children=0, required_children=None,
+                 default_properties=None, properties=None):
         if type(self) is ObjectBase:
             raise Exception("ObjectBase is not meant to be instanced. "
                             "You should be using a subclass instead.")
 
+        if not default_properties:
+            default_properties = {}
         if not properties:
             properties = {}
-        if not default_children:
-            default_children = []
         if not allowed_children:
             allowed_children = ()
         if not required_children:
@@ -38,7 +37,12 @@ class ObjectBase(object):
         self.name = name
         self.tag = tag
         self.children = []
-        self.properties = properties
+        self.default_properties = default_properties
+        self.allowed_children = allowed_children
+        self.max_children = max_children
+        self.required_children = required_children
+        self.allow_text = allow_text
+        self.text = ""
 
         if allow_parent or not parent:
             self.parent = parent
@@ -54,15 +58,14 @@ class ObjectBase(object):
             if instances >= allowed_instances:
                 raise Exception("Trying to create more instances than allowed.")
 
-        self.allowed_children = allowed_children
-        self.max_children = max_children
-        self.required_children = required_children
-        for child in default_children:
-            self.add_child(child(self))
+        self.setup(default_text, properties)
 
-        self.allow_text = allow_text
-        if allow_text:
-            self._text = default_text
+    def setup(self, text="", properties=None):
+        if text:
+            self.set_text(text)
+        if properties:
+            for key in properties:
+                self.default_properties[key].value = properties[key]
 
     def add_child(self, child):
         if type(child) in self.allowed_children and self.max_children and len(self.children) < self.max_children:
@@ -83,15 +86,9 @@ class ObjectBase(object):
         else:
             return False
 
-    def can_delete(self):
-        if not self.parent or self in self.parent.default_children:
-            return False
-        else:
-            return True
-
     def set_text(self, text):
         if self.allow_text:
-            self._text = text
+            self.text = text
             return True
         else:
             return False
