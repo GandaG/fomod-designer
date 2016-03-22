@@ -93,6 +93,15 @@ class ObjectBase(object):
         else:
             return False
 
+    def find_object(self, attr, value):
+        if getattr(self, attr) == value:
+            return self
+        else:
+            for child in self.children:
+                match = child.findObject(attr, value)
+                if match:
+                    return match
+
 
 class PropertyBase(object):
     def __init__(self, name, tag, editable=True):
