@@ -16,19 +16,19 @@
 
 
 class ObjectBase(object):
-    def __init__(self, name, tag, allowed_instances,
+    def __init__(self, name, tag, allowed_instances, element,
                  parent, allow_parent=True,
                  default_text="", allow_text=False,
                  allowed_children=None, max_children=0, required_children=None,
-                 default_properties=None, properties=None):
+                 properties=None, default_properties=None):
         if type(self) is ObjectBase:
             raise Exception("ObjectBase is not meant to be instanced. "
                             "You should be using a subclass instead.")
 
-        if not default_properties:
-            default_properties = {}
         if not properties:
             properties = {}
+        if not default_properties:
+            default_properties = {}
         if not allowed_children:
             allowed_children = ()
         if not required_children:
@@ -37,12 +37,13 @@ class ObjectBase(object):
         self.name = name
         self.tag = tag
         self.children = []
-        self.default_properties = default_properties
+        self.properties = properties
         self.allowed_children = allowed_children
         self.max_children = max_children
         self.required_children = required_children
         self.allow_text = allow_text
         self.text = ""
+        self.element = element
 
         if allow_parent or not parent:
             self.parent = parent
@@ -58,14 +59,10 @@ class ObjectBase(object):
             if instances >= allowed_instances:
                 raise Exception("Trying to create more instances than allowed.")
 
-        self.setup(default_text, properties)
-
-    def setup(self, text="", properties=None):
-        if text:
-            self.set_text(text)
-        if properties:
-            for key in properties:
-                self.default_properties[key].value = properties[key]
+        if default_text:
+            self.set_text(default_text)
+        if default_properties:
+            self.set_properties(default_properties)
 
     def add_child(self, child):
         if type(child) in self.allowed_children and self.max_children and len(self.children) < self.max_children:
@@ -93,6 +90,12 @@ class ObjectBase(object):
         else:
             return False
 
+    def set_properties(self, properties):
+        for key in properties:
+            if self.properties[key].editable and (properties[key] in self.properties[key].values or
+                                                  isinstance(properties[key], str)):
+                self.properties[key].value = properties[key]
+
     def find_object(self, attr, value):
         if getattr(self, attr) == value:
             return self
@@ -104,9 +107,14 @@ class ObjectBase(object):
 
 
 class PropertyBase(object):
-    def __init__(self, name, tag, editable=True):
+    def __init__(self, name, tag, values, editable=True):
+        if type(self) is PropertyBase:
+            raise Exception("PropertyBase is not meant to be instanced. "
+                            "You should be using a subclass instead.")
+
         self.name = name
         self.tag = tag
         self.editable = editable
 
         self.value = ""
+        self.values = values
