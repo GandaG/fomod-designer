@@ -17,8 +17,7 @@
 
 class ObjectBase(object):
     def __init__(self, name, tag, allowed_instances, element,
-                 parent, allow_parent=True,
-                 default_text="", allow_text=False,
+                 allow_parent=True, default_text="", allow_text=False,
                  allowed_children=None, max_children=0, required_children=None,
                  properties=None, default_properties=None):
         if type(self) is ObjectBase:
@@ -44,20 +43,9 @@ class ObjectBase(object):
         self.allow_text = allow_text
         self.text = ""
         self.element = element
-
-        if allow_parent or not parent:
-            self.parent = parent
-        else:
-            raise Exception("Parent {} to {} is not allowed.".format(type(parent),
-                                                                     self.name))
-
-        if parent and allowed_instances:
-            instances = 0
-            for child in self.parent.children:
-                if child is type(self):
-                    instances += 1
-            if instances >= allowed_instances:
-                raise Exception("Trying to create more instances than allowed.")
+        self.allow_parent = allow_parent
+        self.parent = None
+        self.allowed_instances = allowed_instances
 
         if default_text:
             self.set_text(default_text)
@@ -65,23 +53,37 @@ class ObjectBase(object):
             self.set_properties(default_properties)
 
     def add_child(self, child):
+        if not child.allow_parent:
+            raise Exception("Parent {} to {} is not allowed.".format(type(self),
+                                                                     type(child)))
+
+        if child.allowed_instances:
+            instances = 0
+            for item in self.children:
+                if item is type(child):
+                    instances += 1
+            if instances >= child.allowed_instances:
+                raise Exception("Trying to add more instances of {} than allowed.".format(child))
+
         if type(child) in self.allowed_children and self.max_children and len(self.children) < self.max_children:
             self.children.append(child)
-            return True
+            child.parent = self
         else:
-            return False
+            raise Exception("Can't add {} to parent {}".format(child, self))
 
     def remove_child(self, child):
-        instances = 0
-        for item in self.children:
-            if type(item) in self.required_children:
-                instances += 1
+        if self.required_children and type(child) in self.required_children:
+            instances = 0
+            for item in self.children:
+                if type(item) in self.required_children:
+                    instances += 1
+            if instances < 2:
+                raise Exception("Can't remove {} - required child.".format(child))
 
-        if child in self.children and instances >= 2:
+        if child in self.children:
             self.children.remove(child)
-            return True
         else:
-            return False
+            raise Exception("Can't remove {} - it doesn't exists in parent's children list.".format(child))
 
     def set_text(self, text):
         if self.allow_text:
