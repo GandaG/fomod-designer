@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from .exceptions import *
+
 
 class ObjectBase(object):
     def __init__(self, name, tag, allowed_instances, element,
@@ -21,8 +23,7 @@ class ObjectBase(object):
                  allowed_children=None, max_children=0, required_children=None,
                  properties=None, default_properties=None):
         if type(self) is ObjectBase:
-            raise Exception("ObjectBase is not meant to be instanced. "
-                            "You should be using a subclass instead.")
+            raise BaseInstanceException(self)
 
         if not properties:
             properties = {}
@@ -54,8 +55,7 @@ class ObjectBase(object):
 
     def add_child(self, child):
         if not child.allow_parent:
-            raise Exception("Parent {} to {} is not allowed.".format(type(self),
-                                                                     type(child)))
+            raise WrongParentException(child, self)
 
         if child.allowed_instances:
             instances = 0
@@ -63,13 +63,13 @@ class ObjectBase(object):
                 if item is type(child):
                     instances += 1
             if instances >= child.allowed_instances:
-                raise Exception("Trying to add more instances of {} than allowed.".format(child))
+                raise InstanceCreationException(child)
 
         if type(child) in self.allowed_children and self.max_children and len(self.children) < self.max_children:
             self.children.append(child)
             child.parent = self
         else:
-            raise Exception("Can't add {} to parent {}".format(child, self))
+            raise AddChildException(child, self)
 
     def remove_child(self, child):
         if self.required_children and type(child) in self.required_children:
@@ -78,19 +78,18 @@ class ObjectBase(object):
                 if type(item) in self.required_children:
                     instances += 1
             if instances < 2:
-                raise Exception("Can't remove {} - required child.".format(child))
+                raise RemoveRequiredChildException(child, self)
 
         if child in self.children:
             self.children.remove(child)
         else:
-            raise Exception("Can't remove {} - it doesn't exists in parent's children list.".format(child))
+            raise RemoveChildException(child, self)
 
     def set_text(self, text):
         if self.allow_text:
             self.text = text
-            return True
         else:
-            return False
+            raise TextNotAllowedException(self)
 
     def set_properties(self, properties):
         for key in properties:
@@ -111,8 +110,7 @@ class ObjectBase(object):
 class PropertyBase(object):
     def __init__(self, name, tag, values, editable=True):
         if type(self) is PropertyBase:
-            raise Exception("PropertyBase is not meant to be instanced. "
-                            "You should be using a subclass instead.")
+            raise BaseInstanceException(self)
 
         self.name = name
         self.tag = tag
