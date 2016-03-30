@@ -14,12 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .gui import mainframe
+from .gui import mainframe, exceptions
 from PyQt5 import QtWidgets
 
 
 def main():
     import sys
+
+    sys.excepthook = exceptions.excepthook
+
     app = QtWidgets.QApplication(sys.argv)
     window = mainframe.MainFrame()
     window.show()
