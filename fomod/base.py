@@ -14,7 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .exceptions import *
+from .exceptions import (BaseInstanceException, WrongParentException, InstanceCreationException,
+                         AddChildException, RemoveRequiredChildException, RemoveChildException,
+                         TextNotAllowedException)
 
 
 class ObjectBase(object):
@@ -97,14 +99,13 @@ class ObjectBase(object):
                                                   isinstance(properties[key], str)):
                 self.properties[key].value = properties[key]
 
-    def find_object(self, attr, value):
-        if getattr(self, attr) == value:
-            return self
-        else:
-            for child in self.children:
-                match = child.findObject(attr, value)
-                if match:
-                    return match
+    def iter(self):
+        list = [self]
+
+        for child in self.children:
+            list.extend(child.iter())
+
+        return list
 
 
 class PropertyBase(object):
