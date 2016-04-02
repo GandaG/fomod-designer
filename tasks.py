@@ -18,8 +18,14 @@ from invoke import task, run
 
 
 @task
+def create():
+    run("vagrant up")
+
+
+@task
 def reload():
-    run("vagrant destroy -f && vagrant up")
+    run("vagrant destroy -f")
+    create()
 
 
 @task
