@@ -18,7 +18,7 @@ from . import base
 
 
 class ObjectInfo(base.ObjectBase):
-    def __init__(self, element):
+    def __init__(self, element=None):
         allowed_children = (ObjectName, ObjectAuthor, ObjectDescription,
                             ObjectID, ObjectGroup, ObjectVersion, ObjectWebsite)
 
@@ -27,37 +27,37 @@ class ObjectInfo(base.ObjectBase):
 
 
 class ObjectName(base.ObjectBase):
-    def __init__(self, element):
+    def __init__(self, element=None):
         super().__init__("Name", "Name", 1, element, allow_text=True)
 
 
 class ObjectAuthor(base.ObjectBase):
-    def __init__(self, element):
+    def __init__(self, element=None):
         super().__init__("Author", "Author", 1, element, allow_text=True)
 
 
 class ObjectVersion(base.ObjectBase):
-    def __init__(self, element):
+    def __init__(self, element=None):
         super().__init__("Version", "Version", 1, element, allow_text=True)
 
 
 class ObjectID(base.ObjectBase):
-    def __init__(self, element):
+    def __init__(self, element=None):
         super().__init__("ID", "Id", 1, element, allow_text=True)
 
 
 class ObjectWebsite(base.ObjectBase):
-    def __init__(self, element):
+    def __init__(self, element=None):
         super().__init__("Website", "Website", 1, element, allow_text=True)
 
 
 class ObjectDescription(base.ObjectBase):
-    def __init__(self, element):
+    def __init__(self, element=None):
         super().__init__("Description", "Description", 1, element, allow_text=True)
 
 
 class ObjectGroup(base.ObjectBase):
-    def __init__(self, element):
+    def __init__(self, element=None):
         allowed_child = (ObjectElement,)
 
         super().__init__("Group", "Groups", 1, element,
@@ -65,5 +65,5 @@ class ObjectGroup(base.ObjectBase):
 
 
 class ObjectElement(base.ObjectBase):
-    def __init__(self, element):
+    def __init__(self, element=None):
         super().__init__("Element", "element", 0, element, allow_text=True)

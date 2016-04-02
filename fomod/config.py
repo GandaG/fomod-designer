@@ -18,7 +18,7 @@ from . import base, props
 
 
 class ObjectConfig(base.ObjectBase):
-    def __init__(self, element):
+    def __init__(self, element=None):
         allowed_children = (ObjectModName, ObjectModDepend, ObjectInstallSteps,
                             ObjectReqFiles, ObjectCondInstall)
 
@@ -35,12 +35,12 @@ class ObjectConfig(base.ObjectBase):
 
 
 class ObjectModName(base.ObjectBase):
-    def __init__(self, element):
+    def __init__(self, element=None):
         super().__init__("Name", "moduleName", 0, element, allow_text=True)
 
 
 class ObjectModDepend(base.ObjectBase):
-    def __init__(self, element):
+    def __init__(self, element=None):
         allowed_children = (ObjectDependFile, ObjectDependFlag)
 
         super().__init__("Mod Dependencies", "moduleDependencies", 1, element,
@@ -48,7 +48,7 @@ class ObjectModDepend(base.ObjectBase):
 
 
 class ObjectReqFiles(base.ObjectBase):
-    def __init__(self, element):
+    def __init__(self, element=None):
         allowed_children = (ObjectFile, ObjectFolder)
 
         super().__init__("Mod Requirements", "requiredInstallFiles", 1, element,
@@ -56,7 +56,7 @@ class ObjectReqFiles(base.ObjectBase):
 
 
 class ObjectInstallSteps(base.ObjectBase):
-    def __init__(self, element):
+    def __init__(self, element=None):
         allowed_children = (ObjectInstallStep,)
 
         properties = {"order": props.PropertyText("Order", "order", "Explicit", False)}
@@ -66,7 +66,7 @@ class ObjectInstallSteps(base.ObjectBase):
 
 
 class ObjectCondInstall(base.ObjectBase):
-    def __init__(self, element):
+    def __init__(self, element=None):
         allowed_children = (ObjectPatterns,)
 
         super().__init__("Conditional Installation", "conditionalFileInstalls", 1, element,
@@ -74,7 +74,7 @@ class ObjectCondInstall(base.ObjectBase):
 
 
 class ObjectDependFile(base.ObjectBase):
-    def __init__(self, element, default_properties):
+    def __init__(self, element=None, default_properties=None):
         properties = {"file": props.PropertyText("File", "file", ""),
                       "state": props.PropertyCombo("State", "state",
                                                    ("Active", "Inactive", "Missing"))}
@@ -84,7 +84,7 @@ class ObjectDependFile(base.ObjectBase):
 
 
 class ObjectDependFlag(base.ObjectBase):
-    def __init__(self, element, default_properties):
+    def __init__(self, element=None, default_properties=None):
         properties = {"flag": props.PropertyText("Flag", "flag", ""),
                       "value": props.PropertyText("Value", "value", "")}
 
@@ -93,7 +93,7 @@ class ObjectDependFlag(base.ObjectBase):
 
 
 class ObjectFile(base.ObjectBase):
-    def __init__(self, element, default_properties):
+    def __init__(self, element=None, default_properties=None):
         properties = {"source": props.PropertyText("Source", "source", ""),
                       "destination": props.PropertyText("Destination", "destination", ""),
                       "priority": props.PropertyInt("Priority", "priority", 0, 99, 0)}
@@ -103,7 +103,7 @@ class ObjectFile(base.ObjectBase):
 
 
 class ObjectFolder(base.ObjectBase):
-    def __init__(self, element, default_properties):
+    def __init__(self, element=None, default_properties=None):
         properties = {"source": props.PropertyText("Source", "source", ""),
                       "destination": props.PropertyText("Destination", "destination", ""),
                       "priority": props.PropertyInt("Priority", "priority", 0, 99, 0)}
@@ -113,7 +113,7 @@ class ObjectFolder(base.ObjectBase):
 
 
 class ObjectPatterns(base.ObjectBase):
-    def __init__(self, element):
+    def __init__(self, element=None):
         allowed_children = (ObjectPattern,)
 
         super().__init__("Patterns", "patterns", 0, element,
@@ -121,7 +121,7 @@ class ObjectPatterns(base.ObjectBase):
 
 
 class ObjectPattern(base.ObjectBase):
-    def __init__(self, element):
+    def __init__(self, element=None):
         allowed_children = (ObjectFiles, ObjectDependencies)
 
         super().__init__("Pattern", "pattern", 0, element,
@@ -129,7 +129,7 @@ class ObjectPattern(base.ObjectBase):
 
 
 class ObjectFiles(base.ObjectBase):
-    def __init__(self, element):
+    def __init__(self, element=None):
         allowed_children = (ObjectFile, ObjectFolder)
 
         super().__init__("Files", "files", 0, element,
@@ -137,7 +137,7 @@ class ObjectFiles(base.ObjectBase):
 
 
 class ObjectDependencies(base.ObjectBase):
-    def __init__(self, element, default_properties):
+    def __init__(self, element=None, default_properties=None):
         allowed_children = (ObjectDependFile, ObjectDependFlag)
 
         properties = {"operator": props.PropertyCombo("Type", "operator", ["And", "Or"])}
@@ -148,7 +148,7 @@ class ObjectDependencies(base.ObjectBase):
 
 
 class ObjectInstallStep(base.ObjectBase):
-    def __init__(self, element, default_properties):
+    def __init__(self, element=None, default_properties=None):
         allowed_children = (ObjectVisible, ObjectOptGroups)
 
         properties = {"name": props.PropertyText("Name", "name", "")}
@@ -159,7 +159,7 @@ class ObjectInstallStep(base.ObjectBase):
 
 
 class ObjectVisible(base.ObjectBase):
-    def __init__(self, element):
+    def __init__(self, element=None):
         allowed_children = (ObjectDependFile, ObjectDependFlag)
 
         super().__init__("Visibility", "visible", 1, element,
@@ -167,7 +167,7 @@ class ObjectVisible(base.ObjectBase):
 
 
 class ObjectOptGroups(base.ObjectBase):
-    def __init__(self, element, default_properties):
+    def __init__(self, element=None, default_properties=None):
         allowed_children = (ObjectGroup,)
 
         properties = {"order": props.PropertyCombo("Order", "order", ["Ascending", "Descending", "Explicit"])}
@@ -178,7 +178,7 @@ class ObjectOptGroups(base.ObjectBase):
 
 
 class ObjectGroup(base.ObjectBase):
-    def __init__(self, element, default_properties):
+    def __init__(self, element=None, default_properties=None):
         allowed_children = (ObjectPlugins,)
 
         properties = {"name": props.PropertyText("Name", "name", ""),
@@ -192,7 +192,7 @@ class ObjectGroup(base.ObjectBase):
 
 
 class ObjectPlugins(base.ObjectBase):
-    def __init__(self, element, default_properties):
+    def __init__(self, element=None, default_properties=None):
         allowed_children = (ObjectPlugin,)
 
         properties = {"order": props.PropertyCombo("Order", "order", ["Ascending", "Descending", "Explicit"])}
@@ -203,7 +203,7 @@ class ObjectPlugins(base.ObjectBase):
 
 
 class ObjectPlugin(base.ObjectBase):
-    def __init__(self, element, default_properties):
+    def __init__(self, element=None, default_properties=None):
         allowed_children = (ObjectPluginDescription, ObjectImage, ObjectFiles,
                             ObjectConditionFlags, ObjectTypeDesc)
 
@@ -217,13 +217,13 @@ class ObjectPlugin(base.ObjectBase):
 
 
 class ObjectPluginDescription(base.ObjectBase):
-    def __init__(self, element):
+    def __init__(self, element=None):
         super().__init__("Description", "description", 0, element,
                          allow_text=True)
 
 
 class ObjectImage(base.ObjectBase):
-    def __init__(self, element, default_properties):
+    def __init__(self, element=None, default_properties=None):
         properties = {"path": props.PropertyText("Path", "path", "")}
 
         super().__init__("Image", "image", 0, element,
@@ -231,7 +231,7 @@ class ObjectImage(base.ObjectBase):
 
 
 class ObjectConditionFlags(base.ObjectBase):
-    def __init__(self, element):
+    def __init__(self, element=None):
         allowed_children = (ObjectFlag,)
 
         super().__init__("Flags", "conditionFlags", 0, element,
@@ -239,7 +239,7 @@ class ObjectConditionFlags(base.ObjectBase):
 
 
 class ObjectTypeDesc(base.ObjectBase):
-    def __init__(self, element):
+    def __init__(self, element=None):
         allowed_children = (ObjectDependencyType, ObjectType)
 
         super().__init__("Type Descriptor", "typeDescriptor", 0, element,
@@ -248,7 +248,7 @@ class ObjectTypeDesc(base.ObjectBase):
 
 
 class ObjectFlag(base.ObjectBase):
-    def __init__(self, element, default_properties):
+    def __init__(self, element=None, default_properties=None):
         properties = {"name": props.PropertyText("Name", "name", "")}
 
         super().__init__("Flag", "flag", 0, element,
@@ -256,7 +256,7 @@ class ObjectFlag(base.ObjectBase):
 
 
 class ObjectDependencyType(base.ObjectBase):
-    def __init__(self, element):
+    def __init__(self, element=None):
         allowed_children = (ObjectInstallPatterns, ObjectDefaultType)
 
         super().__init__("Dependency Type", "dependencyType", 0, element,
@@ -264,7 +264,7 @@ class ObjectDependencyType(base.ObjectBase):
 
 
 class ObjectDefaultType(base.ObjectBase):
-    def __init__(self, element, default_properties):
+    def __init__(self, element=None, default_properties=None):
         properties = {"name": props.PropertyCombo("Name", "name",
                                                           ["Required", "Recommended",
                                                            "Optional", "CouldBeUsable",
@@ -275,7 +275,7 @@ class ObjectDefaultType(base.ObjectBase):
 
 
 class ObjectType(base.ObjectBase):
-    def __init__(self, element, default_properties):
+    def __init__(self, element=None, default_properties=None):
         properties = {"name": props.PropertyCombo("Name", "name",
                                                           ["Required", "Recommended",
                                                            "Optional", "CouldBeUsable",
@@ -286,7 +286,7 @@ class ObjectType(base.ObjectBase):
 
 
 class ObjectInstallPatterns(base.ObjectBase):
-    def __init__(self, element):
+    def __init__(self, element=None):
         allowed_children = (ObjectInstallPattern,)
 
         super().__init__("Patterns", "patterns", 0, element,
@@ -294,7 +294,7 @@ class ObjectInstallPatterns(base.ObjectBase):
 
 
 class ObjectInstallPattern(base.ObjectBase):
-    def __init__(self, element):
+    def __init__(self, element=None):
         allowed_children = (ObjectType, ObjectDependencies)
 
         super().__init__("Pattern", "pattern", 0, element,
