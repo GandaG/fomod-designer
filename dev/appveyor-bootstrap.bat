@@ -9,4 +9,4 @@ call activate fomod-editor
 
 pip install pip -U
 pip install setuptools -U --ignore-installed
-pip install -r reqs.txt
+pip install -r dev\reqs.txt
