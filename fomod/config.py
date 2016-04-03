@@ -22,10 +22,8 @@ class ObjectConfig(base.ObjectBase):
         allowed_children = (ObjectModName, ObjectModDepend, ObjectInstallSteps,
                             ObjectReqFiles, ObjectCondInstall)
 
-        properties = {"xmlns": props.PropertyText("xmlns", "xmlns:xsi",
-                                                  "http://www.w3.org/2001/XMLSchema-instance",
-                                                  False),
-                      "xsi": props.PropertyText("xsi", "xsi:noNamespaceSchemaLocation",
+        properties = {"xsi": props.PropertyText("xsi",
+                                                "{http://www.w3.org/2001/XMLSchema-instance}noNamespaceSchemaLocation",
                                                 "http://qconsulting.ca/fo3/ModConfig5.0.xsd",
                                                 False)}
 

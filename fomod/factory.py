@@ -18,7 +18,7 @@ from . import info, config, exceptions
 
 
 def from_element(element):
-    if element.tag == "fomod" and not element.parent:
+    if element.tag == "fomod" and not element.getparent():
         return info.ObjectInfo(element)
     elif element.tag == "Name":
         return info.ObjectName(element)
@@ -37,7 +37,7 @@ def from_element(element):
     elif element.tag == "element":
         return info.ObjectElement(element)
 
-    elif element.tag == "config" and not element.parent:
+    elif element.tag == "config" and not element.getparent():
         return config.ObjectConfig(element)
     elif element.tag == "moduleName":
         return config.ObjectModName(element)
