@@ -16,6 +16,20 @@
 
 sudo apt-get update
 
+
+# fix locale issues
+
+{
+    echo 'export LANGUAGE=en_US.UTF-8'
+    echo 'export LANG=en_US.UTF-8'
+    echo 'export LC_ALL=en_US.UTF-8'
+    echo 'export LC_CTYPE="en_US.UTF-8"'
+} >> /home/vagrant/.bashrc
+
+locale-gen en_US.UTF-8
+sudo dpkg-reconfigure locales
+
+
 # get git - needed for pyenv
 
 sudo apt-get install -y git git-flow
