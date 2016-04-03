@@ -46,8 +46,8 @@ def genui():
 def clean():
     from shutil import rmtree
 
-    rmtree("dist")
-    rmtree("build")
+    rmtree("dist", ignore_errors=True)
+    rmtree("build", ignore_errors=True)
 
 
 @task(clean)
@@ -58,9 +58,10 @@ def build():
     from fomod import __version__
 
     spec_file = "build-{}.spec".format(system().lower())
+    spec_dir = path.join("dev", spec_file)
     zip_name = "designer-{}-{}_{}".format(__version__, system().lower(), architecture()[0])
     zip_dir = path.join(curdir, "dist", "FOMOD Designer")
 
-    run("pyinstaller -w --clean {}".format(spec_file))
+    run("pyinstaller -w --clean {}".format(spec_dir))
     make_archive(zip_name, "zip", base_dir=zip_dir)
     move(zip_name + ".zip", "dist")

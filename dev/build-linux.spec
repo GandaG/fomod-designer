@@ -3,10 +3,10 @@
 block_cipher = None
 
 
-a = Analysis(['dev/pyinstaller-bootstrap.py'],
+a = Analysis(['pyinstaller-bootstrap.py'],
              pathex=['/vagrant'],
              binaries=None,
-             datas=[('fomod/gui/logos', 'fomod/gui/logos')],
+             datas=[('../fomod/gui/logos', 'fomod/gui/logos')],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
