@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>FOMOD Designer</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -43,10 +43,8 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
-    <addaction name="action_New"/>
     <addaction name="action_Open"/>
     <addaction name="action_Save"/>
-    <addaction name="actionSave_AS"/>
     <addaction name="separator"/>
     <addaction name="actionO_ptions"/>
    </widget>
@@ -88,10 +86,8 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="action_New"/>
    <addaction name="action_Open"/>
    <addaction name="action_Save"/>
-   <addaction name="actionSave_AS"/>
    <addaction name="separator"/>
    <addaction name="actionO_ptions"/>
    <addaction name="separator"/>
@@ -201,18 +197,6 @@
     </layout>
    </widget>
   </widget>
-  <action name="action_New">
-   <property name="icon">
-    <iconset>
-     <normaloff>../logos/1456477402_add.png</normaloff>../logos/1456477402_add.png</iconset>
-   </property>
-   <property name="text">
-    <string>&amp;New</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+N</string>
-   </property>
-  </action>
   <action name="action_Open">
    <property name="icon">
     <iconset>
@@ -235,18 +219,6 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
-   </property>
-  </action>
-  <action name="actionSave_AS">
-   <property name="icon">
-    <iconset>
-     <normaloff>../logos/1456477799_disc-cd.png</normaloff>../logos/1456477799_disc-cd.png</iconset>
-   </property>
-   <property name="text">
-    <string>Sa&amp;ve As...</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Shift+S</string>
    </property>
   </action>
   <action name="actionO_ptions">
