@@ -1,4 +1,5 @@
 # FOMOD Designer
+[![Build status](https://ci.appveyor.com/api/projects/status/nep4id3ammekof68?svg=true)](https://ci.appveyor.com/project/GandaG/fomod-editor)
 
 *A visual editor to quickly create .fomod installers for Nexus based mods.*
 

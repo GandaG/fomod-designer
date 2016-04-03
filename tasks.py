@@ -19,18 +19,19 @@ from invoke import task, run
 
 @task
 def create():
-    run("vagrant up")
+    run("vagrant up", pty=True)
 
 
 @task
 def reload():
-    run("vagrant destroy -f")
+    run("vagrant destroy -f", pty=True)
     create()
 
 
 @task
 def enter():
-    run("vagrant ssh -- -Xt 'cd /vagrant/; /bin/bash'", pty=True)
+    import os
+    os.system("vagrant ssh -- -Yt 'cd /vagrant/; /bin/bash'")
 
 
 @task
