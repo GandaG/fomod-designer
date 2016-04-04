@@ -17,7 +17,7 @@
 from .exceptions import (BaseInstanceException, WrongParentException, InstanceCreationException,
                          AddChildException, RemoveRequiredChildException, RemoveChildException,
                          TextNotAllowedException)
-from PyQt5.Qt import QStandardItem
+from PyQt5.QtGui import QStandardItem
 
 
 class ObjectBase(object):
@@ -58,23 +58,32 @@ class ObjectBase(object):
         if default_properties:
             self.set_properties(default_properties)
 
-    def add_child(self, child):
+    def can_add_child(self, child):
         if not child.allow_parent:
             raise WrongParentException(child, self)
 
         if child.allowed_instances:
             instances = 0
             for item in self.children:
-                if item is type(child):
+                if type(item) == type(child):
                     instances += 1
             if instances >= child.allowed_instances:
                 raise InstanceCreationException(child)
 
-        if type(child) in self.allowed_children and self.max_children and len(self.children) < self.max_children:
-            self.children.append(child)
-            child.parent = self
+        if type(child) in self.allowed_children and \
+                (not self.max_children or len(self.children) < self.max_children):
+            return
         else:
             raise AddChildException(child, self)
+
+    def add_child(self, child):
+        try:
+            self.can_add_child(child)
+        except:
+            raise
+        else:
+            self.children.append(child)
+            child.parent = self
 
         self.model_item.appendRow(child.model_item)
 

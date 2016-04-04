@@ -208,8 +208,11 @@
    <property name="text">
     <string>&amp;Open</string>
    </property>
+   <property name="toolTip">
+    <string>New/Open</string>
+   </property>
    <property name="shortcut">
-    <string>Ctrl+O</string>
+    <string>Ctrl+N, Ctrl+O</string>
    </property>
   </action>
   <action name="action_Save">
@@ -257,7 +260,7 @@
     <string>&amp;Delete</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+D</string>
+    <string>Ctrl+D, Del</string>
    </property>
   </action>
   <action name="action_About">

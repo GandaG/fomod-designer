@@ -67,17 +67,20 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
         self.action_About.triggered.connect(self.about)
 
         self.object_tree_view.activated.connect(self.selected_object_tree)
+        self.object_box_list.activated.connect(self.selected_object_list)
 
         self.original_title = self.windowTitle()
         self.package_path = ""
         self.info_root = None
         self.config_root = None
         self.current_item = None
+        self.current_object = None
         self.current_children_list = []
         self.tree_model = QtGui.QStandardItemModel()
         self.list_model = QtGui.QStandardItemModel()
 
         self.object_tree_view.setModel(self.tree_model)
+        self.object_tree_view.header().hide()
         self.object_box_list.setModel(self.list_model)
 
     def open(self):
@@ -111,8 +114,25 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
         generic.main()
 
     def delete(self):
-        from . import generic
-        generic.main()
+        try:
+            if self.current_object:
+                object_to_delete = self.current_object
+                object_to_delete.parent.remove_child(object_to_delete)
+
+                new_index = self.tree_model.indexFromItem(self.current_object.parent.model_item)
+                self.selected_object_tree(new_index)
+            else:
+                errorbox = QtWidgets.QMessageBox()
+                errorbox.setText("You can't delete nothing... Try to select something before deleting.")
+                errorbox.setWindowTitle("What are trying to do? o.O")
+                errorbox.setIconPixmap(QtGui.QPixmap("fomod/gui/logos/1456477754_user-admin.png"))
+                errorbox.exec_()
+        except AttributeError:
+            errorbox = QtWidgets.QMessageBox()
+            errorbox.setText("You can't delete root objects!")
+            errorbox.setWindowTitle("You can't do that...")
+            errorbox.setIconPixmap(QtGui.QPixmap("fomod/gui/logos/1456477754_user-admin.png"))
+            errorbox.exec_()
 
     def help(self):
         from . import generic
@@ -123,11 +143,20 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
         generic.main()
 
     def selected_object_tree(self, index):
+        from ..exceptions import InstanceCreationException, AddChildException
 
         def check_item(self, node, item):
             if node.model_item is item:
+                self.current_item = item
+                self.current_object = node
+
                 for child in node.allowed_children:
                     new_item = child()
+                    try:
+                        node.can_add_child(new_item)
+                    except (InstanceCreationException, AddChildException):
+                        continue
+
                     self.list_model.appendRow(new_item.model_item)
                     self.current_children_list.append(new_item)
                 return True
@@ -145,6 +174,19 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
         for node in self.config_root.iter():
             if check_item(self, node, item):
                 return
+
+    def selected_object_list(self, index):
+        item = self.list_model.itemFromIndex(index)
+
+        for child in self.current_children_list:
+            if child.model_item is item:
+                new_child = type(child)()
+                self.current_object.add_child(new_child)
+
+                # reload the object box and expand the item
+                current_index = self.tree_model.indexFromItem(self.current_item)
+                self.selected_object_tree(current_index)
+                self.object_tree_view.expand(current_index)
 
 
 def main():
