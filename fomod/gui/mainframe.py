@@ -70,6 +70,8 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
         self.package_path = ""
         self.info_root = None
         self.config_root = None
+        self.model = QtGui.QStandardItemModel()
+        self.object_tree_view.setModel(self.model)
 
     def open(self):
         from os.path import expanduser, normpath, basename
@@ -80,6 +82,9 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
 
         if self.package_path:
             self.info_root, self.config_root = parse(normpath(self.package_path))
+
+            self.model.appendRow(self.info_root.model_item)
+            self.model.appendRow(self.config_root.model_item)
 
             title = basename(normpath(self.package_path)) + " - " + self.original_title
             self.setWindowTitle(title)
