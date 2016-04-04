@@ -149,6 +149,9 @@
    </widget>
   </widget>
   <widget class="QDockWidget" name="object_tree">
+   <property name="allowedAreas">
+    <set>Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
+   </property>
    <property name="windowTitle">
     <string>Object Tree</string>
    </property>
@@ -192,7 +195,7 @@
    <widget class="QWidget" name="dockWidgetContents_3">
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
-      <widget class="QListWidget" name="object_box_list"/>
+      <widget class="QListView" name="object_box_list"/>
      </item>
     </layout>
    </widget>

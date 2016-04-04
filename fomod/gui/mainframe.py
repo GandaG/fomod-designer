@@ -66,12 +66,19 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
         self.actionHe_lp.triggered.connect(self.help)
         self.action_About.triggered.connect(self.about)
 
+        self.object_tree_view.activated.connect(self.selected_object_tree)
+
         self.original_title = self.windowTitle()
         self.package_path = ""
         self.info_root = None
         self.config_root = None
-        self.model = QtGui.QStandardItemModel()
-        self.object_tree_view.setModel(self.model)
+        self.current_item = None
+        self.current_children_list = []
+        self.tree_model = QtGui.QStandardItemModel()
+        self.list_model = QtGui.QStandardItemModel()
+
+        self.object_tree_view.setModel(self.tree_model)
+        self.object_box_list.setModel(self.list_model)
 
     def open(self):
         from os.path import expanduser, normpath, basename
@@ -83,8 +90,8 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
         if self.package_path:
             self.info_root, self.config_root = parse(normpath(self.package_path))
 
-            self.model.appendRow(self.info_root.model_item)
-            self.model.appendRow(self.config_root.model_item)
+            self.tree_model.appendRow(self.info_root.model_item)
+            self.tree_model.appendRow(self.config_root.model_item)
 
             title = basename(normpath(self.package_path)) + " - " + self.original_title
             self.setWindowTitle(title)
@@ -114,6 +121,30 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
     def about(self):
         from . import generic
         generic.main()
+
+    def selected_object_tree(self, index):
+
+        def check_item(self, node, item):
+            if node.model_item is item:
+                for child in node.allowed_children:
+                    new_item = child()
+                    self.list_model.appendRow(new_item.model_item)
+                    self.current_children_list.append(new_item)
+                return True
+
+            return False
+
+        self.list_model.clear()
+        self.current_children_list.clear()
+
+        item = self.tree_model.itemFromIndex(index)
+        for node in self.info_root.iter():
+            if check_item(self, node, item):
+                return
+
+        for node in self.config_root.iter():
+            if check_item(self, node, item):
+                return
 
 
 def main():

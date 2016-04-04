@@ -46,4 +46,5 @@ def excepthook(exc_type, exc_value, tracebackobj):
 
     errorbox = QtWidgets.QMessageBox()
     errorbox.setText(notice + msg + "<br>" + version_info)
+    errorbox.setWindowTitle("Nobody Panic!")
     errorbox.exec_()

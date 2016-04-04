@@ -51,6 +51,7 @@ class ObjectBase(object):
         self.parent = None
         self.allowed_instances = allowed_instances
         self.model_item = QStandardItem(self.name)
+        self.model_item.setEditable(False)
 
         if default_text:
             self.set_text(default_text)
