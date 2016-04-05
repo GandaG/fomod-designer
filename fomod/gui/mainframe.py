@@ -66,7 +66,7 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
         self.actionHe_lp.triggered.connect(self.help)
         self.action_About.triggered.connect(self.about)
 
-        self.object_tree_view.activated.connect(self.selected_object_tree)
+        self.object_tree_view.clicked.connect(self.selected_object_tree)
         self.object_box_list.activated.connect(self.selected_object_list)
 
         self.original_title = self.windowTitle()
