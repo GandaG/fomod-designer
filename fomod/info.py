@@ -27,33 +27,33 @@ class ObjectInfo(base.ObjectBase):
 
 
 class ObjectName(base.ObjectBase):
-    def __init__(self, element=None):
-        super().__init__("Name", "Name", 1, element, allow_text=True)
+    def __init__(self, element=None, text=""):
+        super().__init__("Name", "Name", 1, element, allow_text=True, default_text=text)
 
 
 class ObjectAuthor(base.ObjectBase):
-    def __init__(self, element=None):
-        super().__init__("Author", "Author", 1, element, allow_text=True)
+    def __init__(self, element=None, text=""):
+        super().__init__("Author", "Author", 1, element, allow_text=True, default_text=text)
 
 
 class ObjectVersion(base.ObjectBase):
-    def __init__(self, element=None):
-        super().__init__("Version", "Version", 1, element, allow_text=True)
+    def __init__(self, element=None, text=""):
+        super().__init__("Version", "Version", 1, element, allow_text=True, default_text=text)
 
 
 class ObjectID(base.ObjectBase):
-    def __init__(self, element=None):
-        super().__init__("ID", "Id", 1, element, allow_text=True)
+    def __init__(self, element=None, text=""):
+        super().__init__("ID", "Id", 1, element, allow_text=True, default_text=text)
 
 
 class ObjectWebsite(base.ObjectBase):
-    def __init__(self, element=None):
-        super().__init__("Website", "Website", 1, element, allow_text=True)
+    def __init__(self, element=None, text=""):
+        super().__init__("Website", "Website", 1, element, allow_text=True, default_text=text)
 
 
 class ObjectDescription(base.ObjectBase):
-    def __init__(self, element=None):
-        super().__init__("Description", "Description", 1, element, allow_text=True)
+    def __init__(self, element=None, text=""):
+        super().__init__("Description", "Description", 1, element, allow_text=True, default_text=text)
 
 
 class ObjectGroup(base.ObjectBase):
@@ -65,5 +65,5 @@ class ObjectGroup(base.ObjectBase):
 
 
 class ObjectElement(base.ObjectBase):
-    def __init__(self, element=None):
-        super().__init__("Element", "element", 0, element, allow_text=True)
+    def __init__(self, element=None, text=""):
+        super().__init__("Element", "element", 0, element, allow_text=True, default_text=text)

@@ -21,26 +21,26 @@ def from_element(element):
     if element.tag == "fomod" and not element.getparent():
         return info.ObjectInfo(element)
     elif element.tag == "Name":
-        return info.ObjectName(element)
+        return info.ObjectName(element, element.text)
     elif element.tag == "Author":
-        return info.ObjectAuthor(element)
+        return info.ObjectAuthor(element, element.text)
     elif element.tag == "Version":
-        return info.ObjectVersion(element)
+        return info.ObjectVersion(element, element.text)
     elif element.tag == "Id":
-        return info.ObjectID(element)
+        return info.ObjectID(element, element.text)
     elif element.tag == "Website":
-        return info.ObjectWebsite(element)
+        return info.ObjectWebsite(element, element.text)
     elif element.tag == "Description":
-        return info.ObjectDescription(element)
+        return info.ObjectDescription(element, element.text)
     elif element.tag == "Groups":
         return info.ObjectGroup(element)
     elif element.tag == "element":
-        return info.ObjectElement(element)
+        return info.ObjectElement(element, element.text)
 
     elif element.tag == "config" and not element.getparent():
         return config.ObjectConfig(element)
     elif element.tag == "moduleName":
-        return config.ObjectModName(element)
+        return config.ObjectModName(element, element.text)
     elif element.tag == "moduleDependencies":
         return config.ObjectModDepend(element)
     elif element.tag == "requiredInstallFiles":
@@ -84,7 +84,7 @@ def from_element(element):
     elif element.tag == "plugin":
         return config.ObjectPlugin(element, dict(element.attrib))
     elif element.tag == "description":
-        return config.ObjectPluginDescription(element)
+        return config.ObjectPluginDescription(element, element.text)
     elif element.tag == "image":
         return config.ObjectImage(element, dict(element.attrib))
     elif element.tag == "conditionFlags":
@@ -92,7 +92,7 @@ def from_element(element):
     elif element.tag == "typeDescriptor":
         return config.ObjectTypeDesc(element)
     elif element.tag == "flag":
-        return config.ObjectFlag(element, dict(element.attrib))
+        return config.ObjectFlag(element, dict(element.attrib), element.text)
     elif element.tag == "dependencyType":
         return config.ObjectDependencyType(element)
     elif element.tag == "defaultType":
