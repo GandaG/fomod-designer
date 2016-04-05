@@ -14,10 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from . import mainframe, exceptions
+from PyQt5 import QtWidgets
 import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-if __name__ == '__main__':
-    from fomod.__main__ import main  # placed here so pycharm doesn't complain about import location
-    main()
+
+def main():
+    sys.excepthook = exceptions.excepthook
+
+    app = QtWidgets.QApplication(sys.argv)
+    window = mainframe.MainFrame()
+    window.show()
+    sys.exit(app.exec_())

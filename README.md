@@ -1,6 +1,7 @@
 # FOMOD Designer
+[![Build status](https://ci.appveyor.com/api/projects/status/nep4id3ammekof68?svg=true)](https://ci.appveyor.com/project/GandaG/fomod-editor)
 
-*A visual editor to quickly create .fomod installers for Nexus based mods.*
+*A visual editor to quickly create FOMOD installers for Nexus based mods.*
 
 ## Overview
 
@@ -14,7 +15,11 @@
 
 ## Usage
 
-*TODO*
+* Open the application;
+* Click on the **New/Open** button;
+* Select the root folder of your package (where the files you'll install are);
+* Create/modify your installer;
+* Once you're ready, click on the **Save** button to save your installer.
 
 ## Contributing
 

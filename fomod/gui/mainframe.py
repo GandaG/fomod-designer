@@ -23,76 +23,72 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
         super(MainFrame, self).__init__()
         self.setupUi(self)
 
-        icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("fomod/gui/logos/1456477402_add.png"),
-                       QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.action_New.setIcon(icon)
+        icon_open = QtGui.QIcon()
+        icon_open.addPixmap(QtGui.QPixmap("fomod/gui/logos/1456477639_file.png"),
+                            QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.action_Open.setIcon(icon_open)
 
-        icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap("fomod/gui/logos/1456477639_file.png"),
-                        QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.action_Open.setIcon(icon1)
+        icon_save = QtGui.QIcon()
+        icon_save.addPixmap(QtGui.QPixmap("fomod/gui/logos/1456477689_disc-floopy.png"),
+                            QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.action_Save.setIcon(icon_save)
 
-        icon2 = QtGui.QIcon()
-        icon2.addPixmap(QtGui.QPixmap("fomod/gui/logos/1456477689_disc-floopy.png"),
-                        QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.action_Save.setIcon(icon2)
+        icon_options = QtGui.QIcon()
+        icon_options.addPixmap(QtGui.QPixmap("fomod/gui/logos/1456477700_configuration.png"),
+                               QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionO_ptions.setIcon(icon_options)
 
-        icon3 = QtGui.QIcon()
-        icon3.addPixmap(QtGui.QPixmap("fomod/gui/logos/1456477799_disc-cd.png"),
-                        QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.actionSave_AS.setIcon(icon3)
+        icon_refresh = QtGui.QIcon()
+        icon_refresh.addPixmap(QtGui.QPixmap("fomod/gui/logos/1456477730_refresh.png"),
+                               QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.action_Refresh.setIcon(icon_refresh)
 
-        icon4 = QtGui.QIcon()
-        icon4.addPixmap(QtGui.QPixmap("fomod/gui/logos/1456477700_configuration.png"),
-                        QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.actionO_ptions.setIcon(icon4)
+        icon_delete = QtGui.QIcon()
+        icon_delete.addPixmap(QtGui.QPixmap("fomod/gui/logos/1456477717_error.png"),
+                              QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.action_Delete.setIcon(icon_delete)
 
-        icon5 = QtGui.QIcon()
-        icon5.addPixmap(QtGui.QPixmap("fomod/gui/logos/1456477730_refresh.png"),
-                        QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.action_Refresh.setIcon(icon5)
+        icon_about = QtGui.QIcon()
+        icon_about.addPixmap(QtGui.QPixmap("fomod/gui/logos/1457582962_notepad.png"),
+                             QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.action_About.setIcon(icon_about)
 
-        icon6 = QtGui.QIcon()
-        icon6.addPixmap(QtGui.QPixmap("fomod/gui/logos/1456477717_error.png"),
-                        QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.action_Delete.setIcon(icon6)
+        icon_help = QtGui.QIcon()
+        icon_help.addPixmap(QtGui.QPixmap("fomod/gui/logos/1457582991_info.png"),
+                            QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionHe_lp.setIcon(icon_help)
 
-        icon7 = QtGui.QIcon()
-        icon7.addPixmap(QtGui.QPixmap("fomod/gui/logos/1457582962_notepad.png"),
-                        QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.action_About.setIcon(icon7)
-
-        icon8 = QtGui.QIcon()
-        icon8.addPixmap(QtGui.QPixmap("fomod/gui/logos/1457582991_info.png"),
-                        QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.actionHe_lp.setIcon(icon8)
-
-        self.action_New.triggered.connect(self.new)
         self.action_Open.triggered.connect(self.open)
         self.action_Save.triggered.connect(self.save)
-        self.actionSave_AS.triggered.connect(self.save_as)
         self.actionO_ptions.triggered.connect(self.options)
         self.action_Refresh.triggered.connect(self.refresh)
         self.action_Delete.triggered.connect(self.delete)
         self.actionHe_lp.triggered.connect(self.help)
         self.action_About.triggered.connect(self.about)
 
-    def new(self):
-        from . import generic
-        generic.main()
+        self.original_title = self.windowTitle()
+        self.package_path = ""
+        self.info_root = None
+        self.config_root = None
 
     def open(self):
-        from . import generic
-        generic.main()
+        from os.path import expanduser, normpath, basename
+        from ..parser import parse
+
+        open_dialog = QtWidgets.QFileDialog()
+        self.package_path = open_dialog.getExistingDirectory(self, "Select package root directory:", expanduser("~"))
+
+        if self.package_path:
+            self.info_root, self.config_root = parse(normpath(self.package_path))
+
+            title = basename(normpath(self.package_path)) + " - " + self.original_title
+            self.setWindowTitle(title)
 
     def save(self):
-        from . import generic
-        generic.main()
+        from ..serializer import serialize
 
-    def save_as(self):
-        from . import generic
-        generic.main()
+        if self.info_root and self.config_root:
+            serialize(self.info_root, self.config_root, self.package_path)
 
     def options(self):
         from . import generic

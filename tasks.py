@@ -18,45 +18,50 @@ from invoke import task, run
 
 
 @task
+def create():
+    run("vagrant up", pty=True)
+
+
+@task
 def reload():
-    run("vagrant destroy -f && vagrant up")
+    run("vagrant destroy -f", pty=True)
+    create()
 
 
 @task
 def enter():
-    run("vagrant ssh -- -Xt 'cd /vagrant/; /bin/bash'")
+    import os
+    os.system("vagrant ssh -- -Yt 'cd /vagrant/; /bin/bash'")
 
 
 @task
 def genui():
     from PyQt5 import uic
-    uic.compileUiDir("fomod/gui/templates")
+    from os.path import join
+
+    uic.compileUiDir(join("fomod", "gui", "templates"))
 
 
 @task
 def clean():
-    run("rm -rf dist/")
-    run("rm -rf build/")
+    from shutil import rmtree
+
+    rmtree("dist", ignore_errors=True)
+    rmtree("build", ignore_errors=True)
 
 
 @task(clean)
 def build():
-    import platform
-    import fomod
+    from platform import system, architecture
+    from shutil import make_archive, move
+    from os import path, curdir
+    from fomod import __version__
 
-    if platform.system() == "Linux":
-        run("pyinstaller -w --clean build-linux.spec")
+    spec_file = "build-{}.spec".format(system().lower())
+    spec_dir = path.join("dev", spec_file)
+    zip_name = "designer-{}-{}_{}".format(__version__, system().lower(), architecture()[0])
+    zip_dir = path.join(curdir, "dist", "FOMOD Designer")
 
-    elif platform.system() == "Windows":
-        run("pyinstaller -w --clean build-windows.spec")
-        run("cd .\dist\ && "
-            "7z a designer-{}-windows_{}.zip \".\\FOMOD Designer\" && cd ..".format(fomod.__version__,
-                                                                                    platform.architecture()[0]))
-        return
-
-    else:
-        run("pyinstaller -w --clean dev/pyinstaller-bootstrap.py")
-
-    run("(cd dist/; zip -r designer-{}-{}_{}.zip 'FOMOD Designer')".format(fomod.__version__,
-                                                                           platform.system().lower(),
-                                                                           platform.architecture()[0]))
+    run("pyinstaller -w --clean {}".format(spec_dir))
+    make_archive(zip_name, "zip", base_dir=zip_dir)
+    move(zip_name + ".zip", "dist")
