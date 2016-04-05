@@ -35,6 +35,9 @@ def serialize(info_root, config_root, package_path):
         element = etree.Element(node.tag)
         node.element = element
 
+        if node.allow_text:
+            element.text = node.text
+
         for key in node.properties:
             element.set(key, node.properties[key])
 
@@ -47,6 +50,9 @@ def serialize(info_root, config_root, package_path):
     for node in config_root.iter():
         element = etree.Element(node.tag)
         node.element = element
+
+        if node.allow_text:
+            element.text = node.text
 
         for key in node.properties:
             element.set(node.properties[key].tag, str(node.properties[key].value))
