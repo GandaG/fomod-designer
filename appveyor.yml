@@ -13,7 +13,8 @@ deploy:
   - provider: GitHub
     auth_token:
       secure: iMaZrvVT+OI/9jRs8LyOvmzVqIBa0/jpiK96wNzZww/KqKsMcferhIeSK7faNzOo
-    artifact: dist\*
+    artifact: '*'
+    description: '[Changelog.](https://github.com/GandaG/fomod-editor/blob/master/CHANGELOG.md)'
     force_update: true
     on:
       appveyor_repo_tag: true
