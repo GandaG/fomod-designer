@@ -34,7 +34,7 @@ class ObjectConfig(base.ObjectBase):
 
 class ObjectModName(base.ObjectBase):
     def __init__(self, element=None, text=""):
-        super().__init__("Name", "moduleName", 0, element, allow_text=True)
+        super().__init__("Name", "moduleName", 0, element, allow_text=True, default_text=text)
 
 
 class ObjectModDepend(base.ObjectBase):
@@ -217,7 +217,7 @@ class ObjectPlugin(base.ObjectBase):
 class ObjectPluginDescription(base.ObjectBase):
     def __init__(self, element=None, text=""):
         super().__init__("Description", "description", 0, element,
-                         allow_text=True)
+                         allow_text=True, default_text=text)
 
 
 class ObjectImage(base.ObjectBase):
@@ -250,7 +250,8 @@ class ObjectFlag(base.ObjectBase):
         properties = {"name": props.PropertyText("Name", "name", "")}
 
         super().__init__("Flag", "flag", 0, element,
-                         properties=properties, allow_text=True, default_properties=default_properties)
+                         properties=properties, allow_text=True,
+                         default_properties=default_properties, default_text=text)
 
 
 class ObjectDependencyType(base.ObjectBase):
