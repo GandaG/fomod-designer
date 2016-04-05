@@ -49,7 +49,7 @@ def serialize(info_root, config_root, package_path):
         node.element = element
 
         for key in node.properties:
-            element.set(node.properties[key].tag, node.properties[key].value)
+            element.set(node.properties[key].tag, str(node.properties[key].value))
 
         if node.parent is None:
             config_element = element
