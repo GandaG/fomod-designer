@@ -1,5 +1,11 @@
 # Changelog
 
+0.2.1 (2016-04-05)
+
+* In-tag text is now properly parsed and saved along with everything else.
+
+----------------------------------
+
 0.2.0 (2016-04-05)
 
 * Users can now modify the installer's objects.
