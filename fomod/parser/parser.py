@@ -41,7 +41,7 @@ def parse(package_path):
         parsed_element = from_element(element)
 
         for node in info_root.iter():
-            if node.element is element.parent:
+            if node.element is element.getparent():
                 node.add_child(parsed_element)
 
     for element in config_tree.getroot().iter():
@@ -50,7 +50,7 @@ def parse(package_path):
         parsed_element = from_element(element)
 
         for node in config_root.iter():
-            if node.element is element.parent:
+            if node.element is element.getparent():
                 node.add_child(parsed_element)
 
     return info_root, config_root

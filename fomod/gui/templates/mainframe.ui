@@ -149,6 +149,9 @@
    </widget>
   </widget>
   <widget class="QDockWidget" name="object_tree">
+   <property name="allowedAreas">
+    <set>Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
+   </property>
    <property name="windowTitle">
     <string>Object Tree</string>
    </property>
@@ -192,7 +195,7 @@
    <widget class="QWidget" name="dockWidgetContents_3">
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
-      <widget class="QListWidget" name="object_box_list"/>
+      <widget class="QListView" name="object_box_list"/>
      </item>
     </layout>
    </widget>
@@ -205,8 +208,11 @@
    <property name="text">
     <string>&amp;Open</string>
    </property>
+   <property name="toolTip">
+    <string>New/Open</string>
+   </property>
    <property name="shortcut">
-    <string>Ctrl+O</string>
+    <string>Ctrl+N, Ctrl+O</string>
    </property>
   </action>
   <action name="action_Save">
@@ -254,7 +260,7 @@
     <string>&amp;Delete</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+D</string>
+    <string>Ctrl+D, Del</string>
    </property>
   </action>
   <action name="action_About">

@@ -16,7 +16,7 @@
 
 import traceback
 import io
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtGui
 from .. import __version__
 
 
@@ -32,18 +32,20 @@ def excepthook(exc_type, exc_value, tracebackobj):
         "An unhandled exception occurred. Please report the problem"
         " at <a href = https://github.com/GandaG/fomod-editor/issues>Github</a>,"
         " <a href = http://www.nexusmods.com/skyrim/?>Nexus</a> or"
-        " <a href = http://forum.step-project.com/>STEP</a>."
-        " <br><br>Error information:<br>")
+        " <a href = http://forum.step-project.com/>STEP</a>.")
     version_info = __version__
 
     tbinfofile = io.StringIO()
     traceback.print_tb(tracebackobj, None, tbinfofile)
     tbinfofile.seek(0)
     tbinfo = tbinfofile.read()
-    errmsg = '{}:<br>{}'.format(str(exc_type), str(exc_value))
+    errmsg = 'Error information:\n\nVersion: {}\n{}:\n{}\n'.format(version_info, str(exc_type), str(exc_value))
     sections = [errmsg, tbinfo]
-    msg = '<br>'.join(sections)
+    msg = '\n'.join(sections)
 
     errorbox = QtWidgets.QMessageBox()
-    errorbox.setText(notice + msg + "<br>" + version_info)
+    errorbox.setText(notice)
+    errorbox.setDetailedText(msg)
+    errorbox.setWindowTitle("Nobody Panic!")
+    errorbox.setIconPixmap(QtGui.QPixmap("fomod/gui/logos/1456477754_user-admin.png"))
     errorbox.exec_()
