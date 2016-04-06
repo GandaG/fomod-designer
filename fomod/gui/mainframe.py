@@ -92,6 +92,8 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
         self.package_path = open_dialog.getExistingDirectory(self, "Select package root directory:", expanduser("~"))
 
         if self.package_path:
+            self.tree_model.clear()
+
             self.info_root, self.config_root = parse(normpath(self.package_path))
 
             self.tree_model.appendRow(self.info_root.model_item)
@@ -186,7 +188,7 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
             prop_list.append(QtWidgets.QLineEdit(self.dockWidgetContents))
             prop_list[prop_index].setObjectName(str(prop_index))
             prop_list[prop_index].setText(self.current_object.text)
-            prop_list[prop_index].textEdited.connect(self.current_object.set_text)
+            prop_list[prop_index].textEdited[str].connect(self.current_object.set_text)
             self.formLayout.setWidget(prop_index, QtWidgets.QFormLayout.FieldRole,
                                       prop_list[prop_index])
 
@@ -204,7 +206,7 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
             if type(props[key]) == PropertyText:
                 prop_list.append(QtWidgets.QLineEdit(self.dockWidgetContents))
                 prop_list[prop_index].setText(props[key].value)
-                prop_list[prop_index].textEdited.connect(props[key].set_value)
+                prop_list[prop_index].textEdited[str].connect(props[key].set_value)
 
             elif type(props[key]) == PropertyInt:
                 prop_list.append(QtWidgets.QSpinBox(self.dockWidgetContents))
@@ -257,10 +259,16 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
                 new_child = type(child)()
                 self.current_object.add_child(new_child)
 
-                # reload the object box and expand the item
+                # reload the object box
                 self.update_box_list()
+
+                # expand the parent
                 current_index = self.tree_model.indexFromItem(self.current_item)
                 self.object_tree_view.expand(current_index)
+
+                # select the new item
+                self.object_tree_view.setCurrentIndex(self.tree_model.indexFromItem(new_child.model_item))
+                self.selected_object_tree(self.tree_model.indexFromItem(new_child.model_item))
 
 
 def main():
