@@ -58,14 +58,14 @@ def from_element(element):
     elif element.tag == "folder":
         return config.ObjectFolder(element, dict(element.attrib))
     elif element.tag == "patterns":
-        if element.parent == "dependencyType":
+        if element.getparent().tag == "dependencyType":
             return config.ObjectInstallPatterns(element)
-        elif element.parent == "conditionalFileInstalls":
+        elif element.getparent().tag == "conditionalFileInstalls":
             return config.ObjectPatterns(element)
     elif element.tag == "pattern":
-        if element.parent.parent == "conditionalFileInstalls":
+        if element.getparent().getparent().tag == "conditionalFileInstalls":
             return config.ObjectPattern(element)
-        elif element.parent.parent == "dependencyType":
+        elif element.getparent().getparent().tag == "dependencyType":
             return config.ObjectInstallPattern(element)
     elif element.tag == "files":
         return config.ObjectFiles(element)
@@ -100,5 +100,4 @@ def from_element(element):
     elif element.tag == "type":
         return config.ObjectType(element, dict(element.attrib))
 
-    else:
-        raise exceptions.FactoryTagNotFound(element.tag)
+    raise exceptions.FactoryTagNotFound(element.tag)
