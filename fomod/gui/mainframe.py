@@ -75,6 +75,7 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
         self.config_root = None
         self.current_item = None
         self.current_object = None
+        self.current_prop_list = []
         self.current_children_list = []
         self.tree_model = QtGui.QStandardItemModel()
         self.list_model = QtGui.QStandardItemModel()
@@ -143,37 +144,110 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
         generic.main()
 
     def selected_object_tree(self, index):
+        self.current_item, self.current_object = self.get_from_index(index)
+
+        self.update_box_list()
+        self.update_props_list()
+
+    def update_box_list(self):
         from ..exceptions import InstanceCreationException, AddChildException
-
-        def check_item(self, node, item):
-            if node.model_item is item:
-                self.current_item = item
-                self.current_object = node
-
-                for child in node.allowed_children:
-                    new_item = child()
-                    try:
-                        node.can_add_child(new_item)
-                    except (InstanceCreationException, AddChildException):
-                        continue
-
-                    self.list_model.appendRow(new_item.model_item)
-                    self.current_children_list.append(new_item)
-                return True
-
-            return False
 
         self.list_model.clear()
         self.current_children_list.clear()
 
+        for child in self.current_object.allowed_children:
+            new_object = child()
+            try:
+                self.current_object.can_add_child(new_object)
+            except (InstanceCreationException, AddChildException):
+                continue
+
+            self.list_model.appendRow(new_object.model_item)
+            self.current_children_list.append(new_object)
+
+    def update_props_list(self):
+        from ..props import PropertyCombo, PropertyInt, PropertyText
+
+        self.current_prop_list.clear()
+        for index in reversed(range(self.formLayout.count())):
+            widget = self.formLayout.takeAt(index).widget()
+            if widget is not None:
+                widget.deleteLater()
+
+        prop_index = 0
+        prop_list = self.current_prop_list
+        props = self.current_object.properties
+
+        if self.current_object.allow_text:
+            text_label = QtWidgets.QLabel(self.dockWidgetContents)
+            text_label.setObjectName("text_label")
+            text_label.setText("Text")
+            self.formLayout.setWidget(prop_index, QtWidgets.QFormLayout.LabelRole, text_label)
+            prop_list.append(QtWidgets.QLineEdit(self.dockWidgetContents))
+            prop_list[prop_index].setObjectName(str(prop_index))
+            prop_list[prop_index].setText(self.current_object.text)
+            prop_list[prop_index].textEdited.connect(self.current_object.set_text)
+            self.formLayout.setWidget(prop_index, QtWidgets.QFormLayout.FieldRole,
+                                      prop_list[prop_index])
+
+            prop_index += 1
+
+        for key in props:
+            if not props[key].editable:
+                continue
+
+            label = QtWidgets.QLabel(self.dockWidgetContents)
+            label.setObjectName("label_" + str(prop_index))
+            label.setText(props[key].name)
+            self.formLayout.setWidget(prop_index, QtWidgets.QFormLayout.LabelRole, label)
+
+            if type(props[key]) == PropertyText:
+                prop_list.append(QtWidgets.QLineEdit(self.dockWidgetContents))
+                prop_list[prop_index].setText(props[key].value)
+                prop_list[prop_index].textEdited.connect(props[key].set_value)
+
+            elif type(props[key]) == PropertyInt:
+                prop_list.append(QtWidgets.QSpinBox(self.dockWidgetContents))
+                prop_list[prop_index].setValue(props[key].value)
+                prop_list[prop_index].valueChanged.connect(props[key].set_value)
+                prop_list[prop_index].setMinimum(props[key].min)
+                prop_list[prop_index].setMaximum(props[key].max)
+
+            elif type(props[key]) == PropertyCombo:
+                prop_list.append(QtWidgets.QComboBox(self.dockWidgetContents))
+                prop_list[prop_index].insertItems(0, props[key].values)
+                prop_list[prop_index].activated[str].connect(props[key].set_value)
+
+            """self.widget = QtWidgets.QWidget(self.dockWidgetContents)
+            self.widget.setObjectName("widget")
+            self.horizontalLayout_4 = QtWidgets.QHBoxLayout(self.widget)
+            self.horizontalLayout_4.setObjectName("horizontalLayout_4")
+            self.lineEdit_2 = QtWidgets.QLineEdit(self.widget)
+            self.lineEdit_2.setObjectName("lineEdit_2")
+            self.horizontalLayout_4.addWidget(self.lineEdit_2)
+            self.pushButton = QtWidgets.QPushButton(self.widget)
+            self.pushButton.setObjectName("pushButton")
+            self.horizontalLayout_4.addWidget(self.pushButton)
+            self.formLayout.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.widget)"""
+
+            self.formLayout.setWidget(prop_index, QtWidgets.QFormLayout.FieldRole,
+                                      prop_list[prop_index])
+            prop_list[prop_index].setObjectName(str(prop_index))
+            prop_index += 1
+
+    def get_from_index(self, index):
+
         item = self.tree_model.itemFromIndex(index)
+
         for node in self.info_root.iter():
-            if check_item(self, node, item):
-                return
+            if node.model_item is item:
+                return item, node
 
         for node in self.config_root.iter():
-            if check_item(self, node, item):
-                return
+            if node.model_item is item:
+                return item, node
+
+        return None
 
     def selected_object_list(self, index):
         item = self.list_model.itemFromIndex(index)
@@ -184,8 +258,8 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
                 self.current_object.add_child(new_child)
 
                 # reload the object box and expand the item
+                self.update_box_list()
                 current_index = self.tree_model.indexFromItem(self.current_item)
-                self.selected_object_tree(current_index)
                 self.object_tree_view.expand(current_index)
 
 
