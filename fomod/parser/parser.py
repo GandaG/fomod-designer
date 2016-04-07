@@ -29,6 +29,9 @@ def parse(package_path):
     info_path = os.path.join(fomod_folder_path, "info.xml")
     config_path = os.path.join(fomod_folder_path, "ModuleConfig.xml")
 
+    xmlschema_doc = etree.parse("http://qconsulting.ca/fo3/ModConfig5.0.xsd")
+    xmlschema = etree.XMLSchema(xmlschema_doc)
+
     info_tree = etree.parse(info_path)
     config_tree = etree.parse(config_path)
 
@@ -52,6 +55,9 @@ def parse(package_path):
         for node in config_root.iter():
             if node.element is element.getparent():
                 node.add_child(parsed_element)
+
+    xmlschema.assertValid(info_root)
+    xmlschema.assertValid(config_root)
 
     return info_root, config_root
 

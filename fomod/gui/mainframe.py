@@ -210,7 +210,7 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
 
             elif type(props[key]) == PropertyInt:
                 prop_list.append(QtWidgets.QSpinBox(self.dockWidgetContents))
-                prop_list[prop_index].setValue(props[key].value)
+                prop_list[prop_index].setValue(int(props[key].value))
                 prop_list[prop_index].valueChanged.connect(props[key].set_value)
                 prop_list[prop_index].setMinimum(props[key].min)
                 prop_list[prop_index].setMaximum(props[key].max)

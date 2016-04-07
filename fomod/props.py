@@ -33,6 +33,7 @@ class PropertyCombo(base.PropertyBase):
         self.value = values[0]
 
     def set_value(self, value):
+        value = int(value)
         if self.editable and value in self.values:
             self.value = value
 
