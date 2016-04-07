@@ -18,6 +18,7 @@ import os
 from lxml import etree
 from PyQt5 import QtWidgets, QtGui
 from ..factory import from_element
+from ..fileio import check_fomod, check_file
 
 
 def parse(package_path):
@@ -27,10 +28,12 @@ def parse(package_path):
     if not fomod_exists:
         return new(fomod_folder_path)
 
-    info_path = os.path.join(fomod_folder_path, "info.xml")
-    config_path = os.path.join(fomod_folder_path, "ModuleConfig.xml")
-
     try:
+        info_file, config_file = check_file(fomod_folder_path)
+
+        info_path = os.path.join(fomod_folder_path, info_file)
+        config_path = os.path.join(fomod_folder_path, config_file)
+
         info_tree = etree.parse(info_path)
         config_tree = etree.parse(config_path)
     except OSError:
@@ -69,17 +72,3 @@ def new(fomod_folder_path):
     from .. import info, config
 
     return info.ObjectInfo(), config.ObjectConfig()
-
-
-def check_fomod(package_path):
-    existing_fomod = False
-    fomod_folder = "fomod"
-
-    for folder in os.listdir(package_path):
-        if folder.upper() == "FOMOD":
-            existing_fomod = True
-            fomod_folder = folder
-
-    return fomod_folder, existing_fomod
-
-
