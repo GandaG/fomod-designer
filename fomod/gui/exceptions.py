@@ -39,13 +39,13 @@ def excepthook(exc_type, exc_value, tracebackobj):
     traceback.print_tb(tracebackobj, None, tbinfofile)
     tbinfofile.seek(0)
     tbinfo = tbinfofile.read()
-    errmsg = 'Error information:\n\nVersion: {}\n{}:\n{}\n'.format(version_info, str(exc_type), str(exc_value))
+    errmsg = '\nError information:\n\nVersion: {}\n{}: {}\n'.format(version_info, str(exc_type), str(exc_value))
     sections = [errmsg, tbinfo]
     msg = '\n'.join(sections)
 
     errorbox = QtWidgets.QMessageBox()
     errorbox.setText(notice)
-    errorbox.setDetailedText(msg)
+    errorbox.setInformativeText(msg)
     errorbox.setWindowTitle("Nobody Panic!")
     errorbox.setIconPixmap(QtGui.QPixmap("fomod/gui/logos/1456477754_user-admin.png"))
     errorbox.exec_()

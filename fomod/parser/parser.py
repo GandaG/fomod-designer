@@ -36,7 +36,7 @@ def parse(package_path):
     config_root = from_element(config_tree.getroot())
 
     for element in info_tree.getroot().iter():
-        if element is info_tree.getroot():
+        if element is info_tree.getroot() or element.tag is etree.Comment:
             continue
         parsed_element = from_element(element)
 
@@ -45,7 +45,7 @@ def parse(package_path):
                 node.add_child(parsed_element)
 
     for element in config_tree.getroot().iter():
-        if element is config_tree.getroot():
+        if element is config_tree.getroot() or element.tag is etree.Comment:
             continue
         parsed_element = from_element(element)
 

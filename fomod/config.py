@@ -136,7 +136,7 @@ class ObjectFiles(base.ObjectBase):
 
 class ObjectDependencies(base.ObjectBase):
     def __init__(self, element=None, default_properties=None):
-        allowed_children = (ObjectDependFile, ObjectDependFlag)
+        allowed_children = (ObjectDependFile, ObjectDependFlag, ObjectDependencies)
 
         properties = {"operator": props.PropertyCombo("Type", "operator", ["And", "Or"])}
 

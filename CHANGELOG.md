@@ -1,5 +1,17 @@
 # Changelog
 
+0.3.0 (2016-04-07)
+
+* All basic functionality is now done.
+* Tag properties are now properly displayed and editable.
+* XML comments are now ignored by the parser.
+* Child objects are now auto-selected when created.
+* Fixed error when opening an installer over an already opened one.
+* Fixed dependencies tag not being able to be self nested.
+* Fixed deployed archive structure.
+
+----------------------------------
+
 0.2.1 (2016-04-05)
 
 * In-tag text is now properly parsed and saved along with everything else.

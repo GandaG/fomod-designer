@@ -22,11 +22,19 @@ class PropertyText(base.PropertyBase):
         super().__init__(name, tag, (), editable)
         self.value = text
 
+    def set_value(self, text):
+        if self.editable:
+            self.value = text
+
 
 class PropertyCombo(base.PropertyBase):
     def __init__(self, name, tag, values, editable=True):
         super().__init__(name, tag, values, editable)
         self.value = values[0]
+
+    def set_value(self, value):
+        if self.editable and value in self.values:
+            self.value = value
 
 
 class PropertyInt(base.PropertyBase):
@@ -37,3 +45,7 @@ class PropertyInt(base.PropertyBase):
 
         super().__init__(name, tag, values, editable)
         self.value = default
+
+    def set_value(self, value):
+        if self.editable and value in self.values:
+            self.value = value
