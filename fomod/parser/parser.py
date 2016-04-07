@@ -39,7 +39,7 @@ def parse(package_path):
         errorbox.setWindowTitle("Parser Error")
         errorbox.setIconPixmap(QtGui.QPixmap("fomod/gui/logos/1456477754_user-admin.png"))
         errorbox.exec_()
-        return
+        return None, None
 
     info_root = from_element(info_tree.getroot())
     config_root = from_element(config_tree.getroot())
@@ -81,3 +81,5 @@ def check_fomod(package_path):
             fomod_folder = folder
 
     return fomod_folder, existing_fomod
+
+

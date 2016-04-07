@@ -92,9 +92,12 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
         self.package_path = open_dialog.getExistingDirectory(self, "Select package root directory:", expanduser("~"))
 
         if self.package_path:
-            self.tree_model.clear()
-
             self.info_root, self.config_root = parse(normpath(self.package_path))
+            
+            if not self.info_root or not self.config_root:
+                return
+
+            self.tree_model.clear()
 
             self.tree_model.appendRow(self.info_root.model_item)
             self.tree_model.appendRow(self.config_root.model_item)
