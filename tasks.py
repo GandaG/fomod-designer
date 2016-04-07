@@ -60,8 +60,8 @@ def build():
     spec_file = "build-{}.spec".format(system().lower())
     spec_dir = path.join("dev", spec_file)
     zip_name = "designer-{}-{}_{}".format(__version__, system().lower(), architecture()[0])
-    zip_dir = path.join(curdir, "dist", "FOMOD Designer")
+    zip_dir = path.join(curdir, "dist")
 
     run("pyinstaller -w --clean {}".format(spec_dir))
-    make_archive(zip_name, "zip", base_dir=zip_dir)
+    make_archive(zip_name, "zip", base_dir="FOMOD Designer", root_dir=zip_dir)
     move(zip_name + ".zip", "dist")
