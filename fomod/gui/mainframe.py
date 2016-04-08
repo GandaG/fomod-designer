@@ -69,8 +69,10 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
         self.object_tree_view.clicked.connect(self.selected_object_tree)
         self.object_box_list.activated.connect(self.selected_object_list)
 
+        self.fomod_changed = False
         self.original_title = self.windowTitle()
         self.package_path = ""
+        self.package_name = ""
         self.info_root = None
         self.config_root = None
         self.current_item = None
@@ -105,14 +107,27 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
             self.tree_model.appendRow(self.info_root.model_item)
             self.tree_model.appendRow(self.config_root.model_item)
 
-            title = basename(normpath(self.package_path)) + " - " + self.original_title
-            self.setWindowTitle(title)
+            self.package_name = basename(normpath(self.package_path))
+            self.fomod_modified(False)
 
     def save(self):
         from ..serializer import serialize
 
-        if self.info_root and self.config_root:
+        if not self.fomod_changed:
+            errorbox = QtWidgets.QMessageBox()
+            errorbox.setText("There are no changes to save!")
+            errorbox.setWindowTitle("I REFUSE TO SAVE")
+            errorbox.setIconPixmap(QtGui.QPixmap("fomod/gui/logos/1456477754_user-admin.png"))
+            errorbox.exec_()
+        elif not self.info_root and not self.config_root:
+            errorbox = QtWidgets.QMessageBox()
+            errorbox.setText("There is nothing... literally.")
+            errorbox.setWindowTitle("I REFUSE TO SAVE")
+            errorbox.setIconPixmap(QtGui.QPixmap("fomod/gui/logos/1456477754_user-admin.png"))
+            errorbox.exec_()
+        else:
             serialize(self.info_root, self.config_root, self.package_path)
+            self.fomod_modified(False)
 
     def options(self):
         from . import generic
@@ -195,6 +210,7 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
             prop_list[prop_index].setObjectName(str(prop_index))
             prop_list[prop_index].setText(self.current_object.text)
             prop_list[prop_index].textEdited[str].connect(self.current_object.set_text)
+            prop_list[prop_index].textEdited[str].connect(self.fomod_modified)
             self.formLayout.setWidget(prop_index, QtWidgets.QFormLayout.FieldRole,
                                       prop_list[prop_index])
 
@@ -213,11 +229,13 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
                 prop_list.append(QtWidgets.QLineEdit(self.dockWidgetContents))
                 prop_list[prop_index].setText(props[key].value)
                 prop_list[prop_index].textEdited[str].connect(props[key].set_value)
+                prop_list[prop_index].textEdited[str].connect(self.fomod_modified)
 
             elif type(props[key]) == PropertyInt:
                 prop_list.append(QtWidgets.QSpinBox(self.dockWidgetContents))
                 prop_list[prop_index].setValue(int(props[key].value))
                 prop_list[prop_index].valueChanged.connect(props[key].set_value)
+                prop_list[prop_index].valueChanged.connect(self.fomod_modified)
                 prop_list[prop_index].setMinimum(props[key].min)
                 prop_list[prop_index].setMaximum(props[key].max)
 
@@ -225,6 +243,7 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
                 prop_list.append(QtWidgets.QComboBox(self.dockWidgetContents))
                 prop_list[prop_index].insertItems(0, props[key].values)
                 prop_list[prop_index].activated[str].connect(props[key].set_value)
+                prop_list[prop_index].activated[str].connect(self.fomod_modified)
 
             """self.widget = QtWidgets.QWidget(self.dockWidgetContents)
             self.widget.setObjectName("widget")
@@ -275,6 +294,17 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
                 # select the new item
                 self.object_tree_view.setCurrentIndex(self.tree_model.indexFromItem(new_child.model_item))
                 self.selected_object_tree(self.tree_model.indexFromItem(new_child.model_item))
+
+                # set the installer as changed
+                self.fomod_modified(True)
+
+    def fomod_modified(self, changed):
+        if changed is False:
+            self.fomod_changed = False
+            self.setWindowTitle(self.package_name + " - " + self.original_title)
+        else:
+            self.fomod_changed = True
+            self.setWindowTitle("*" + self.package_name + " - " + self.original_title)
 
 
 def main():
