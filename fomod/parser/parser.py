@@ -37,11 +37,9 @@ def parse(package_path):
         info_tree = etree.parse(info_path)
         config_tree = etree.parse(config_path)
     except OSError:
-        errorbox = QtWidgets.QMessageBox()
-        errorbox.setText("FOMOD folder found but either info.xml or moduleconfig.xml are missing.")
-        errorbox.setWindowTitle("Parser Error")
-        errorbox.setIconPixmap(QtGui.QPixmap("fomod/gui/logos/1456477754_user-admin.png"))
-        errorbox.exec_()
+        from ..gui import generic
+        generic.generic_errorbox("Parser Error",
+                                 "FOMOD folder found but either info.xml or moduleconfig.xml are missing.")
         return None, None
 
     info_root = from_element(info_tree.getroot())

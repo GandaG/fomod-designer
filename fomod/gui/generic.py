@@ -31,15 +31,14 @@ class NotImplementedDialog(QtWidgets.QDialog, template.Ui_Dialog):
         self.close()
 
 
-def main():
+def not_implemented():
     window = NotImplementedDialog()
     window.exec_()
 
 
-# For testing and debugging.
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    window = NotImplementedDialog()
-    window.show()
-    sys.exit(app.exec_())
+def generic_errorbox(title, msg):
+    errorbox = QtWidgets.QMessageBox()
+    errorbox.setText(msg)
+    errorbox.setWindowTitle(title)
+    errorbox.setIconPixmap(QtGui.QPixmap("fomod/gui/logos/1456477754_user-admin.png"))
+    errorbox.exec_()

@@ -114,28 +114,24 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
         from ..serializer import serialize
 
         if not self.fomod_changed:
-            errorbox = QtWidgets.QMessageBox()
-            errorbox.setText("There are no changes to save!")
-            errorbox.setWindowTitle("I REFUSE TO SAVE")
-            errorbox.setIconPixmap(QtGui.QPixmap("fomod/gui/logos/1456477754_user-admin.png"))
-            errorbox.exec_()
+            from . import generic
+            generic.generic_errorbox("I REFUSE TO SAVE",
+                                     "There are no changes to save!")
         elif not self.info_root and not self.config_root:
-            errorbox = QtWidgets.QMessageBox()
-            errorbox.setText("There is nothing... literally.")
-            errorbox.setWindowTitle("I REFUSE TO SAVE")
-            errorbox.setIconPixmap(QtGui.QPixmap("fomod/gui/logos/1456477754_user-admin.png"))
-            errorbox.exec_()
+            from . import generic
+            generic.generic_errorbox("I REFUSE TO SAVE",
+                                     "There is nothing... literally.")
         else:
             serialize(self.info_root, self.config_root, self.package_path)
             self.fomod_modified(False)
 
     def options(self):
         from . import generic
-        generic.main()
+        generic.not_implemented()
 
     def refresh(self):
         from . import generic
-        generic.main()
+        generic.not_implemented()
 
     def delete(self):
         try:
@@ -146,25 +142,21 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
                 new_index = self.tree_model.indexFromItem(self.current_object.parent.model_item)
                 self.selected_object_tree(new_index)
             else:
-                errorbox = QtWidgets.QMessageBox()
-                errorbox.setText("You can't delete nothing... Try to select something before deleting.")
-                errorbox.setWindowTitle("What are trying to do? o.O")
-                errorbox.setIconPixmap(QtGui.QPixmap("fomod/gui/logos/1456477754_user-admin.png"))
-                errorbox.exec_()
+                from . import generic
+                generic.generic_errorbox("What are trying to do? o.O",
+                                         "You can't delete nothing... Try to select something before deleting.")
         except AttributeError:
-            errorbox = QtWidgets.QMessageBox()
-            errorbox.setText("You can't delete root objects!")
-            errorbox.setWindowTitle("You can't do that...")
-            errorbox.setIconPixmap(QtGui.QPixmap("fomod/gui/logos/1456477754_user-admin.png"))
-            errorbox.exec_()
+            from . import generic
+            generic.generic_errorbox("You can't do that...",
+                                     "You can't delete root objects!")
 
     def help(self):
         from . import generic
-        generic.main()
+        generic.not_implemented()
 
     def about(self):
         from . import generic
-        generic.main()
+        generic.not_implemented()
 
     def selected_object_tree(self, index):
         self.current_item, self.current_object = self.get_from_index(index)

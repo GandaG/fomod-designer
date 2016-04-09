@@ -31,11 +31,11 @@ class IntroWindow(QtWidgets.QMainWindow, template.Ui_MainWindow):
 
     def new(self):
         from . import generic
-        generic.main()
+        generic.not_implemented()
 
     def open(self):
         from . import generic
-        generic.main()
+        generic.not_implemented()
 
 
 def main():
