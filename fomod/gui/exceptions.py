@@ -47,5 +47,5 @@ def excepthook(exc_type, exc_value, tracebackobj):
     errorbox.setText(notice)
     errorbox.setInformativeText(msg)
     errorbox.setWindowTitle("Nobody Panic!")
-    errorbox.setIconPixmap(QtGui.QPixmap("fomod/gui/logos/1456477754_user-admin.png"))
+    errorbox.setIconPixmap(QtGui.QPixmap("fomod/gui/logos/logo_admin.png"))
     errorbox.exec_()

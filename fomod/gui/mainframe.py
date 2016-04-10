@@ -24,37 +24,37 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
         self.setupUi(self)
 
         icon_open = QtGui.QIcon()
-        icon_open.addPixmap(QtGui.QPixmap("fomod/gui/logos/1456477639_file.png"),
+        icon_open.addPixmap(QtGui.QPixmap("fomod/gui/logos/logo_open_file.png"),
                             QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.action_Open.setIcon(icon_open)
 
         icon_save = QtGui.QIcon()
-        icon_save.addPixmap(QtGui.QPixmap("fomod/gui/logos/1456477689_disc-floopy.png"),
+        icon_save.addPixmap(QtGui.QPixmap("fomod/gui/logos/logo_floppy_disk.png"),
                             QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.action_Save.setIcon(icon_save)
 
         icon_options = QtGui.QIcon()
-        icon_options.addPixmap(QtGui.QPixmap("fomod/gui/logos/1456477700_configuration.png"),
+        icon_options.addPixmap(QtGui.QPixmap("fomod/gui/logos/logo_gear.png"),
                                QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.actionO_ptions.setIcon(icon_options)
 
         icon_refresh = QtGui.QIcon()
-        icon_refresh.addPixmap(QtGui.QPixmap("fomod/gui/logos/1456477730_refresh.png"),
+        icon_refresh.addPixmap(QtGui.QPixmap("fomod/gui/logos/logo_refresh.png"),
                                QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.action_Refresh.setIcon(icon_refresh)
 
         icon_delete = QtGui.QIcon()
-        icon_delete.addPixmap(QtGui.QPixmap("fomod/gui/logos/1456477717_error.png"),
+        icon_delete.addPixmap(QtGui.QPixmap("fomod/gui/logos/logo_cross.png"),
                               QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.action_Delete.setIcon(icon_delete)
 
         icon_about = QtGui.QIcon()
-        icon_about.addPixmap(QtGui.QPixmap("fomod/gui/logos/1457582962_notepad.png"),
+        icon_about.addPixmap(QtGui.QPixmap("fomod/gui/logos/logo_notepad.png"),
                              QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.action_About.setIcon(icon_about)
 
         icon_help = QtGui.QIcon()
-        icon_help.addPixmap(QtGui.QPixmap("fomod/gui/logos/1457582991_info.png"),
+        icon_help.addPixmap(QtGui.QPixmap("fomod/gui/logos/logo_info.png"),
                             QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.actionHe_lp.setIcon(icon_help)
 

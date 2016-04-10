@@ -30,7 +30,7 @@ class Ui_Dialog(object):
         sizePolicy.setHeightForWidth(self.label_2.sizePolicy().hasHeightForWidth())
         self.label_2.setSizePolicy(sizePolicy)
         self.label_2.setText("")
-        self.label_2.setPixmap(QtGui.QPixmap("../logos/1456477754_user-admin.png"))
+        self.label_2.setPixmap(QtGui.QPixmap("../logos/logo_admin.png"))
         self.label_2.setScaledContents(False)
         self.label_2.setObjectName("label_2")
         self.horizontalLayout.addWidget(self.label_2, 0, QtCore.Qt.AlignHCenter|QtCore.Qt.AlignVCenter)

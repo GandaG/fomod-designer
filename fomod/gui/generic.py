@@ -23,7 +23,7 @@ class NotImplementedDialog(QtWidgets.QDialog, template.Ui_Dialog):
         super(NotImplementedDialog, self).__init__()
         self.setupUi(self)
 
-        self.label_2.setPixmap(QtGui.QPixmap("fomod/gui/logos/1456477754_user-admin.png"))
+        self.label_2.setPixmap(QtGui.QPixmap("fomod/gui/logos/logo_admin.png"))
 
         self.pushButton.clicked.connect(self.ok)
 
@@ -40,5 +40,5 @@ def generic_errorbox(title, msg):
     errorbox = QtWidgets.QMessageBox()
     errorbox.setText(msg)
     errorbox.setWindowTitle(title)
-    errorbox.setIconPixmap(QtGui.QPixmap("fomod/gui/logos/1456477754_user-admin.png"))
+    errorbox.setIconPixmap(QtGui.QPixmap("fomod/gui/logos/logo_admin.png"))
     errorbox.exec_()
