@@ -16,7 +16,6 @@
 
 from invoke import task, run
 
-
 @task
 def create():
     run("vagrant up", pty=True)
@@ -55,18 +54,26 @@ def build():
     from platform import system, architecture
     from shutil import make_archive, move
     from os import path, curdir, environ
-    from fomod import __version__
+    from configparser import ConfigParser
 
     try:
         build_number = environ["APPVEYOR_BUILD_NUMBER"]
     except KeyError:
         build_number = 0
 
-    __version__ = __version__ + "." + build_number
+    config = ConfigParser()
+    config.read("setup.cfg")
+
+    config.set("bumpversion", "current_build", build_number)
+
+    with open('setup.cfg', 'wb') as configfile:
+        config.write(configfile)
+
+    version = config.get('bumpversion', 'current_version') + "." + build_number
 
     spec_file = "build-{}.spec".format(system().lower())
     spec_dir = path.join("dev", spec_file)
-    zip_name = "designer-{}.{}-{}_{}".format(__version__, build_number, system().lower(), architecture()[0])
+    zip_name = "designer-{}-{}_{}".format(version, system().lower(), architecture()[0])
     zip_dir = path.join(curdir, "dist")
 
     run("pyinstaller -w --clean {}".format(spec_dir))

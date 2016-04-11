@@ -14,4 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = "0.3.0"
+
+def get_version():
+    import configparser
+    from os.path import join
+
+    config = configparser.ConfigParser()
+    config.read(join("..", "setup.cfg"))
+
+    return config.get('bumpversion', 'current_version') + "." \
+           + config.get('bumpversion', 'current_version')
+
+__version__ = get_version()
