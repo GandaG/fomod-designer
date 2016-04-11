@@ -87,24 +87,30 @@ class ObjectBase(object):
 
         self.model_item.appendRow(child.model_item)
 
-    def remove_child(self, child):
+    def check_required_children(self, child, removing=False):
         if self.required_children and type(child) in self.required_children:
             instances = 0
             for item in self.children:
                 if type(item) in self.required_children:
                     instances += 1
-            if instances < 2:
+            if (instances < 2 and removing) or (instances < 1 and not removing):
                 raise RemoveRequiredChildException(child, self)
 
-        if child in self.children:
-            self.children.remove(child)
+    def remove_child(self, child):
+        try:
+            self.check_required_children(child, True)
+        except RemoveRequiredChildException:
+            raise
         else:
-            raise RemoveChildException(child, self)
+            if child in self.children:
+                self.children.remove(child)
+            else:
+                raise RemoveChildException(child, self)
 
-        if child.model_item.row() == -1:
-            raise RemoveChildException(child, self)
-        else:
-            self.model_item.takeRow(child.model_item.row())
+            if child.model_item.row() == -1:
+                raise RemoveChildException(child, self)
+            else:
+                self.model_item.takeRow(child.model_item.row())
 
     def set_text(self, text):
         if self.allow_text:
