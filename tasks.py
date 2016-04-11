@@ -62,6 +62,8 @@ def build():
     except KeyError:
         build_number = 0
 
+    __version__ = __version__ + "." + build_number
+
     spec_file = "build-{}.spec".format(system().lower())
     spec_dir = path.join("dev", spec_file)
     zip_name = "designer-{}.{}-{}_{}".format(__version__, build_number, system().lower(), architecture()[0])

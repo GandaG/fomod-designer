@@ -60,7 +60,7 @@ def serialize(info_root, config_root, package_path):
         if node.required_children:
             for child in node.iter():
                 if type(child) in node.required_children:
-                    node.check_required_child(child)
+                    node.check_required_children(child)
 
         if node.parent is None:
             config_element = element
