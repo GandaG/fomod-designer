@@ -54,12 +54,17 @@ def clean():
 def build():
     from platform import system, architecture
     from shutil import make_archive, move
-    from os import path, curdir
+    from os import path, curdir, environ
     from fomod import __version__
+
+    try:
+        build_number = environ["APPVEYOR_BUILD_NUMBER"]
+    except KeyError:
+        build_number = 0
 
     spec_file = "build-{}.spec".format(system().lower())
     spec_dir = path.join("dev", spec_file)
-    zip_name = "designer-{}-{}_{}".format(__version__, system().lower(), architecture()[0])
+    zip_name = "designer-{}.{}-{}_{}".format(__version__, build_number, system().lower(), architecture()[0])
     zip_dir = path.join(curdir, "dist")
 
     run("pyinstaller -w --clean {}".format(spec_dir))

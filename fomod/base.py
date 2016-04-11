@@ -119,7 +119,7 @@ class ObjectBase(object):
             raise TextNotAllowedException(self)
 
     def set_properties(self, properties):
-        for key in self.properties:
+        for key in properties:
             if self.properties[key].editable and (properties[key] in self.properties[key].values or
                                                   isinstance(properties[key], str)):
                 self.properties[key].value = properties[key]
