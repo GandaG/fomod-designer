@@ -57,8 +57,10 @@ def serialize(info_root, config_root, package_path):
         for key in node.properties:
             element.set(node.properties[key].tag, str(node.properties[key].value))
 
-        if node.parent.required_children:
-            node.parent.check_required_children(node)
+        if node.required_children:
+            for child in node.iter():
+                if type(child) in node.required_children:
+                    node.check_required_child(child)
 
         if node.parent is None:
             config_element = element
