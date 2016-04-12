@@ -1,8 +1,4 @@
-language: go
-
-os:
-  - linux
-  - osx
+language: python
 
 install:
   - chmod +x ./dev/travis-bootstrap.sh

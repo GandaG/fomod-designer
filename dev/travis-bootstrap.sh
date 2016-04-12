@@ -51,3 +51,5 @@ pyenv shell miniconda3-3.19.0/envs/fomod-editor
 pip install pip -U
 pip install setuptools -U --ignore-installed
 pip install -r dev/reqs.txt
+
+export PATH="$PYENV_ROOT/versions/miniconda3-3.19.0/envs/fomod-editor/bin:$PATH"
