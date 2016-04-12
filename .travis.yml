@@ -1,0 +1,19 @@
+language: python
+
+os:
+  - linux
+  - osx
+
+install:
+  - sh ./travis-bootstrap.sh
+
+script:
+  - inv build
+
+deploy:
+  provider: releases
+  api_key: "$GITHUB_API_KEY"
+  file: "dist/*.zip"
+  skip_cleanup: true
+  on:
+    tags: true

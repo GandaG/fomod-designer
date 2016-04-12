@@ -59,7 +59,10 @@ def build():
     try:
         build_number = environ["APPVEYOR_BUILD_NUMBER"]
     except KeyError:
-        build_number = 0
+        try:
+            build_number = environ["TRAVIS_BUILD_NUMBER"]
+        except KeyError:
+            build_number = 0
 
     config = ConfigParser()
     config.read("setup.cfg")
