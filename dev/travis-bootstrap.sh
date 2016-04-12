@@ -55,3 +55,6 @@ pip install -r dev/reqs.txt
 
 unset PYTHONPATH
 export PATH="$PYENV_ROOT/versions/miniconda3-3.19.0/envs/fomod-editor/bin:$PATH"
+
+echo PYTHONPATH
+echo PATH
