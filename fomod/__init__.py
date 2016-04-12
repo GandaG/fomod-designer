@@ -17,9 +17,10 @@
 
 def get_version():
     import configparser
+    from os.path import join, dirname
 
     config = configparser.ConfigParser()
-    config.read("setup.cfg")
+    config.read(join(dirname(__file__), "..", "setup.cfg"))
 
     return config.get('bumpversion', 'current_version') + "." + config.get('bumpversion', 'current_build')
 
