@@ -34,7 +34,6 @@ eval "$(pyenv virtualenv-init -)"
 # start installing the python versions
 
 env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install miniconda3-3.19.0
-env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install 3.5.1
 
 
 # make the virtualenv
@@ -49,8 +48,9 @@ pyenv shell miniconda3-3.19.0/envs/fomod-editor
 
 # install the pip reqs
 
+python --version
 pip install pip -U
 pip install setuptools -U --ignore-installed
 pip install -r dev/reqs.txt
 
-export PATH="$PYENV_ROOT/versions/miniconda3-3.19.0/bin:$PATH"
+export PATH="$PYENV_ROOT/versions/miniconda3-3.19.0/envs/fomod-editor/bin:$PATH"
