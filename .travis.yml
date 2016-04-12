@@ -5,6 +5,7 @@ os:
   - osx
 
 install:
+  - chmod +x ./dev/travis-bootstrap.sh
   - ./dev/travis-bootstrap.sh
 
 script:
