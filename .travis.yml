@@ -4,9 +4,6 @@ install:
   - chmod +x ./dev/travis-bootstrap.sh
   - ./dev/travis-bootstrap.sh
 
-script:
-  - invoke build
-
 deploy:
   provider: releases
   api_key: "$GITHUB_API_KEY"
