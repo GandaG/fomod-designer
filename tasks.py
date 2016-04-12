@@ -59,7 +59,10 @@ def build():
     try:
         build_number = environ["APPVEYOR_BUILD_NUMBER"]
     except KeyError:
-        build_number = 0
+        try:
+            build_number = environ["TRAVIS_BUILD_NUMBER"]
+        except KeyError:
+            build_number = 0
 
     config = ConfigParser()
     config.read("setup.cfg")
@@ -75,6 +78,7 @@ def build():
     spec_dir = path.join("dev", spec_file)
     zip_name = "designer-{}-{}_{}".format(version, system().lower(), architecture()[0])
     zip_dir = path.join(curdir, "dist")
+
 
     run("pyinstaller -w --clean {}".format(spec_dir))
     make_archive(zip_name, "zip", base_dir="FOMOD Designer", root_dir=zip_dir)

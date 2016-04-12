@@ -84,7 +84,6 @@ eval "$(pyenv virtualenv-init -)"
 # start installing the python versions
 
 env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install miniconda3-3.19.0
-env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install 3.5.1
 
 
 # make the virtualenv
