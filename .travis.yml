@@ -1,11 +1,11 @@
-language: python
+language: go
 
 os:
   - linux
   - osx
 
 install:
-  - sh ./travis-bootstrap.sh
+  - sh ./dev/travis-bootstrap.sh
 
 script:
   - inv build
@@ -13,7 +13,10 @@ script:
 deploy:
   provider: releases
   api_key: "$GITHUB_API_KEY"
-  file: "dist/*.zip"
+  file_glob: true
+  file:
+    - "dist/*.zip"
+    - "*.spec"
   skip_cleanup: true
   on:
     tags: true

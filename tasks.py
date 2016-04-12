@@ -79,6 +79,9 @@ def build():
     zip_name = "designer-{}-{}_{}".format(version, system().lower(), architecture()[0])
     zip_dir = path.join(curdir, "dist")
 
-    run("pyinstaller -w --clean {}".format(spec_dir))
+    if system().lower != "windows" and system().lower() != "linux":
+        run("pyinstaller -wF --clean dev/pyinstaller-bootstrap.py")
+    else:
+        run("pyinstaller -w --clean {}".format(spec_dir))
     make_archive(zip_name, "zip", base_dir="FOMOD Designer", root_dir=zip_dir)
     move(zip_name + ".zip", "dist")

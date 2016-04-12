@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-sudo apt-get update
-
 # get pyenv - I hate messing with system python on ubuntu
 
 git clone https://github.com/yyuu/pyenv.git $HOME/.pyenv
