@@ -17,7 +17,7 @@
 # get pyenv - I hate messing with system python on ubuntu
 
 git clone https://github.com/yyuu/pyenv.git $HOME/.pyenv
-echo "successful clone"
+
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
@@ -27,14 +27,14 @@ eval "$(pyenv init -)"
 
 git clone https://github.com/yyuu/pyenv-virtualenv.git \
  $HOME/.pyenv/plugins/pyenv-virtualenv
-echo "successful clone"
+
 eval "$(pyenv virtualenv-init -)"
 
 
 # start installing the python versions
 
 env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install miniconda3-3.19.0
-echo "successful conda env"
+
 
 # make the virtualenv
 
@@ -44,7 +44,7 @@ conda create -y -n fomod-editor \
  -c https://conda.anaconda.org/anaconda \
  python=3.5.1 pyqt5=5.5.1 lxml=3.5.0
 pyenv shell miniconda3-3.19.0/envs/fomod-editor
-echo "successful conda install"
+
 
 # install the pip reqs
 

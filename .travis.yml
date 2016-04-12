@@ -1,4 +1,4 @@
-language: python
+language: go
 
 os:
   - linux
@@ -9,7 +9,7 @@ install:
   - ./dev/travis-bootstrap.sh
 
 script:
-  - inv build
+  - invoke build
 
 deploy:
   provider: releases
