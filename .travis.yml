@@ -5,7 +5,7 @@ os:
   - osx
 
 install:
-  - sh ./dev/travis-bootstrap.sh
+  - ./dev/travis-bootstrap.sh
 
 script:
   - inv build
