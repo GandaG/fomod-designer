@@ -64,9 +64,9 @@ def build():
     config = ConfigParser()
     config.read("setup.cfg")
 
-    config.set("bumpversion", "current_build", build_number)
+    config.set("bumpversion", "current_build", str(build_number))
 
-    with open('setup.cfg', 'wb') as configfile:
+    with open('setup.cfg', 'w') as configfile:
         config.write(configfile)
 
     version = config.get('bumpversion', 'current_version') + "." + build_number
