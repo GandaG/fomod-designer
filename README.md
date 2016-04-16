@@ -23,7 +23,15 @@
 
 ## Contributing
 
-See the [CONTRIBUTING] document.
+This repo uses a ***.settings*** file to define all the necessary settings. This file follows this syntax:
+
+```
+[git]
+user=git_username
+email=git_email
+```
+
+For more information see the [CONTRIBUTING] document.
 Thank you, [contributors]!
 
   [CONTRIBUTING]: /.github/CONTRIBUTING.md
