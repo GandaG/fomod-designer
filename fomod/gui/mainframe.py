@@ -15,7 +15,9 @@
 # limitations under the License.
 
 from PyQt5 import QtWidgets, QtGui, QtCore
+from os.path import join
 from .templates import mainframe as template
+from .. import cur_folder
 
 
 class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
@@ -25,37 +27,37 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
 
         # setup the icons properly
         icon_open = QtGui.QIcon()
-        icon_open.addPixmap(QtGui.QPixmap("fomod/gui/logos/logo_open_file.png"),
+        icon_open.addPixmap(QtGui.QPixmap(join(cur_folder, "fomod/gui/logos/logo_open_file.png")),
                             QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.action_Open.setIcon(icon_open)
 
         icon_save = QtGui.QIcon()
-        icon_save.addPixmap(QtGui.QPixmap("fomod/gui/logos/logo_floppy_disk.png"),
+        icon_save.addPixmap(QtGui.QPixmap(join(cur_folder, "fomod/gui/logos/logo_floppy_disk.png")),
                             QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.action_Save.setIcon(icon_save)
 
         icon_options = QtGui.QIcon()
-        icon_options.addPixmap(QtGui.QPixmap("fomod/gui/logos/logo_gear.png"),
+        icon_options.addPixmap(QtGui.QPixmap(join(cur_folder, "fomod/gui/logos/logo_gear.png")),
                                QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.actionO_ptions.setIcon(icon_options)
 
         icon_refresh = QtGui.QIcon()
-        icon_refresh.addPixmap(QtGui.QPixmap("fomod/gui/logos/logo_refresh.png"),
+        icon_refresh.addPixmap(QtGui.QPixmap(join(cur_folder, "fomod/gui/logos/logo_refresh.png")),
                                QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.action_Refresh.setIcon(icon_refresh)
 
         icon_delete = QtGui.QIcon()
-        icon_delete.addPixmap(QtGui.QPixmap("fomod/gui/logos/logo_cross.png"),
+        icon_delete.addPixmap(QtGui.QPixmap(join(cur_folder, "fomod/gui/logos/logo_cross.png")),
                               QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.action_Delete.setIcon(icon_delete)
 
         icon_about = QtGui.QIcon()
-        icon_about.addPixmap(QtGui.QPixmap("fomod/gui/logos/logo_notepad.png"),
+        icon_about.addPixmap(QtGui.QPixmap(join(cur_folder, "fomod/gui/logos/logo_notepad.png")),
                              QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.action_About.setIcon(icon_about)
 
         icon_help = QtGui.QIcon()
-        icon_help.addPixmap(QtGui.QPixmap("fomod/gui/logos/logo_info.png"),
+        icon_help.addPixmap(QtGui.QPixmap(join(cur_folder, "fomod/gui/logos/logo_info.png")),
                             QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.actionHe_lp.setIcon(icon_help)
 
@@ -305,17 +307,3 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
         else:
             self.fomod_changed = True
             self.setWindowTitle("*" + self.package_name + " - " + self.original_title)
-
-
-def main():
-    window = MainFrame()
-    window.exec_()
-
-
-# For testing and debugging.
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    window = MainFrame()
-    window.show()
-    sys.exit(app.exec_())

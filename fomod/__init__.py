@@ -14,12 +14,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
+from os.path import abspath, dirname, join
+
+
+if getattr(sys, 'frozen', False):
+    cur_folder = sys._MEIPASS
+else:
+    cur_folder = join(dirname(abspath(__file__)), "..")
+
 
 def get_version():
     import configparser
 
     config = configparser.ConfigParser()
-    config.read("setup.cfg")
+    config.read(join(cur_folder, "setup.cfg"))
 
     return config.get('bumpversion', 'current_version') + "." + config.get('bumpversion', 'current_build')
 
