@@ -50,6 +50,7 @@ class ObjectBase(object):
         self.allow_parent = allow_parent
         self.parent = None
         self.allowed_instances = allowed_instances
+
         self.model_item = QStandardItem(self.name)
         self.model_item.setEditable(False)
 
@@ -123,6 +124,12 @@ class ObjectBase(object):
             if self.properties[key].editable and (properties[key] in self.properties[key].values or
                                                   isinstance(properties[key], str)):
                 self.properties[key].value = properties[key]
+
+    def set_item_name(self, name):
+        if not name:
+            self.model_item.setText(self.name)
+        else:
+            self.model_item.setText(name)
 
     def iter(self):
         list = [self]
