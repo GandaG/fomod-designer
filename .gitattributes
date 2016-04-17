@@ -1,0 +1,10 @@
+* text=auto
+
+*.bat text
+*.sh text
+*.txt text
+*.ui text
+*.py text
+
+*.png binary
+*.jpg binary

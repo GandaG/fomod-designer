@@ -14,8 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from PyQt5 import QtWidgets, QtGui
+from PyQt5 import QtWidgets, QtGui, QtCore
+from os.path import join
 from .templates import mainframe as template
+from .. import cur_folder
 
 
 class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
@@ -23,54 +25,62 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
         super(MainFrame, self).__init__()
         self.setupUi(self)
 
+        # setup the icons properly
         icon_open = QtGui.QIcon()
-        icon_open.addPixmap(QtGui.QPixmap("fomod/gui/logos/1456477639_file.png"),
+        icon_open.addPixmap(QtGui.QPixmap(join(cur_folder, "fomod/gui/logos/logo_open_file.png")),
                             QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.action_Open.setIcon(icon_open)
 
         icon_save = QtGui.QIcon()
-        icon_save.addPixmap(QtGui.QPixmap("fomod/gui/logos/1456477689_disc-floopy.png"),
+        icon_save.addPixmap(QtGui.QPixmap(join(cur_folder, "fomod/gui/logos/logo_floppy_disk.png")),
                             QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.action_Save.setIcon(icon_save)
 
         icon_options = QtGui.QIcon()
-        icon_options.addPixmap(QtGui.QPixmap("fomod/gui/logos/1456477700_configuration.png"),
+        icon_options.addPixmap(QtGui.QPixmap(join(cur_folder, "fomod/gui/logos/logo_gear.png")),
                                QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.actionO_ptions.setIcon(icon_options)
 
         icon_refresh = QtGui.QIcon()
-        icon_refresh.addPixmap(QtGui.QPixmap("fomod/gui/logos/1456477730_refresh.png"),
+        icon_refresh.addPixmap(QtGui.QPixmap(join(cur_folder, "fomod/gui/logos/logo_refresh.png")),
                                QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.action_Refresh.setIcon(icon_refresh)
 
         icon_delete = QtGui.QIcon()
-        icon_delete.addPixmap(QtGui.QPixmap("fomod/gui/logos/1456477717_error.png"),
+        icon_delete.addPixmap(QtGui.QPixmap(join(cur_folder, "fomod/gui/logos/logo_cross.png")),
                               QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.action_Delete.setIcon(icon_delete)
 
         icon_about = QtGui.QIcon()
-        icon_about.addPixmap(QtGui.QPixmap("fomod/gui/logos/1457582962_notepad.png"),
+        icon_about.addPixmap(QtGui.QPixmap(join(cur_folder, "fomod/gui/logos/logo_notepad.png")),
                              QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.action_About.setIcon(icon_about)
 
         icon_help = QtGui.QIcon()
-        icon_help.addPixmap(QtGui.QPixmap("fomod/gui/logos/1457582991_info.png"),
+        icon_help.addPixmap(QtGui.QPixmap(join(cur_folder, "fomod/gui/logos/logo_info.png")),
                             QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.actionHe_lp.setIcon(icon_help)
+
+        # setup any additional info left from designer
+        self.delete_sec_shortcut = QtWidgets.QShortcut(self)
+        self.delete_sec_shortcut.setKey(QtCore.Qt.Key_Delete)
 
         self.action_Open.triggered.connect(self.open)
         self.action_Save.triggered.connect(self.save)
         self.actionO_ptions.triggered.connect(self.options)
         self.action_Refresh.triggered.connect(self.refresh)
         self.action_Delete.triggered.connect(self.delete)
+        self.delete_sec_shortcut.activated.connect(self.delete)
         self.actionHe_lp.triggered.connect(self.help)
         self.action_About.triggered.connect(self.about)
 
         self.object_tree_view.clicked.connect(self.selected_object_tree)
         self.object_box_list.activated.connect(self.selected_object_list)
 
+        self.fomod_changed = False
         self.original_title = self.windowTitle()
         self.package_path = ""
+        self.package_name = ""
         self.info_root = None
         self.config_root = None
         self.current_item = None
@@ -92,29 +102,44 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
         self.package_path = open_dialog.getExistingDirectory(self, "Select package root directory:", expanduser("~"))
 
         if self.package_path:
+            info_root, config_root = parse(normpath(self.package_path))
+
+            if not info_root or not config_root:
+                return
+
             self.tree_model.clear()
 
-            self.info_root, self.config_root = parse(normpath(self.package_path))
+            self.info_root = info_root
+            self.config_root = config_root
 
             self.tree_model.appendRow(self.info_root.model_item)
             self.tree_model.appendRow(self.config_root.model_item)
 
-            title = basename(normpath(self.package_path)) + " - " + self.original_title
-            self.setWindowTitle(title)
+            self.package_name = basename(normpath(self.package_path))
+            self.fomod_modified(False)
 
     def save(self):
         from ..serializer import serialize
 
-        if self.info_root and self.config_root:
+        if not self.fomod_changed:
+            from . import generic
+            generic.generic_errorbox("I REFUSE TO SAVE",
+                                     "There are no changes to save!")
+        elif not self.info_root and not self.config_root:
+            from . import generic
+            generic.generic_errorbox("I REFUSE TO SAVE",
+                                     "There is nothing... literally.")
+        else:
             serialize(self.info_root, self.config_root, self.package_path)
+            self.fomod_modified(False)
 
     def options(self):
         from . import generic
-        generic.main()
+        generic.not_implemented()
 
     def refresh(self):
         from . import generic
-        generic.main()
+        generic.not_implemented()
 
     def delete(self):
         try:
@@ -125,25 +150,21 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
                 new_index = self.tree_model.indexFromItem(self.current_object.parent.model_item)
                 self.selected_object_tree(new_index)
             else:
-                errorbox = QtWidgets.QMessageBox()
-                errorbox.setText("You can't delete nothing... Try to select something before deleting.")
-                errorbox.setWindowTitle("What are trying to do? o.O")
-                errorbox.setIconPixmap(QtGui.QPixmap("fomod/gui/logos/1456477754_user-admin.png"))
-                errorbox.exec_()
+                from . import generic
+                generic.generic_errorbox("What are trying to do? o.O",
+                                         "You can't delete nothing... Try to select something before deleting.")
         except AttributeError:
-            errorbox = QtWidgets.QMessageBox()
-            errorbox.setText("You can't delete root objects!")
-            errorbox.setWindowTitle("You can't do that...")
-            errorbox.setIconPixmap(QtGui.QPixmap("fomod/gui/logos/1456477754_user-admin.png"))
-            errorbox.exec_()
+            from . import generic
+            generic.generic_errorbox("You can't do that...",
+                                     "You can't delete root objects!")
 
     def help(self):
         from . import generic
-        generic.main()
+        generic.not_implemented()
 
     def about(self):
         from . import generic
-        generic.main()
+        generic.not_implemented()
 
     def selected_object_tree(self, index):
         self.current_item, self.current_object = self.get_from_index(index)
@@ -189,6 +210,7 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
             prop_list[prop_index].setObjectName(str(prop_index))
             prop_list[prop_index].setText(self.current_object.text)
             prop_list[prop_index].textEdited[str].connect(self.current_object.set_text)
+            prop_list[prop_index].textEdited[str].connect(self.fomod_modified)
             self.formLayout.setWidget(prop_index, QtWidgets.QFormLayout.FieldRole,
                                       prop_list[prop_index])
 
@@ -207,11 +229,15 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
                 prop_list.append(QtWidgets.QLineEdit(self.dockWidgetContents))
                 prop_list[prop_index].setText(props[key].value)
                 prop_list[prop_index].textEdited[str].connect(props[key].set_value)
+                prop_list[prop_index].textEdited[str].connect(self.fomod_modified)
+                if key == "name" or key == "source":
+                    prop_list[prop_index].textEdited[str].connect(self.current_object.set_item_name)
 
             elif type(props[key]) == PropertyInt:
                 prop_list.append(QtWidgets.QSpinBox(self.dockWidgetContents))
-                prop_list[prop_index].setValue(props[key].value)
+                prop_list[prop_index].setValue(int(props[key].value))
                 prop_list[prop_index].valueChanged.connect(props[key].set_value)
+                prop_list[prop_index].valueChanged.connect(self.fomod_modified)
                 prop_list[prop_index].setMinimum(props[key].min)
                 prop_list[prop_index].setMaximum(props[key].max)
 
@@ -219,6 +245,7 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
                 prop_list.append(QtWidgets.QComboBox(self.dockWidgetContents))
                 prop_list[prop_index].insertItems(0, props[key].values)
                 prop_list[prop_index].activated[str].connect(props[key].set_value)
+                prop_list[prop_index].activated[str].connect(self.fomod_modified)
 
             """self.widget = QtWidgets.QWidget(self.dockWidgetContents)
             self.widget.setObjectName("widget")
@@ -270,16 +297,13 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
                 self.object_tree_view.setCurrentIndex(self.tree_model.indexFromItem(new_child.model_item))
                 self.selected_object_tree(self.tree_model.indexFromItem(new_child.model_item))
 
+                # set the installer as changed
+                self.fomod_modified(True)
 
-def main():
-    window = MainFrame()
-    window.exec_()
-
-
-# For testing and debugging.
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    window = MainFrame()
-    window.show()
-    sys.exit(app.exec_())
+    def fomod_modified(self, changed):
+        if changed is False:
+            self.fomod_changed = False
+            self.setWindowTitle(self.package_name + " - " + self.original_title)
+        else:
+            self.fomod_changed = True
+            self.setWindowTitle("*" + self.package_name + " - " + self.original_title)

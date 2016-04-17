@@ -1,16 +1,13 @@
 # -*- mode: python -*-
 
 block_cipher = None
-
+import os
 
 a = Analysis(['pyinstaller-bootstrap.py'],
-             pathex=['/vagrant'],
+             pathex=[os.getcwd()],
              binaries=None,
              datas=[('../fomod/gui/logos', 'fomod/gui/logos'),
-                    ('../README.md', '.'),
-                    ('../LICENSE', '.'),
-                    ('../CHANGELOG.md', '.'),
-                    ('../CONTRIBUTING.md', '.'),],
+                    ('../setup.cfg', '.'),],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
@@ -22,16 +19,11 @@ pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
 exe = EXE(pyz,
           a.scripts,
-          exclude_binaries=True,
-          name='designer',
+          a.binaries,
+          a.zipfiles,
+          a.datas,
+          name='FOMOD Designer',
           debug=False,
           strip=False,
           upx=True,
           console=False )
-coll = COLLECT(exe,
-               a.binaries,
-               a.zipfiles,
-               a.datas,
-               strip=False,
-               upx=True,
-               name='FOMOD Designer')

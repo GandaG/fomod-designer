@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env bash
 
 # Copyright 2016 Daniel Nunes
 #
@@ -14,22 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-from os.path import abspath, dirname, join
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
 
+pyenv shell miniconda3-3.19.0/envs/fomod-editor
 
-if getattr(sys, 'frozen', False):
-    cur_folder = sys._MEIPASS
-else:
-    cur_folder = join(dirname(abspath(__file__)), "..")
-
-
-def get_version():
-    import configparser
-
-    config = configparser.ConfigParser()
-    config.read(join(cur_folder, "setup.cfg"))
-
-    return config.get('bumpversion', 'current_version') + "." + config.get('bumpversion', 'current_build')
-
-__version__ = get_version()
+invoke build

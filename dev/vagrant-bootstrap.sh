@@ -52,8 +52,22 @@ export PS1="\[\033[38;5;10m\]\u@ \$(parse_git_branch)\w\\$ \[$(tput sgr0)\]"
 
 # configure git so you don't have to go back and forward all the time.
 
-git config --global user.email "gandaganza@gmail.com"
-git config --global user.name "Daniel Nunes"
+python3 - <<END
+#!/usr/bin/env python
+from configparser import ConfigParser, NoSectionError
+from os import system
+config = ConfigParser()
+config.read("/vagrant/.settings")
+try:
+    user = config.get("git", "user")
+    email = config.get("git", "email")
+    print("git user defined as " + user)
+    print("git email defined as " + email)
+    system("git config --global user.name \"{}\"".format(user))
+    system("git config --global user.email \"{}\"".format(email))
+except NoSectionError:
+    print("No .settings file - check readme for further details.")
+END
 git config --global core.editor nano
 git config --global push.default simple
 git config --global credential.helper 'cache --timeout=18000'
@@ -84,7 +98,6 @@ eval "$(pyenv virtualenv-init -)"
 # start installing the python versions
 
 env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install miniconda3-3.19.0
-env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install 3.5.1
 
 
 # make the virtualenv

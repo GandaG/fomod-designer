@@ -16,6 +16,7 @@
 
 import os
 from lxml import etree
+from ..fileio import check_fomod, check_file
 
 
 def serialize(info_root, config_root, package_path):
@@ -25,8 +26,10 @@ def serialize(info_root, config_root, package_path):
     if not fomod_exists:
         os.makedirs(fomod_folder_path)
 
-    info_path = os.path.join(fomod_folder_path, "info.xml")
-    config_path = os.path.join(fomod_folder_path, "ModuleConfig.xml")
+    info_file, config_file = check_file(fomod_folder_path, True)
+
+    info_path = os.path.join(fomod_folder_path, info_file)
+    config_path = os.path.join(fomod_folder_path, config_file)
 
     info_element = None
     config_element = None
@@ -37,9 +40,6 @@ def serialize(info_root, config_root, package_path):
 
         if node.allow_text:
             element.text = node.text
-
-        for key in node.properties:
-            element.set(key, node.properties[key])
 
         if node.parent is None:
             info_element = element
@@ -57,6 +57,11 @@ def serialize(info_root, config_root, package_path):
         for key in node.properties:
             element.set(node.properties[key].tag, str(node.properties[key].value))
 
+        if node.required_children:
+            for child in node.iter():
+                if type(child) in node.required_children:
+                    node.check_required_children(child)
+
         if node.parent is None:
             config_element = element
             continue
@@ -70,15 +75,3 @@ def serialize(info_root, config_root, package_path):
     with open(config_path, "wb") as config:
         config_tree = etree.ElementTree(config_element)
         config_tree.write(config, pretty_print=True)
-
-
-def check_fomod(package_path):
-    existing_fomod = False
-    fomod_folder = "fomod"
-
-    for folder in os.listdir(package_path):
-        if folder.upper() == "FOMOD":
-            existing_fomod = True
-            fomod_folder = folder
-
-    return fomod_folder, existing_fomod

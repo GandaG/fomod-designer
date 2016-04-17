@@ -1,5 +1,5 @@
 # FOMOD Designer
-[![Build status](https://ci.appveyor.com/api/projects/status/nep4id3ammekof68?svg=true)](https://ci.appveyor.com/project/GandaG/fomod-editor)
+[![Build status](https://ci.appveyor.com/api/projects/status/nep4id3ammekof68?svg=true)](https://ci.appveyor.com/project/GandaG/fomod-editor) [![Build Status](https://travis-ci.org/GandaG/fomod-editor.svg?branch=develop)](https://travis-ci.org/GandaG/fomod-editor)
 
 *A visual editor to quickly create FOMOD installers for Nexus based mods.*
 
@@ -23,7 +23,15 @@
 
 ## Contributing
 
-See the [CONTRIBUTING] document.
+This repo uses a ***.settings*** file to define all the necessary settings. This file follows this syntax:
+
+```
+[git]
+user=git_username
+email=git_email
+```
+
+For more information see the [CONTRIBUTING] document.
 Thank you, [contributors]!
 
   [CONTRIBUTING]: /.github/CONTRIBUTING.md
