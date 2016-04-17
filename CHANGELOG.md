@@ -1,5 +1,19 @@
 # Changelog
 
+0.3.1 (2016-04-17)
+
+* Tags/item with name/source property now have that as the title instead of the tag's name.
+* Fixed all keyboard shortcuts.
+* Everything is now included within a single executable.
+* Added full linux support.
+* Included build number in version.
+* Fixed no error raised when no required child exist.
+* Window title now includes an asterisk when any content has been modified.
+* Missing files in fomod folder are now properly checked.
+* Fixed spinbox property.
+
+----------------------------------
+
 0.3.0 (2016-04-07)
 
 * All basic functionality is now done.
