@@ -42,6 +42,11 @@ def genui():
 
 
 @task
+def preview():
+    run("python dev/pyinstaller-bootstrap.py")
+
+
+@task
 def clean():
     from shutil import rmtree
 

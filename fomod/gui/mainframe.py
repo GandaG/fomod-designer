@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from PyQt5 import QtWidgets, QtGui
+from PyQt5 import QtWidgets, QtGui, QtCore
 from .templates import mainframe as template
 
 
@@ -23,6 +23,7 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
         super(MainFrame, self).__init__()
         self.setupUi(self)
 
+        # setup the icons properly
         icon_open = QtGui.QIcon()
         icon_open.addPixmap(QtGui.QPixmap("fomod/gui/logos/logo_open_file.png"),
                             QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -58,11 +59,16 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
                             QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.actionHe_lp.setIcon(icon_help)
 
+        # setup any additional info left from designer
+        self.delete_sec_shortcut = QtWidgets.QShortcut(self)
+        self.delete_sec_shortcut.setKey(QtCore.Qt.Key_Delete)
+
         self.action_Open.triggered.connect(self.open)
         self.action_Save.triggered.connect(self.save)
         self.actionO_ptions.triggered.connect(self.options)
         self.action_Refresh.triggered.connect(self.refresh)
         self.action_Delete.triggered.connect(self.delete)
+        self.delete_sec_shortcut.activated.connect(self.delete)
         self.actionHe_lp.triggered.connect(self.help)
         self.action_About.triggered.connect(self.about)
 
