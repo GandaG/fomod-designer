@@ -18,6 +18,7 @@ from .exceptions import (BaseInstanceException, WrongParentException, InstanceCr
                          AddChildException, RemoveRequiredChildException, RemoveChildException,
                          TextNotAllowedException)
 from PyQt5.QtGui import QStandardItem
+from os import sep
 
 
 class ObjectBase(object):
@@ -128,8 +129,11 @@ class ObjectBase(object):
     def set_item_name(self, name):
         if not name:
             self.model_item.setText(self.name)
-        else:
+        elif "name" in self.properties:
             self.model_item.setText(name)
+        elif "source" in self.properties:
+            split_name = name.split(sep)
+            self.model_item.setText(split_name[len(split_name) - 1])
 
     def iter(self):
         list = [self]

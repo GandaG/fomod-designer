@@ -228,7 +228,7 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
                 prop_list[prop_index].setText(props[key].value)
                 prop_list[prop_index].textEdited[str].connect(props[key].set_value)
                 prop_list[prop_index].textEdited[str].connect(self.fomod_modified)
-                if key == "name":
+                if key == "name" or key == "source":
                     prop_list[prop_index].textEdited[str].connect(self.current_object.set_item_name)
 
             elif type(props[key]) == PropertyInt:
