@@ -16,7 +16,6 @@
 
 import os
 from lxml import etree
-from PyQt5 import QtWidgets, QtGui
 from ..factory import from_element
 from ..fileio import check_fomod, check_file
 
@@ -34,8 +33,20 @@ def parse(package_path):
         info_path = os.path.join(fomod_folder_path, info_file)
         config_path = os.path.join(fomod_folder_path, config_file)
 
-        info_tree = etree.parse(info_path)
-        config_tree = etree.parse(config_path)
+        try:
+            info_tree = etree.parse(info_path)
+        except etree.XMLSyntaxError as e:
+            from ..gui import generic
+            generic.generic_errorbox("Parser Error",
+                                     "Info.xml file has incorrect syntax.\nError information:\n" + str(e))
+            return None, None
+        try:
+            config_tree = etree.parse(config_path)
+        except etree.XMLSyntaxError as e:
+            from ..gui import generic
+            generic.generic_errorbox("Parser Error",
+                                     "ModuleConfig.xml file has incorrect syntax.\n\nError information:\n" + str(e))
+            return None, None
     except OSError:
         from ..gui import generic
         generic.generic_errorbox("Parser Error",
