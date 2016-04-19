@@ -16,17 +16,17 @@
 
 import os
 from lxml import etree
-from ..fileio import check_fomod, check_file
+from .utility import __check_fomod, __check_file
 
 
-def serialize(info_root, config_root, package_path):
-    fomod_folder, fomod_exists = check_fomod(package_path)
+def __export(info_root, config_root, package_path):
+    fomod_folder, fomod_exists = __check_fomod(package_path)
     fomod_folder_path = os.path.join(package_path, fomod_folder)
 
     if not fomod_exists:
         os.makedirs(fomod_folder_path)
 
-    info_file, config_file = check_file(fomod_folder_path, True)
+    info_file, config_file = __check_file(fomod_folder_path, True)
 
     info_path = os.path.join(fomod_folder_path, info_file)
     config_path = os.path.join(fomod_folder_path, config_file)

@@ -14,7 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import info, config, exceptions
+from . import info, config
+from .exceptions import FactoryTagNotFound
 
 
 def from_element(element):
@@ -100,4 +101,4 @@ def from_element(element):
     elif element.tag == "type":
         return config.ObjectType(element, dict(element.attrib))
 
-    raise exceptions.FactoryTagNotFound(element.tag)
+    raise FactoryTagNotFound(element.tag)

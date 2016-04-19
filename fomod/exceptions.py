@@ -14,42 +14,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-class WrongParentException(Exception):
-    def __init__(self, instance, parent):
-        print("{} has the wrong kind of parent - {}.".format(type(instance), type(parent)))
-
-
-class BaseInstanceException(Exception):
-    def __init__(self, base):
-        print("{} is not meant to be instanced. You should be using a subclass instead.".format(type(base)))
+import traceback
+from io import StringIO
+from . import __version__, generic
 
 
-class InstanceCreationException(Exception):
-    def __init__(self, instance):
-        print("Trying to create more instances of {} than allowed.".format(type(instance)))
+def excepthook(exc_type, exc_value, tracebackobj):
+    """
+    Global function to catch unhandled exceptions.
 
+    @param exc_type exception type
+    @param exc_value exception value
+    @param tracebackobj traceback object
+    """
+    notice = (
+        "An unhandled exception occurred. Please report the problem"
+        " at <a href = https://github.com/GandaG/fomod-editor/issues>Github</a>,"
+        " <a href = http://www.nexusmods.com/skyrim/?>Nexus</a> or"
+        " <a href = http://forum.step-project.com/index.php>STEP</a>.")
+    version_info = __version__
 
-class AddChildException(Exception):
-    def __init__(self, child, parent):
-        print("Can't add child {} to parent {}.".format(type(child), type(parent)))
+    tbinfofile = StringIO()
+    traceback.print_tb(tracebackobj, None, tbinfofile)
+    tbinfofile.seek(0)
+    tbinfo = tbinfofile.read()
+    errmsg = 'Error information:\n\nVersion: {}\n{}: {}\n'.format(version_info, str(exc_type), str(exc_value))
+    sections = [errmsg, tbinfo]
+    msg = '\n'.join(sections)
 
-
-class RemoveChildException(Exception):
-    def __init__(self, child, parent):
-        print("Can't remove child {} from parent {}.".format(type(child), type(parent)))
-
-
-class RemoveRequiredChildException(Exception):
-    def __init__(self, child, parent):
-        print("Can't remove {} - required child to {}.".format(type(child), type(parent)))
-
-
-class TextNotAllowedException(Exception):
-    def __init__(self, instance):
-        print("Text not allowed in {} {}".format(type(instance), instance))
-
-
-class FactoryTagNotFound(Exception):
-    def __init__(self, tag):
-        print("Factory couldn't find a class to match {}".format(tag))
+    generic.generic_errorbox("Nobody Panic!", notice, msg)

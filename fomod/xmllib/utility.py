@@ -14,14 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
+from os import listdir
 
 
-def check_fomod(package_path):
+def __check_fomod(package_path):
     existing_fomod = False
     fomod_folder = "fomod"
 
-    for folder in os.listdir(package_path):
+    for folder in listdir(package_path):
         if folder.upper() == "FOMOD":
             existing_fomod = True
             fomod_folder = folder
@@ -29,14 +29,14 @@ def check_fomod(package_path):
     return fomod_folder, existing_fomod
 
 
-def check_file(fomod_path, ignore_errors=False):
+def __check_file(fomod_path, ignore_errors=False):
     info_exists = False
     config_exists = False
 
     info_file = "info.xml"
     config_file = "moduleconfig.xml"
 
-    for file in os.listdir(fomod_path):
+    for file in listdir(fomod_path):
         if file.upper() == "INFO.XML":
             info_exists = True
             info_file = file

@@ -14,50 +14,52 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt5 import QtWidgets, QtGui, QtCore, uic
 from os.path import join
-from .templates import mainframe as template
-from .. import cur_folder
+from . import cur_folder
 
 
-class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
+base_ui = uic.loadUiType(join(cur_folder, "resources/templates/mainframe.ui"))
+
+
+class MainFrame(QtWidgets.QMainWindow, base_ui[0]):
     def __init__(self):
-        super(MainFrame, self).__init__()
+        super().__init__()
         self.setupUi(self)
 
         # setup the icons properly
         icon_open = QtGui.QIcon()
-        icon_open.addPixmap(QtGui.QPixmap(join(cur_folder, "fomod/gui/logos/logo_open_file.png")),
+        icon_open.addPixmap(QtGui.QPixmap(join(cur_folder, "resources/logos/logo_open_file.png")),
                             QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.action_Open.setIcon(icon_open)
 
         icon_save = QtGui.QIcon()
-        icon_save.addPixmap(QtGui.QPixmap(join(cur_folder, "fomod/gui/logos/logo_floppy_disk.png")),
+        icon_save.addPixmap(QtGui.QPixmap(join(cur_folder, "resources/logos/logo_floppy_disk.png")),
                             QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.action_Save.setIcon(icon_save)
 
         icon_options = QtGui.QIcon()
-        icon_options.addPixmap(QtGui.QPixmap(join(cur_folder, "fomod/gui/logos/logo_gear.png")),
+        icon_options.addPixmap(QtGui.QPixmap(join(cur_folder, "resources/logos/logo_gear.png")),
                                QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.actionO_ptions.setIcon(icon_options)
 
         icon_refresh = QtGui.QIcon()
-        icon_refresh.addPixmap(QtGui.QPixmap(join(cur_folder, "fomod/gui/logos/logo_refresh.png")),
+        icon_refresh.addPixmap(QtGui.QPixmap(join(cur_folder, "resources/logos/logo_refresh.png")),
                                QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.action_Refresh.setIcon(icon_refresh)
 
         icon_delete = QtGui.QIcon()
-        icon_delete.addPixmap(QtGui.QPixmap(join(cur_folder, "fomod/gui/logos/logo_cross.png")),
+        icon_delete.addPixmap(QtGui.QPixmap(join(cur_folder, "resources/logos/logo_cross.png")),
                               QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.action_Delete.setIcon(icon_delete)
 
         icon_about = QtGui.QIcon()
-        icon_about.addPixmap(QtGui.QPixmap(join(cur_folder, "fomod/gui/logos/logo_notepad.png")),
+        icon_about.addPixmap(QtGui.QPixmap(join(cur_folder, "resources/logos/logo_notepad.png")),
                              QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.action_About.setIcon(icon_about)
 
         icon_help = QtGui.QIcon()
-        icon_help.addPixmap(QtGui.QPixmap(join(cur_folder, "fomod/gui/logos/logo_info.png")),
+        icon_help.addPixmap(QtGui.QPixmap(join(cur_folder, "resources/logos/logo_info.png")),
                             QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.actionHe_lp.setIcon(icon_help)
 
@@ -65,7 +67,7 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
         self.delete_sec_shortcut = QtWidgets.QShortcut(self)
         self.delete_sec_shortcut.setKey(QtCore.Qt.Key_Delete)
 
-        self.action_Open.triggered.connect(self.open)
+        self.action_Open.triggered.connect(self._open)
         self.action_Save.triggered.connect(self.save)
         self.actionO_ptions.triggered.connect(self.options)
         self.action_Refresh.triggered.connect(self.refresh)
@@ -94,23 +96,27 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
         self.object_tree_view.header().hide()
         self.object_box_list.setModel(self.list_model)
 
-    def open(self):
+    def _open(self):
         from os.path import expanduser, normpath, basename
-        from ..parser import parse
+        from .xmllib import parse, ParseException
 
         open_dialog = QtWidgets.QFileDialog()
         self.package_path = open_dialog.getExistingDirectory(self, "Select package root directory:", expanduser("~"))
 
         if self.package_path:
-            info_root, config_root = parse(normpath(self.package_path))
 
-            if not info_root or not config_root:
+            try:
+                self.info_root, self.config_root = parse(normpath(self.package_path))
+            except ParseException as p:
+                from .generic import generic_errorbox
+                if p.detailed:
+                    detail = "Error information:\n\n" + p.detailed
+                else:
+                    detail = ""
+                generic_errorbox(p.title, p.message, detail)
                 return
 
             self.tree_model.clear()
-
-            self.info_root = info_root
-            self.config_root = config_root
 
             self.tree_model.appendRow(self.info_root.model_item)
             self.tree_model.appendRow(self.config_root.model_item)
@@ -119,7 +125,7 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
             self.fomod_modified(False)
 
     def save(self):
-        from ..serializer import serialize
+        from .xmllib import export
 
         if not self.fomod_changed:
             from . import generic
@@ -130,7 +136,7 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
             generic.generic_errorbox("I REFUSE TO SAVE",
                                      "There is nothing... literally.")
         else:
-            serialize(self.info_root, self.config_root, self.package_path)
+            export(self.info_root, self.config_root, self.package_path)
             self.fomod_modified(False)
 
     def options(self):
@@ -173,7 +179,7 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
         self.update_props_list()
 
     def update_box_list(self):
-        from ..exceptions import InstanceCreationException, AddChildException
+        from .xmllib import InstanceCreationException, AddChildException
 
         self.list_model.clear()
         self.current_children_list.clear()
@@ -189,8 +195,6 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
             self.current_children_list.append(new_object)
 
     def update_props_list(self):
-        from ..props import PropertyCombo, PropertyInt, PropertyText
-
         self.current_prop_list.clear()
         for index in reversed(range(self.formLayout.count())):
             widget = self.formLayout.takeAt(index).widget()
@@ -225,7 +229,7 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
             label.setText(props[key].name)
             self.formLayout.setWidget(prop_index, QtWidgets.QFormLayout.LabelRole, label)
 
-            if type(props[key]) == PropertyText:
+            if props[key].type_id == str:
                 prop_list.append(QtWidgets.QLineEdit(self.dockWidgetContents))
                 prop_list[prop_index].setText(props[key].value)
                 prop_list[prop_index].textEdited[str].connect(props[key].set_value)
@@ -233,7 +237,7 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
                 if key == "name" or key == "source":
                     prop_list[prop_index].textEdited[str].connect(self.current_object.set_item_name)
 
-            elif type(props[key]) == PropertyInt:
+            elif props[key].type_id == int:
                 prop_list.append(QtWidgets.QSpinBox(self.dockWidgetContents))
                 prop_list[prop_index].setValue(int(props[key].value))
                 prop_list[prop_index].valueChanged.connect(props[key].set_value)
@@ -241,7 +245,7 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
                 prop_list[prop_index].setMinimum(props[key].min)
                 prop_list[prop_index].setMaximum(props[key].max)
 
-            elif type(props[key]) == PropertyCombo:
+            elif props[key].type_id == list:
                 prop_list.append(QtWidgets.QComboBox(self.dockWidgetContents))
                 prop_list[prop_index].insertItems(0, props[key].values)
                 prop_list[prop_index].activated[str].connect(props[key].set_value)

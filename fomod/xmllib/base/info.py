@@ -14,10 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import base
+from .base import _ObjectBase
 
 
-class ObjectInfo(base.ObjectBase):
+class ObjectInfo(_ObjectBase):
     def __init__(self, element=None):
         allowed_children = (ObjectName, ObjectAuthor, ObjectDescription,
                             ObjectID, ObjectGroup, ObjectVersion, ObjectWebsite)
@@ -26,37 +26,37 @@ class ObjectInfo(base.ObjectBase):
                          allowed_children=allowed_children)
 
 
-class ObjectName(base.ObjectBase):
+class ObjectName(_ObjectBase):
     def __init__(self, element=None, text=""):
         super().__init__("Name", "Name", 1, element, allow_text=True, default_text=text)
 
 
-class ObjectAuthor(base.ObjectBase):
+class ObjectAuthor(_ObjectBase):
     def __init__(self, element=None, text=""):
         super().__init__("Author", "Author", 1, element, allow_text=True, default_text=text)
 
 
-class ObjectVersion(base.ObjectBase):
+class ObjectVersion(_ObjectBase):
     def __init__(self, element=None, text=""):
         super().__init__("Version", "Version", 1, element, allow_text=True, default_text=text)
 
 
-class ObjectID(base.ObjectBase):
+class ObjectID(_ObjectBase):
     def __init__(self, element=None, text=""):
         super().__init__("ID", "Id", 1, element, allow_text=True, default_text=text)
 
 
-class ObjectWebsite(base.ObjectBase):
+class ObjectWebsite(_ObjectBase):
     def __init__(self, element=None, text=""):
         super().__init__("Website", "Website", 1, element, allow_text=True, default_text=text)
 
 
-class ObjectDescription(base.ObjectBase):
+class ObjectDescription(_ObjectBase):
     def __init__(self, element=None, text=""):
         super().__init__("Description", "Description", 1, element, allow_text=True, default_text=text)
 
 
-class ObjectGroup(base.ObjectBase):
+class ObjectGroup(_ObjectBase):
     def __init__(self, element=None):
         allowed_child = (ObjectElement,)
 
@@ -64,6 +64,6 @@ class ObjectGroup(base.ObjectBase):
                          allowed_children=allowed_child)
 
 
-class ObjectElement(base.ObjectBase):
+class ObjectElement(_ObjectBase):
     def __init__(self, element=None, text=""):
         super().__init__("Element", "element", 0, element, allow_text=True, default_text=text)

@@ -16,19 +16,19 @@
 
 import os
 from lxml import etree
-from ..factory import from_element
-from ..fileio import check_fomod, check_file
+from .base.factory import from_element
+from .utility import __check_fomod, __check_file
 
 
-def parse(package_path):
-    fomod_folder, fomod_exists = check_fomod(package_path)
+def __parse(package_path):
+    fomod_folder, fomod_exists = __check_fomod(package_path)
     fomod_folder_path = os.path.join(package_path, fomod_folder)
 
     if not fomod_exists:
         return new(fomod_folder_path)
 
     try:
-        info_file, config_file = check_file(fomod_folder_path)
+        info_file, config_file = __check_file(fomod_folder_path)
 
         info_path = os.path.join(fomod_folder_path, info_file)
         config_path = os.path.join(fomod_folder_path, config_file)
@@ -36,22 +36,18 @@ def parse(package_path):
         try:
             info_tree = etree.parse(info_path)
         except etree.XMLSyntaxError as e:
-            from ..gui import generic
-            generic.generic_errorbox("Parser Error",
-                                     "Info.xml file has incorrect syntax.\nError information:\n" + str(e))
-            return None, None
+            from .exceptions import ParseSyntaxException
+            raise ParseSyntaxException("info.xml", str(e))
+
         try:
             config_tree = etree.parse(config_path)
         except etree.XMLSyntaxError as e:
-            from ..gui import generic
-            generic.generic_errorbox("Parser Error",
-                                     "ModuleConfig.xml file has incorrect syntax.\n\nError information:\n" + str(e))
-            return None, None
+            from .exceptions import ParseSyntaxException
+            raise ParseSyntaxException("ModuleConfig.xml", str(e))
+
     except OSError:
-        from ..gui import generic
-        generic.generic_errorbox("Parser Error",
-                                 "FOMOD folder found but either info.xml or moduleconfig.xml are missing.")
-        return None, None
+        from .exceptions import ParseMissingFileException
+        raise ParseMissingFileException()
 
     info_root = from_element(info_tree.getroot())
     config_root = from_element(config_tree.getroot())
@@ -78,6 +74,6 @@ def parse(package_path):
 
 
 def new(fomod_folder_path):
-    from .. import info, config
+    from .base import info, config
 
     return info.ObjectInfo(), config.ObjectConfig()

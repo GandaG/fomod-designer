@@ -14,19 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from PyQt5.QtGui import QStandardItem
+from os import sep
 from .exceptions import (BaseInstanceException, WrongParentException, InstanceCreationException,
                          AddChildException, RemoveRequiredChildException, RemoveChildException,
                          TextNotAllowedException)
-from PyQt5.QtGui import QStandardItem
-from os import sep
 
 
-class ObjectBase(object):
+class _ObjectBase(object):
     def __init__(self, name, tag, allowed_instances, element,
                  allow_parent=True, default_text="", allow_text=False,
                  allowed_children=None, max_children=0, required_children=None,
                  properties=None, default_properties=None):
-        if type(self) is ObjectBase:
+        if type(self) is _ObjectBase:
             raise BaseInstanceException(self)
 
         if not properties:
@@ -136,22 +136,9 @@ class ObjectBase(object):
             self.model_item.setText(split_name[len(split_name) - 1])
 
     def iter(self):
-        list = [self]
+        result = [self]
 
         for child in self.children:
-            list.extend(child.iter())
+            result.extend(child.iter())
 
-        return list
-
-
-class PropertyBase(object):
-    def __init__(self, name, tag, values, editable=True):
-        if type(self) is PropertyBase:
-            raise BaseInstanceException(self)
-
-        self.name = name
-        self.tag = tag
-        self.editable = editable
-
-        self.value = ""
-        self.values = values
+        return result
