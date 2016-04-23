@@ -98,7 +98,7 @@ class MainFrame(QtWidgets.QMainWindow, base_ui[0]):
 
     def _open(self):
         from os.path import expanduser, normpath, basename
-        from .xmllib import parse, ParseException
+        from .nodelib import import_, NodeLibError
 
         open_dialog = QtWidgets.QFileDialog()
         self.package_path = open_dialog.getExistingDirectory(self, "Select package root directory:", expanduser("~"))
@@ -106,14 +106,10 @@ class MainFrame(QtWidgets.QMainWindow, base_ui[0]):
         if self.package_path:
 
             try:
-                self.info_root, self.config_root = parse(normpath(self.package_path))
-            except ParseException as p:
+                self.info_root, self.config_root = import_(normpath(self.package_path))
+            except NodeLibError as p:
                 from .generic import generic_errorbox
-                if p.detailed:
-                    detail = "Error information:\n\n" + p.detailed
-                else:
-                    detail = ""
-                generic_errorbox(p.title, p.message, detail)
+                generic_errorbox(p.title, str(p))
                 return
 
             self.tree_model.clear()
@@ -125,7 +121,7 @@ class MainFrame(QtWidgets.QMainWindow, base_ui[0]):
             self.fomod_modified(False)
 
     def save(self):
-        from .xmllib import export
+        from .nodelib import export
 
         if not self.fomod_changed:
             from . import generic
@@ -179,8 +175,6 @@ class MainFrame(QtWidgets.QMainWindow, base_ui[0]):
         self.update_props_list()
 
     def update_box_list(self):
-        from .xmllib import InstanceCreationException, AddChildException
-
         self.list_model.clear()
         self.current_children_list.clear()
 

@@ -17,37 +17,28 @@
 import os
 from lxml import etree
 from .base.factory import from_element
-from .utility import __check_fomod, __check_file
+from .utility import check_file
+from .exceptions import MissingFileError, ParserError
 
 
-def __parse(package_path):
-    fomod_folder, fomod_exists = __check_fomod(package_path)
-    fomod_folder_path = os.path.join(package_path, fomod_folder)
-
-    if not fomod_exists:
-        return new(fomod_folder_path)
-
+def import_(package_path):
     try:
-        info_file, config_file = __check_file(fomod_folder_path)
+        fomod_folder = check_file(package_path, "fomod")
+        fomod_folder_path = os.path.join(package_path, fomod_folder)
+
+        info_file = check_file(fomod_folder_path, "info.xml")
+        config_file = check_file(fomod_folder_path, "moduleconfig.xml")
 
         info_path = os.path.join(fomod_folder_path, info_file)
         config_path = os.path.join(fomod_folder_path, config_file)
 
-        try:
-            info_tree = etree.parse(info_path)
-        except etree.XMLSyntaxError as e:
-            from .exceptions import ParseSyntaxException
-            raise ParseSyntaxException("info.xml", str(e))
+        info_tree = etree.parse(info_path)
+        config_tree = etree.parse(config_path)
 
-        try:
-            config_tree = etree.parse(config_path)
-        except etree.XMLSyntaxError as e:
-            from .exceptions import ParseSyntaxException
-            raise ParseSyntaxException("ModuleConfig.xml", str(e))
-
-    except OSError:
-        from .exceptions import ParseMissingFileException
-        raise ParseMissingFileException()
+    except etree.ParseError as e:
+        raise ParserError(str(e))
+    except MissingFileError as e:
+        return new(os.path.join(package_path, e.file))
 
     info_root = from_element(info_tree.getroot())
     config_root = from_element(config_tree.getroot())

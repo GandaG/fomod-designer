@@ -16,17 +16,28 @@
 
 import os
 from lxml import etree
-from .utility import __check_fomod, __check_file
+from .utility import check_file
+from .exceptions import MissingFileError
 
 
-def __export(info_root, config_root, package_path):
-    fomod_folder, fomod_exists = __check_fomod(package_path)
+def export(info_root, config_root, package_path):
+    try:
+        fomod_folder = check_file(package_path, "fomod")
+    except MissingFileError as e:
+        os.makedirs(os.path.join(package_path, e.file))
+        fomod_folder = os.path.join(package_path, e.file)
+
     fomod_folder_path = os.path.join(package_path, fomod_folder)
 
-    if not fomod_exists:
-        os.makedirs(fomod_folder_path)
+    try:
+        info_file = check_file(fomod_folder_path, "Info.xml")
+    except MissingFileError as e:
+        info_file = e.file
 
-    info_file, config_file = __check_file(fomod_folder_path, True)
+    try:
+        config_file = check_file(fomod_folder_path, "ModuleConfig.xml")
+    except MissingFileError as e:
+        config_file = e.file
 
     info_path = os.path.join(fomod_folder_path, info_file)
     config_path = os.path.join(fomod_folder_path, config_file)
