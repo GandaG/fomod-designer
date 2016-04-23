@@ -22,7 +22,7 @@ from . import cur_folder
 base_ui = uic.loadUiType(join(cur_folder, "resources/templates/mainframe.ui"))
 
 
-class MainFrame(QtWidgets.QMainWindow, base_ui[0]):
+class MainFrame(base_ui[0], base_ui[1]):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
@@ -67,7 +67,7 @@ class MainFrame(QtWidgets.QMainWindow, base_ui[0]):
         self.delete_sec_shortcut = QtWidgets.QShortcut(self)
         self.delete_sec_shortcut.setKey(QtCore.Qt.Key_Delete)
 
-        self.action_Open.triggered.connect(self._open)
+        self.action_Open.triggered.connect(self.open)
         self.action_Save.triggered.connect(self.save)
         self.actionO_ptions.triggered.connect(self.options)
         self.action_Refresh.triggered.connect(self.refresh)
@@ -96,7 +96,7 @@ class MainFrame(QtWidgets.QMainWindow, base_ui[0]):
         self.object_tree_view.header().hide()
         self.object_box_list.setModel(self.list_model)
 
-    def _open(self):
+    def open(self):
         from os.path import expanduser, normpath, basename
         from .nodelib import import_, NodeLibError
 
@@ -180,13 +180,9 @@ class MainFrame(QtWidgets.QMainWindow, base_ui[0]):
 
         for child in self.current_object.allowed_children:
             new_object = child()
-            try:
-                self.current_object.can_add_child(new_object)
-            except (InstanceCreationException, AddChildException):
-                continue
-
-            self.list_model.appendRow(new_object.model_item)
-            self.current_children_list.append(new_object)
+            if self.current_object.can_add_child(new_object):
+                self.list_model.appendRow(new_object.model_item)
+                self.current_children_list.append(new_object)
 
     def update_props_list(self):
         self.current_prop_list.clear()

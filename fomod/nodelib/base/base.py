@@ -16,17 +16,16 @@
 
 from PyQt5.QtGui import QStandardItem
 from os import sep
-from .exceptions import (BaseInstanceException, WrongParentException, InstanceCreationException,
-                         AddChildException, RemoveRequiredChildException, RemoveChildException,
-                         TextNotAllowedException)
+from .exceptions import (BaseInstanceException, WrongParentException, RemoveRequiredChildException,
+                         RemoveChildException, TextNotAllowedException)
 
 
-class _ObjectBase(object):
+class ObjectBase(object):
     def __init__(self, name, tag, allowed_instances, element,
                  allow_parent=True, default_text="", allow_text=False,
                  allowed_children=None, max_children=0, required_children=None,
                  properties=None, default_properties=None):
-        if type(self) is _ObjectBase:
+        if type(self) is ObjectBase:
             raise BaseInstanceException(self)
 
         if not properties:
@@ -70,37 +69,34 @@ class _ObjectBase(object):
                 if type(item) == type(child):
                     instances += 1
             if instances >= child.allowed_instances:
-                raise InstanceCreationException(child)
+                return False
 
         if type(child) in self.allowed_children and \
                 (not self.max_children or len(self.children) < self.max_children):
-            return
-        else:
-            raise AddChildException(child, self)
+            return True
+        return False
 
     def add_child(self, child):
-        try:
-            self.can_add_child(child)
-        except:
-            raise
-        else:
+        if self.can_add_child(child):
             self.children.append(child)
             child.parent = self
+            self.model_item.appendRow(child.model_item)
+            return True
+        return False
 
-        self.model_item.appendRow(child.model_item)
-
-    def check_required_children(self, child, removing=False):
+    def check_required_children(self, child):
         if self.required_children and type(child) in self.required_children:
             instances = 0
             for item in self.children:
                 if type(item) in self.required_children:
                     instances += 1
-            if (instances < 2 and removing) or (instances < 1 and not removing):
-                raise RemoveRequiredChildException(child, self)
+            if instances < 2:
+                return False
+        return True
 
     def remove_child(self, child):
         try:
-            self.check_required_children(child, True)
+            self.check_required_children(child)
         except RemoveRequiredChildException:
             raise
         else:

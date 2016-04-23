@@ -14,11 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .base import _ObjectBase
+from .base import ObjectBase
 from .props import PropertyCombo, PropertyInt, PropertyText
 
 
-class ObjectConfig(_ObjectBase):
+class ObjectConfig(ObjectBase):
     def __init__(self, element=None):
         allowed_children = (ObjectModName, ObjectModDepend, ObjectInstallSteps,
                             ObjectReqFiles, ObjectCondInstall)
@@ -33,12 +33,12 @@ class ObjectConfig(_ObjectBase):
                          properties=properties)
 
 
-class ObjectModName(_ObjectBase):
+class ObjectModName(ObjectBase):
     def __init__(self, element=None, text=""):
         super().__init__("Name", "moduleName", 0, element, allow_text=True, default_text=text)
 
 
-class ObjectModDepend(_ObjectBase):
+class ObjectModDepend(ObjectBase):
     def __init__(self, element=None):
         allowed_children = (ObjectDependFile, ObjectDependFlag)
 
@@ -46,7 +46,7 @@ class ObjectModDepend(_ObjectBase):
                          allowed_children=allowed_children)
 
 
-class ObjectReqFiles(_ObjectBase):
+class ObjectReqFiles(ObjectBase):
     def __init__(self, element=None):
         allowed_children = (ObjectFile, ObjectFolder)
 
@@ -54,7 +54,7 @@ class ObjectReqFiles(_ObjectBase):
                          allowed_children=allowed_children)
 
 
-class ObjectInstallSteps(_ObjectBase):
+class ObjectInstallSteps(ObjectBase):
     def __init__(self, element=None):
         allowed_children = (ObjectInstallStep,)
 
@@ -64,7 +64,7 @@ class ObjectInstallSteps(_ObjectBase):
                          allowed_children=allowed_children, properties=properties)
 
 
-class ObjectCondInstall(_ObjectBase):
+class ObjectCondInstall(ObjectBase):
     def __init__(self, element=None):
         allowed_children = (ObjectPatterns,)
 
@@ -72,7 +72,7 @@ class ObjectCondInstall(_ObjectBase):
                          allowed_children=allowed_children)
 
 
-class ObjectDependFile(_ObjectBase):
+class ObjectDependFile(ObjectBase):
     def __init__(self, element=None, default_properties=None):
         properties = {"file": PropertyText("File", "file", ""),
                       "state": PropertyCombo("State", "state", ("Active", "Inactive", "Missing"))}
@@ -81,7 +81,7 @@ class ObjectDependFile(_ObjectBase):
                          properties=properties, default_properties=default_properties)
 
 
-class ObjectDependFlag(_ObjectBase):
+class ObjectDependFlag(ObjectBase):
     def __init__(self, element=None, default_properties=None):
         properties = {"flag": PropertyText("Flag", "flag", ""),
                       "value": PropertyText("Value", "value", "")}
@@ -90,7 +90,7 @@ class ObjectDependFlag(_ObjectBase):
                          properties=properties, default_properties=default_properties)
 
 
-class ObjectFile(_ObjectBase):
+class ObjectFile(ObjectBase):
     def __init__(self, element=None, default_properties=None):
         properties = {"source": PropertyText("Source", "source", ""),
                       "destination": PropertyText("Destination", "destination", ""),
@@ -100,7 +100,7 @@ class ObjectFile(_ObjectBase):
                          properties=properties, default_properties=default_properties)
 
 
-class ObjectFolder(_ObjectBase):
+class ObjectFolder(ObjectBase):
     def __init__(self, element=None, default_properties=None):
         properties = {"source": PropertyText("Source", "source", ""),
                       "destination": PropertyText("Destination", "destination", ""),
@@ -110,7 +110,7 @@ class ObjectFolder(_ObjectBase):
                          properties=properties, default_properties=default_properties)
 
 
-class ObjectPatterns(_ObjectBase):
+class ObjectPatterns(ObjectBase):
     def __init__(self, element=None):
         allowed_children = (ObjectPattern,)
 
@@ -118,7 +118,7 @@ class ObjectPatterns(_ObjectBase):
                          allowed_children=allowed_children)
 
 
-class ObjectPattern(_ObjectBase):
+class ObjectPattern(ObjectBase):
     def __init__(self, element=None):
         allowed_children = (ObjectFiles, ObjectDependencies)
 
@@ -126,7 +126,7 @@ class ObjectPattern(_ObjectBase):
                          allowed_children=allowed_children)
 
 
-class ObjectFiles(_ObjectBase):
+class ObjectFiles(ObjectBase):
     def __init__(self, element=None):
         allowed_children = (ObjectFile, ObjectFolder)
 
@@ -134,7 +134,7 @@ class ObjectFiles(_ObjectBase):
                          allowed_children=allowed_children)
 
 
-class ObjectDependencies(_ObjectBase):
+class ObjectDependencies(ObjectBase):
     def __init__(self, element=None, default_properties=None):
         allowed_children = (ObjectDependFile, ObjectDependFlag, ObjectDependencies)
 
@@ -145,7 +145,7 @@ class ObjectDependencies(_ObjectBase):
                          properties=properties, default_properties=default_properties)
 
 
-class ObjectInstallStep(_ObjectBase):
+class ObjectInstallStep(ObjectBase):
     def __init__(self, element=None, default_properties=None):
         allowed_children = (ObjectVisible, ObjectOptGroups)
 
@@ -156,7 +156,7 @@ class ObjectInstallStep(_ObjectBase):
                          properties=properties, default_properties=default_properties)
 
 
-class ObjectVisible(_ObjectBase):
+class ObjectVisible(ObjectBase):
     def __init__(self, element=None):
         allowed_children = (ObjectDependFile, ObjectDependFlag)
 
@@ -164,7 +164,7 @@ class ObjectVisible(_ObjectBase):
                          allowed_children=allowed_children)
 
 
-class ObjectOptGroups(_ObjectBase):
+class ObjectOptGroups(ObjectBase):
     def __init__(self, element=None, default_properties=None):
         allowed_children = (ObjectGroup,)
 
@@ -175,7 +175,7 @@ class ObjectOptGroups(_ObjectBase):
                          properties=properties, default_properties=default_properties)
 
 
-class ObjectGroup(_ObjectBase):
+class ObjectGroup(ObjectBase):
     def __init__(self, element=None, default_properties=None):
         allowed_children = (ObjectPlugins,)
 
@@ -188,7 +188,7 @@ class ObjectGroup(_ObjectBase):
                          properties=properties, default_properties=default_properties)
 
 
-class ObjectPlugins(_ObjectBase):
+class ObjectPlugins(ObjectBase):
     def __init__(self, element=None, default_properties=None):
         allowed_children = (ObjectPlugin,)
 
@@ -199,7 +199,7 @@ class ObjectPlugins(_ObjectBase):
                          properties=properties, default_properties=default_properties)
 
 
-class ObjectPlugin(_ObjectBase):
+class ObjectPlugin(ObjectBase):
     def __init__(self, element=None, default_properties=None):
         allowed_children = (ObjectPluginDescription, ObjectImage, ObjectFiles,
                             ObjectConditionFlags, ObjectTypeDesc)
@@ -213,13 +213,13 @@ class ObjectPlugin(_ObjectBase):
                          required_children=required_children, default_properties=default_properties)
 
 
-class ObjectPluginDescription(_ObjectBase):
+class ObjectPluginDescription(ObjectBase):
     def __init__(self, element=None, text=""):
         super().__init__("Description", "description", 0, element,
                          allow_text=True, default_text=text)
 
 
-class ObjectImage(_ObjectBase):
+class ObjectImage(ObjectBase):
     def __init__(self, element=None, default_properties=None):
         properties = {"path": PropertyText("Path", "path", "")}
 
@@ -227,7 +227,7 @@ class ObjectImage(_ObjectBase):
                          properties=properties, default_properties=default_properties)
 
 
-class ObjectConditionFlags(_ObjectBase):
+class ObjectConditionFlags(ObjectBase):
     def __init__(self, element=None):
         allowed_children = (ObjectFlag,)
 
@@ -235,7 +235,7 @@ class ObjectConditionFlags(_ObjectBase):
                          allowed_children=allowed_children)
 
 
-class ObjectTypeDesc(_ObjectBase):
+class ObjectTypeDesc(ObjectBase):
     def __init__(self, element=None):
         allowed_children = (ObjectDependencyType, ObjectType)
 
@@ -244,7 +244,7 @@ class ObjectTypeDesc(_ObjectBase):
                          max_children=1)
 
 
-class ObjectFlag(_ObjectBase):
+class ObjectFlag(ObjectBase):
     def __init__(self, element=None, default_properties=None, text=""):
         properties = {"name": PropertyText("Name", "name", "")}
 
@@ -253,7 +253,7 @@ class ObjectFlag(_ObjectBase):
                          default_properties=default_properties, default_text=text)
 
 
-class ObjectDependencyType(_ObjectBase):
+class ObjectDependencyType(ObjectBase):
     def __init__(self, element=None):
         allowed_children = (ObjectInstallPatterns, ObjectDefaultType)
 
@@ -261,7 +261,7 @@ class ObjectDependencyType(_ObjectBase):
                          allowed_children=allowed_children)
 
 
-class ObjectDefaultType(_ObjectBase):
+class ObjectDefaultType(ObjectBase):
     def __init__(self, element=None, default_properties=None):
         properties = {"name": PropertyCombo("Name", "name",
                                             ["Required", "Recommended", "Optional", "CouldBeUsable", "NotUsable"])}
@@ -270,7 +270,7 @@ class ObjectDefaultType(_ObjectBase):
                          properties=properties, default_properties=default_properties)
 
 
-class ObjectType(_ObjectBase):
+class ObjectType(ObjectBase):
     def __init__(self, element=None, default_properties=None):
         properties = {"name": PropertyCombo("Name", "name",
                                             ["Required", "Recommended", "Optional", "CouldBeUsable", "NotUsable"])}
@@ -279,7 +279,7 @@ class ObjectType(_ObjectBase):
                          properties=properties, default_properties=default_properties)
 
 
-class ObjectInstallPatterns(_ObjectBase):
+class ObjectInstallPatterns(ObjectBase):
     def __init__(self, element=None):
         allowed_children = (ObjectInstallPattern,)
 
@@ -287,7 +287,7 @@ class ObjectInstallPatterns(_ObjectBase):
                          allowed_children=allowed_children)
 
 
-class ObjectInstallPattern(_ObjectBase):
+class ObjectInstallPattern(ObjectBase):
     def __init__(self, element=None):
         allowed_children = (ObjectType, ObjectDependencies)
 
