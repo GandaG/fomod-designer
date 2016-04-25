@@ -14,14 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .base import ObjectBase
+from .base import NodeBase
 from .props import PropertyCombo, PropertyInt, PropertyText
 
 
-class ObjectConfig(ObjectBase):
+class NodeConfig(NodeBase):
     def __init__(self, element=None):
-        allowed_children = (ObjectModName, ObjectModDepend, ObjectInstallSteps,
-                            ObjectReqFiles, ObjectCondInstall)
+        allowed_children = (NodeModName, NodeModDepend, NodeInstallSteps,
+                            NodeReqFiles, NodeCondInstall)
 
         properties = {"xsi": PropertyText("xsi",
                                           "{http://www.w3.org/2001/XMLSchema-instance}noNamespaceSchemaLocation",
@@ -33,30 +33,30 @@ class ObjectConfig(ObjectBase):
                          properties=properties)
 
 
-class ObjectModName(ObjectBase):
+class NodeModName(NodeBase):
     def __init__(self, element=None, text=""):
         super().__init__("Name", "moduleName", 0, element, allow_text=True, default_text=text)
 
 
-class ObjectModDepend(ObjectBase):
+class NodeModDepend(NodeBase):
     def __init__(self, element=None):
-        allowed_children = (ObjectDependFile, ObjectDependFlag)
+        allowed_children = (NodeDependFile, NodeDependFlag)
 
         super().__init__("Mod Dependencies", "moduleDependencies", 1, element,
                          allowed_children=allowed_children)
 
 
-class ObjectReqFiles(ObjectBase):
+class NodeReqFiles(NodeBase):
     def __init__(self, element=None):
-        allowed_children = (ObjectFile, ObjectFolder)
+        allowed_children = (NodeFile, NodeFolder)
 
         super().__init__("Mod Requirements", "requiredInstallFiles", 1, element,
                          allowed_children=allowed_children)
 
 
-class ObjectInstallSteps(ObjectBase):
+class NodeInstallSteps(NodeBase):
     def __init__(self, element=None):
-        allowed_children = (ObjectInstallStep,)
+        allowed_children = (NodeInstallStep,)
 
         properties = {"order": PropertyText("Order", "order", "Explicit", False)}
 
@@ -64,15 +64,15 @@ class ObjectInstallSteps(ObjectBase):
                          allowed_children=allowed_children, properties=properties)
 
 
-class ObjectCondInstall(ObjectBase):
+class NodeCondInstall(NodeBase):
     def __init__(self, element=None):
-        allowed_children = (ObjectPatterns,)
+        allowed_children = (NodePatterns,)
 
         super().__init__("Conditional Installation", "conditionalFileInstalls", 1, element,
                          allowed_children=allowed_children)
 
 
-class ObjectDependFile(ObjectBase):
+class NodeDependFile(NodeBase):
     def __init__(self, element=None, default_properties=None):
         properties = {"file": PropertyText("File", "file", ""),
                       "state": PropertyCombo("State", "state", ("Active", "Inactive", "Missing"))}
@@ -81,7 +81,7 @@ class ObjectDependFile(ObjectBase):
                          properties=properties, default_properties=default_properties)
 
 
-class ObjectDependFlag(ObjectBase):
+class NodeDependFlag(NodeBase):
     def __init__(self, element=None, default_properties=None):
         properties = {"flag": PropertyText("Flag", "flag", ""),
                       "value": PropertyText("Value", "value", "")}
@@ -90,7 +90,7 @@ class ObjectDependFlag(ObjectBase):
                          properties=properties, default_properties=default_properties)
 
 
-class ObjectFile(ObjectBase):
+class NodeFile(NodeBase):
     def __init__(self, element=None, default_properties=None):
         properties = {"source": PropertyText("Source", "source", ""),
                       "destination": PropertyText("Destination", "destination", ""),
@@ -100,7 +100,7 @@ class ObjectFile(ObjectBase):
                          properties=properties, default_properties=default_properties)
 
 
-class ObjectFolder(ObjectBase):
+class NodeFolder(NodeBase):
     def __init__(self, element=None, default_properties=None):
         properties = {"source": PropertyText("Source", "source", ""),
                       "destination": PropertyText("Destination", "destination", ""),
@@ -110,33 +110,33 @@ class ObjectFolder(ObjectBase):
                          properties=properties, default_properties=default_properties)
 
 
-class ObjectPatterns(ObjectBase):
+class NodePatterns(NodeBase):
     def __init__(self, element=None):
-        allowed_children = (ObjectPattern,)
+        allowed_children = (NodePattern,)
 
         super().__init__("Patterns", "patterns", 0, element,
                          allowed_children=allowed_children)
 
 
-class ObjectPattern(ObjectBase):
+class NodePattern(NodeBase):
     def __init__(self, element=None):
-        allowed_children = (ObjectFiles, ObjectDependencies)
+        allowed_children = (NodeFiles, NodeDependencies)
 
         super().__init__("Pattern", "pattern", 0, element,
                          allowed_children=allowed_children)
 
 
-class ObjectFiles(ObjectBase):
+class NodeFiles(NodeBase):
     def __init__(self, element=None):
-        allowed_children = (ObjectFile, ObjectFolder)
+        allowed_children = (NodeFile, NodeFolder)
 
         super().__init__("Files", "files", 0, element,
                          allowed_children=allowed_children)
 
 
-class ObjectDependencies(ObjectBase):
+class NodeDependencies(NodeBase):
     def __init__(self, element=None, default_properties=None):
-        allowed_children = (ObjectDependFile, ObjectDependFlag, ObjectDependencies)
+        allowed_children = (NodeDependFile, NodeDependFlag, NodeDependencies)
 
         properties = {"operator": PropertyCombo("Type", "operator", ["And", "Or"])}
 
@@ -145,9 +145,9 @@ class ObjectDependencies(ObjectBase):
                          properties=properties, default_properties=default_properties)
 
 
-class ObjectInstallStep(ObjectBase):
+class NodeInstallStep(NodeBase):
     def __init__(self, element=None, default_properties=None):
-        allowed_children = (ObjectVisible, ObjectOptGroups)
+        allowed_children = (NodeVisible, NodeOptGroups)
 
         properties = {"name": PropertyText("Name", "name", "")}
 
@@ -156,17 +156,17 @@ class ObjectInstallStep(ObjectBase):
                          properties=properties, default_properties=default_properties)
 
 
-class ObjectVisible(ObjectBase):
+class NodeVisible(NodeBase):
     def __init__(self, element=None):
-        allowed_children = (ObjectDependFile, ObjectDependFlag)
+        allowed_children = (NodeDependFile, NodeDependFlag)
 
         super().__init__("Visibility", "visible", 1, element,
                          allowed_children=allowed_children)
 
 
-class ObjectOptGroups(ObjectBase):
+class NodeOptGroups(NodeBase):
     def __init__(self, element=None, default_properties=None):
-        allowed_children = (ObjectGroup,)
+        allowed_children = (NodeGroup,)
 
         properties = {"order": PropertyCombo("Order", "order", ["Ascending", "Descending", "Explicit"])}
 
@@ -175,9 +175,9 @@ class ObjectOptGroups(ObjectBase):
                          properties=properties, default_properties=default_properties)
 
 
-class ObjectGroup(ObjectBase):
+class NodeGroup(NodeBase):
     def __init__(self, element=None, default_properties=None):
-        allowed_children = (ObjectPlugins,)
+        allowed_children = (NodePlugins,)
 
         properties = {"name": PropertyText("Name", "name", ""),
                       "type": PropertyCombo("Type", "type", ["SelectAny", "SelectAtMostOne",
@@ -188,9 +188,9 @@ class ObjectGroup(ObjectBase):
                          properties=properties, default_properties=default_properties)
 
 
-class ObjectPlugins(ObjectBase):
+class NodePlugins(NodeBase):
     def __init__(self, element=None, default_properties=None):
-        allowed_children = (ObjectPlugin,)
+        allowed_children = (NodePlugin,)
 
         properties = {"order": PropertyCombo("Order", "order", ["Ascending", "Descending", "Explicit"])}
 
@@ -199,12 +199,12 @@ class ObjectPlugins(ObjectBase):
                          properties=properties, default_properties=default_properties)
 
 
-class ObjectPlugin(ObjectBase):
+class NodePlugin(NodeBase):
     def __init__(self, element=None, default_properties=None):
-        allowed_children = (ObjectPluginDescription, ObjectImage, ObjectFiles,
-                            ObjectConditionFlags, ObjectTypeDesc)
+        allowed_children = (NodePluginDescription, NodeImage, NodeFiles,
+                            NodeConditionFlags, NodeTypeDesc)
 
-        required_children = (ObjectConditionFlags, ObjectFiles)
+        required_children = (NodeConditionFlags, NodeFiles)
 
         properties = {"name": PropertyText("Name", "name", "")}
 
@@ -213,13 +213,13 @@ class ObjectPlugin(ObjectBase):
                          required_children=required_children, default_properties=default_properties)
 
 
-class ObjectPluginDescription(ObjectBase):
+class NodePluginDescription(NodeBase):
     def __init__(self, element=None, text=""):
         super().__init__("Description", "description", 0, element,
                          allow_text=True, default_text=text)
 
 
-class ObjectImage(ObjectBase):
+class NodeImage(NodeBase):
     def __init__(self, element=None, default_properties=None):
         properties = {"path": PropertyText("Path", "path", "")}
 
@@ -227,24 +227,24 @@ class ObjectImage(ObjectBase):
                          properties=properties, default_properties=default_properties)
 
 
-class ObjectConditionFlags(ObjectBase):
+class NodeConditionFlags(NodeBase):
     def __init__(self, element=None):
-        allowed_children = (ObjectFlag,)
+        allowed_children = (NodeFlag,)
 
         super().__init__("Flags", "conditionFlags", 0, element,
                          allowed_children=allowed_children)
 
 
-class ObjectTypeDesc(ObjectBase):
+class NodeTypeDesc(NodeBase):
     def __init__(self, element=None):
-        allowed_children = (ObjectDependencyType, ObjectType)
+        allowed_children = (NodeDependencyType, NodeType)
 
         super().__init__("Type Descriptor", "typeDescriptor", 0, element,
                          allowed_children=allowed_children,
                          max_children=1)
 
 
-class ObjectFlag(ObjectBase):
+class NodeFlag(NodeBase):
     def __init__(self, element=None, default_properties=None, text=""):
         properties = {"name": PropertyText("Name", "name", "")}
 
@@ -253,15 +253,15 @@ class ObjectFlag(ObjectBase):
                          default_properties=default_properties, default_text=text)
 
 
-class ObjectDependencyType(ObjectBase):
+class NodeDependencyType(NodeBase):
     def __init__(self, element=None):
-        allowed_children = (ObjectInstallPatterns, ObjectDefaultType)
+        allowed_children = (NodeInstallPatterns, NodeDefaultType)
 
         super().__init__("Dependency Type", "dependencyType", 0, element,
                          allowed_children=allowed_children)
 
 
-class ObjectDefaultType(ObjectBase):
+class NodeDefaultType(NodeBase):
     def __init__(self, element=None, default_properties=None):
         properties = {"name": PropertyCombo("Name", "name",
                                             ["Required", "Recommended", "Optional", "CouldBeUsable", "NotUsable"])}
@@ -270,7 +270,7 @@ class ObjectDefaultType(ObjectBase):
                          properties=properties, default_properties=default_properties)
 
 
-class ObjectType(ObjectBase):
+class NodeType(NodeBase):
     def __init__(self, element=None, default_properties=None):
         properties = {"name": PropertyCombo("Name", "name",
                                             ["Required", "Recommended", "Optional", "CouldBeUsable", "NotUsable"])}
@@ -279,17 +279,17 @@ class ObjectType(ObjectBase):
                          properties=properties, default_properties=default_properties)
 
 
-class ObjectInstallPatterns(ObjectBase):
+class NodeInstallPatterns(NodeBase):
     def __init__(self, element=None):
-        allowed_children = (ObjectInstallPattern,)
+        allowed_children = (NodeInstallPattern,)
 
         super().__init__("Patterns", "patterns", 0, element,
                          allowed_children=allowed_children)
 
 
-class ObjectInstallPattern(ObjectBase):
+class NodeInstallPattern(NodeBase):
     def __init__(self, element=None):
-        allowed_children = (ObjectType, ObjectDependencies)
+        allowed_children = (NodeType, NodeDependencies)
 
         super().__init__("Pattern", "pattern", 0, element,
                          allowed_children=allowed_children)

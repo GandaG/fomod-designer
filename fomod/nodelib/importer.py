@@ -67,4 +67,4 @@ def import_(package_path):
 def new():
     from .base import info, config
 
-    return info.ObjectInfo(), config.ObjectConfig()
+    return info.NodeInfo(), config.NodeConfig()

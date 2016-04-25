@@ -20,85 +20,85 @@ from .exceptions import FactoryTagNotFound
 
 def from_element(element):
     if element.tag == "fomod" and not element.getparent():
-        return info.ObjectInfo(element)
+        return info.NodeInfo(element)
     elif element.tag == "Name":
-        return info.ObjectName(element, element.text)
+        return info.NodeName(element, element.text)
     elif element.tag == "Author":
-        return info.ObjectAuthor(element, element.text)
+        return info.NodeAuthor(element, element.text)
     elif element.tag == "Version":
-        return info.ObjectVersion(element, element.text)
+        return info.NodeVersion(element, element.text)
     elif element.tag == "Id":
-        return info.ObjectID(element, element.text)
+        return info.NodeID(element, element.text)
     elif element.tag == "Website":
-        return info.ObjectWebsite(element, element.text)
+        return info.NodeWebsite(element, element.text)
     elif element.tag == "Description":
-        return info.ObjectDescription(element, element.text)
+        return info.NodeDescription(element, element.text)
     elif element.tag == "Groups":
-        return info.ObjectGroup(element)
+        return info.NodeGroup(element)
     elif element.tag == "element":
-        return info.ObjectElement(element, element.text)
+        return info.NodeElement(element, element.text)
 
     elif element.tag == "config" and not element.getparent():
-        return config.ObjectConfig(element)
+        return config.NodeConfig(element)
     elif element.tag == "moduleName":
-        return config.ObjectModName(element, element.text)
+        return config.NodeModName(element, element.text)
     elif element.tag == "moduleDependencies":
-        return config.ObjectModDepend(element)
+        return config.NodeModDepend(element)
     elif element.tag == "requiredInstallFiles":
-        return config.ObjectReqFiles(element)
+        return config.NodeReqFiles(element)
     elif element.tag == "installSteps":
-        return config.ObjectInstallSteps(element)
+        return config.NodeInstallSteps(element)
     elif element.tag == "conditionalFileInstalls":
-        return config.ObjectCondInstall(element)
+        return config.NodeCondInstall(element)
     elif element.tag == "fileDependency":
-        return config.ObjectDependFile(element, dict(element.attrib))
+        return config.NodeDependFile(element, dict(element.attrib))
     elif element.tag == "flagDependency":
-        return config.ObjectDependFlag(element, dict(element.attrib))
+        return config.NodeDependFlag(element, dict(element.attrib))
     elif element.tag == "file":
-        return config.ObjectFile(element, dict(element.attrib))
+        return config.NodeFile(element, dict(element.attrib))
     elif element.tag == "folder":
-        return config.ObjectFolder(element, dict(element.attrib))
+        return config.NodeFolder(element, dict(element.attrib))
     elif element.tag == "patterns":
         if element.getparent().tag == "dependencyType":
-            return config.ObjectInstallPatterns(element)
+            return config.NodeInstallPatterns(element)
         elif element.getparent().tag == "conditionalFileInstalls":
-            return config.ObjectPatterns(element)
+            return config.NodePatterns(element)
     elif element.tag == "pattern":
         if element.getparent().getparent().tag == "conditionalFileInstalls":
-            return config.ObjectPattern(element)
+            return config.NodePattern(element)
         elif element.getparent().getparent().tag == "dependencyType":
-            return config.ObjectInstallPattern(element)
+            return config.NodeInstallPattern(element)
     elif element.tag == "files":
-        return config.ObjectFiles(element)
+        return config.NodeFiles(element)
     elif element.tag == "dependencies":
-        return config.ObjectDependencies(element, dict(element.attrib))
+        return config.NodeDependencies(element, dict(element.attrib))
     elif element.tag == "installStep":
-        return config.ObjectInstallStep(element, dict(element.attrib))
+        return config.NodeInstallStep(element, dict(element.attrib))
     elif element.tag == "visible":
-        return config.ObjectVisible(element)
+        return config.NodeVisible(element)
     elif element.tag == "optionalFileGroups":
-        return config.ObjectOptGroups(element, dict(element.attrib))
+        return config.NodeOptGroups(element, dict(element.attrib))
     elif element.tag == "group":
-        return config.ObjectGroup(element, dict(element.attrib))
+        return config.NodeGroup(element, dict(element.attrib))
     elif element.tag == "plugins":
-        return config.ObjectPlugins(element, dict(element.attrib))
+        return config.NodePlugins(element, dict(element.attrib))
     elif element.tag == "plugin":
-        return config.ObjectPlugin(element, dict(element.attrib))
+        return config.NodePlugin(element, dict(element.attrib))
     elif element.tag == "description":
-        return config.ObjectPluginDescription(element, element.text)
+        return config.NodePluginDescription(element, element.text)
     elif element.tag == "image":
-        return config.ObjectImage(element, dict(element.attrib))
+        return config.NodeImage(element, dict(element.attrib))
     elif element.tag == "conditionFlags":
-        return config.ObjectConditionFlags(element)
+        return config.NodeConditionFlags(element)
     elif element.tag == "typeDescriptor":
-        return config.ObjectTypeDesc(element)
+        return config.NodeTypeDesc(element)
     elif element.tag == "flag":
-        return config.ObjectFlag(element, dict(element.attrib), element.text)
+        return config.NodeFlag(element, dict(element.attrib), element.text)
     elif element.tag == "dependencyType":
-        return config.ObjectDependencyType(element)
+        return config.NodeDependencyType(element)
     elif element.tag == "defaultType":
-        return config.ObjectDefaultType(element, dict(element.attrib))
+        return config.NodeDefaultType(element, dict(element.attrib))
     elif element.tag == "type":
-        return config.ObjectType(element, dict(element.attrib))
+        return config.NodeType(element, dict(element.attrib))
 
     raise FactoryTagNotFound(element.tag)

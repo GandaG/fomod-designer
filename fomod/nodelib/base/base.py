@@ -20,12 +20,12 @@ from .exceptions import (BaseInstanceException, WrongParentException, RemoveRequ
                          RemoveChildException, TextNotAllowedException)
 
 
-class ObjectBase(object):
+class NodeBase(object):
     def __init__(self, name, tag, allowed_instances, element,
                  allow_parent=True, default_text="", allow_text=False,
                  allowed_children=None, max_children=0, required_children=None,
                  properties=None, default_properties=None):
-        if type(self) is ObjectBase:
+        if type(self) is NodeBase:
             raise BaseInstanceException(self)
 
         if not properties:

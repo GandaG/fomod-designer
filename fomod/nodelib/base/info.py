@@ -14,56 +14,56 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .base import ObjectBase
+from .base import NodeBase
 
 
-class ObjectInfo(ObjectBase):
+class NodeInfo(NodeBase):
     def __init__(self, element=None):
-        allowed_children = (ObjectName, ObjectAuthor, ObjectDescription,
-                            ObjectID, ObjectGroup, ObjectVersion, ObjectWebsite)
+        allowed_children = (NodeName, NodeAuthor, NodeDescription,
+                            NodeID, NodeGroup, NodeVersion, NodeWebsite)
 
         super().__init__("Info", "fomod", 1, element, False,
                          allowed_children=allowed_children)
 
 
-class ObjectName(ObjectBase):
+class NodeName(NodeBase):
     def __init__(self, element=None, text=""):
         super().__init__("Name", "Name", 1, element, allow_text=True, default_text=text)
 
 
-class ObjectAuthor(ObjectBase):
+class NodeAuthor(NodeBase):
     def __init__(self, element=None, text=""):
         super().__init__("Author", "Author", 1, element, allow_text=True, default_text=text)
 
 
-class ObjectVersion(ObjectBase):
+class NodeVersion(NodeBase):
     def __init__(self, element=None, text=""):
         super().__init__("Version", "Version", 1, element, allow_text=True, default_text=text)
 
 
-class ObjectID(ObjectBase):
+class NodeID(NodeBase):
     def __init__(self, element=None, text=""):
         super().__init__("ID", "Id", 1, element, allow_text=True, default_text=text)
 
 
-class ObjectWebsite(ObjectBase):
+class NodeWebsite(NodeBase):
     def __init__(self, element=None, text=""):
         super().__init__("Website", "Website", 1, element, allow_text=True, default_text=text)
 
 
-class ObjectDescription(ObjectBase):
+class NodeDescription(NodeBase):
     def __init__(self, element=None, text=""):
         super().__init__("Description", "Description", 1, element, allow_text=True, default_text=text)
 
 
-class ObjectGroup(ObjectBase):
+class NodeGroup(NodeBase):
     def __init__(self, element=None):
-        allowed_child = (ObjectElement,)
+        allowed_child = (NodeElement,)
 
         super().__init__("Group", "Groups", 1, element,
                          allowed_children=allowed_child)
 
 
-class ObjectElement(ObjectBase):
+class NodeElement(NodeBase):
     def __init__(self, element=None, text=""):
         super().__init__("Element", "element", 0, element, allow_text=True, default_text=text)
