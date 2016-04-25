@@ -34,14 +34,6 @@ def enter():
 
 
 @task
-def genui():
-    from PyQt5 import uic
-    from os.path import join
-
-    uic.compileUiDir(join("fomod", "gui", "templates"))
-
-
-@task
 def preview():
     run("python dev/pyinstaller-bootstrap.py")
 

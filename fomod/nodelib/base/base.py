@@ -51,7 +51,8 @@ class ObjectBase(object):
         self.parent = None
         self.allowed_instances = allowed_instances
 
-        self.model_item = QStandardItem(self.name)
+        self.model_item = NodeStandardItem(self)
+        self.model_item.setText(self.name)
         self.model_item.setEditable(False)
 
         if default_text:
@@ -138,3 +139,10 @@ class ObjectBase(object):
             result.extend(child.iter())
 
         return result
+
+
+class NodeStandardItem(QStandardItem):
+    """A Standard Item but with an added reference to a xml node."""
+    def __init__(self, node):
+        self.xml_node = node
+        super().__init__()

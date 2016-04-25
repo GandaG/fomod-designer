@@ -261,38 +261,27 @@ class MainFrame(base_ui[0], base_ui[1]):
     def get_from_index(self, index):
 
         item = self.tree_model.itemFromIndex(index)
-
-        for node in self.info_root.iter():
-            if node.model_item is item:
-                return item, node
-
-        for node in self.config_root.iter():
-            if node.model_item is item:
-                return item, node
-
-        return None
+        return item, item.xml_node
 
     def selected_object_list(self, index):
         item = self.list_model.itemFromIndex(index)
 
-        for child in self.current_children_list:
-            if child.model_item is item:
-                new_child = type(child)()
-                self.current_object.add_child(new_child)
+        new_child = type(item.xml_node)()
+        self.current_object.add_child(new_child)
 
-                # reload the object box
-                self.update_box_list()
+        # reload the object box
+        self.update_box_list()
 
-                # expand the parent
-                current_index = self.tree_model.indexFromItem(self.current_item)
-                self.object_tree_view.expand(current_index)
+        # expand the parent
+        current_index = self.tree_model.indexFromItem(self.current_item)
+        self.object_tree_view.expand(current_index)
 
-                # select the new item
-                self.object_tree_view.setCurrentIndex(self.tree_model.indexFromItem(new_child.model_item))
-                self.selected_object_tree(self.tree_model.indexFromItem(new_child.model_item))
+        # select the new item
+        self.object_tree_view.setCurrentIndex(self.tree_model.indexFromItem(new_child.model_item))
+        self.selected_object_tree(self.tree_model.indexFromItem(new_child.model_item))
 
-                # set the installer as changed
-                self.fomod_modified(True)
+        # set the installer as changed
+        self.fomod_modified(True)
 
     def fomod_modified(self, changed):
         if changed is False:
