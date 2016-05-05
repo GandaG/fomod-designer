@@ -14,50 +14,52 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt5 import QtWidgets, QtGui, QtCore, uic
 from os.path import join
-from .templates import mainframe as template
-from .. import cur_folder
+from . import cur_folder
 
 
-class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
+base_ui = uic.loadUiType(join(cur_folder, "resources/templates/mainframe.ui"))
+
+
+class MainFrame(base_ui[0], base_ui[1]):
     def __init__(self):
-        super(MainFrame, self).__init__()
+        super().__init__()
         self.setupUi(self)
 
         # setup the icons properly
         icon_open = QtGui.QIcon()
-        icon_open.addPixmap(QtGui.QPixmap(join(cur_folder, "fomod/gui/logos/logo_open_file.png")),
+        icon_open.addPixmap(QtGui.QPixmap(join(cur_folder, "resources/logos/logo_open_file.png")),
                             QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.action_Open.setIcon(icon_open)
 
         icon_save = QtGui.QIcon()
-        icon_save.addPixmap(QtGui.QPixmap(join(cur_folder, "fomod/gui/logos/logo_floppy_disk.png")),
+        icon_save.addPixmap(QtGui.QPixmap(join(cur_folder, "resources/logos/logo_floppy_disk.png")),
                             QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.action_Save.setIcon(icon_save)
 
         icon_options = QtGui.QIcon()
-        icon_options.addPixmap(QtGui.QPixmap(join(cur_folder, "fomod/gui/logos/logo_gear.png")),
+        icon_options.addPixmap(QtGui.QPixmap(join(cur_folder, "resources/logos/logo_gear.png")),
                                QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.actionO_ptions.setIcon(icon_options)
 
         icon_refresh = QtGui.QIcon()
-        icon_refresh.addPixmap(QtGui.QPixmap(join(cur_folder, "fomod/gui/logos/logo_refresh.png")),
+        icon_refresh.addPixmap(QtGui.QPixmap(join(cur_folder, "resources/logos/logo_refresh.png")),
                                QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.action_Refresh.setIcon(icon_refresh)
 
         icon_delete = QtGui.QIcon()
-        icon_delete.addPixmap(QtGui.QPixmap(join(cur_folder, "fomod/gui/logos/logo_cross.png")),
+        icon_delete.addPixmap(QtGui.QPixmap(join(cur_folder, "resources/logos/logo_cross.png")),
                               QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.action_Delete.setIcon(icon_delete)
 
         icon_about = QtGui.QIcon()
-        icon_about.addPixmap(QtGui.QPixmap(join(cur_folder, "fomod/gui/logos/logo_notepad.png")),
+        icon_about.addPixmap(QtGui.QPixmap(join(cur_folder, "resources/logos/logo_notepad.png")),
                              QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.action_About.setIcon(icon_about)
 
         icon_help = QtGui.QIcon()
-        icon_help.addPixmap(QtGui.QPixmap(join(cur_folder, "fomod/gui/logos/logo_info.png")),
+        icon_help.addPixmap(QtGui.QPixmap(join(cur_folder, "resources/logos/logo_info.png")),
                             QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.actionHe_lp.setIcon(icon_help)
 
@@ -83,7 +85,6 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
         self.package_name = ""
         self.info_root = None
         self.config_root = None
-        self.current_item = None
         self.current_object = None
         self.current_prop_list = []
         self.current_children_list = []
@@ -96,21 +97,20 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
 
     def open(self):
         from os.path import expanduser, normpath, basename
-        from ..parser import parse
+        from .nodelib import import_, NodeLibError
 
         open_dialog = QtWidgets.QFileDialog()
         self.package_path = open_dialog.getExistingDirectory(self, "Select package root directory:", expanduser("~"))
 
         if self.package_path:
-            info_root, config_root = parse(normpath(self.package_path))
-
-            if not info_root or not config_root:
+            try:
+                self.info_root, self.config_root = import_(normpath(self.package_path))
+            except NodeLibError as p:
+                from .generic import generic_errorbox
+                generic_errorbox(p.title, str(p))
                 return
 
             self.tree_model.clear()
-
-            self.info_root = info_root
-            self.config_root = config_root
 
             self.tree_model.appendRow(self.info_root.model_item)
             self.tree_model.appendRow(self.config_root.model_item)
@@ -119,18 +119,14 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
             self.fomod_modified(False)
 
     def save(self):
-        from ..serializer import serialize
+        from .nodelib import export
 
-        if not self.fomod_changed:
-            from . import generic
-            generic.generic_errorbox("I REFUSE TO SAVE",
-                                     "There are no changes to save!")
-        elif not self.info_root and not self.config_root:
+        if not self.info_root and not self.config_root:
             from . import generic
             generic.generic_errorbox("I REFUSE TO SAVE",
                                      "There is nothing... literally.")
         else:
-            serialize(self.info_root, self.config_root, self.package_path)
+            export(self.info_root, self.config_root, self.package_path)
             self.fomod_modified(False)
 
     def options(self):
@@ -143,16 +139,12 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
 
     def delete(self):
         try:
-            if self.current_object:
+            if self.current_object is not None:
                 object_to_delete = self.current_object
-                object_to_delete.parent.remove_child(object_to_delete)
+                new_index = self.tree_model.indexFromItem(self.current_object.getparent().model_item)
+                object_to_delete.getparent().remove_child(object_to_delete)
 
-                new_index = self.tree_model.indexFromItem(self.current_object.parent.model_item)
                 self.selected_object_tree(new_index)
-            else:
-                from . import generic
-                generic.generic_errorbox("What are trying to do? o.O",
-                                         "You can't delete nothing... Try to select something before deleting.")
         except AttributeError:
             from . import generic
             generic.generic_errorbox("You can't do that...",
@@ -167,30 +159,22 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
         generic.not_implemented()
 
     def selected_object_tree(self, index):
-        self.current_item, self.current_object = self.get_from_index(index)
+        self.current_object = self.tree_model.itemFromIndex(index).xml_node
 
         self.update_box_list()
         self.update_props_list()
 
     def update_box_list(self):
-        from ..exceptions import InstanceCreationException, AddChildException
-
         self.list_model.clear()
         self.current_children_list.clear()
 
         for child in self.current_object.allowed_children:
             new_object = child()
-            try:
-                self.current_object.can_add_child(new_object)
-            except (InstanceCreationException, AddChildException):
-                continue
-
-            self.list_model.appendRow(new_object.model_item)
-            self.current_children_list.append(new_object)
+            if self.current_object.can_add_child(new_object):
+                self.list_model.appendRow(new_object.model_item)
+                self.current_children_list.append(new_object)
 
     def update_props_list(self):
-        from ..props import PropertyCombo, PropertyInt, PropertyText
-
         self.current_prop_list.clear()
         for index in reversed(range(self.formLayout.count())):
             widget = self.formLayout.takeAt(index).widget()
@@ -211,6 +195,7 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
             prop_list[prop_index].setText(self.current_object.text)
             prop_list[prop_index].textEdited[str].connect(self.current_object.set_text)
             prop_list[prop_index].textEdited[str].connect(self.fomod_modified)
+            prop_list[prop_index].textEdited[str].connect(self.current_object.write_attribs)
             self.formLayout.setWidget(prop_index, QtWidgets.QFormLayout.FieldRole,
                                       prop_list[prop_index])
 
@@ -225,27 +210,30 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
             label.setText(props[key].name)
             self.formLayout.setWidget(prop_index, QtWidgets.QFormLayout.LabelRole, label)
 
-            if type(props[key]) == PropertyText:
+            if props[key].type_ == "text":
                 prop_list.append(QtWidgets.QLineEdit(self.dockWidgetContents))
                 prop_list[prop_index].setText(props[key].value)
                 prop_list[prop_index].textEdited[str].connect(props[key].set_value)
                 prop_list[prop_index].textEdited[str].connect(self.fomod_modified)
-                if key == "name" or key == "source":
-                    prop_list[prop_index].textEdited[str].connect(self.current_object.set_item_name)
+                prop_list[prop_index].textEdited[str].connect(self.current_object.write_attribs)
+                prop_list[prop_index].textEdited[str].connect(self.current_object.update_item_name)
 
-            elif type(props[key]) == PropertyInt:
+            elif props[key].type_ == "int":
                 prop_list.append(QtWidgets.QSpinBox(self.dockWidgetContents))
                 prop_list[prop_index].setValue(int(props[key].value))
                 prop_list[prop_index].valueChanged.connect(props[key].set_value)
                 prop_list[prop_index].valueChanged.connect(self.fomod_modified)
+                prop_list[prop_index].valueChanged.connect(self.current_object.write_attribs)
                 prop_list[prop_index].setMinimum(props[key].min)
                 prop_list[prop_index].setMaximum(props[key].max)
 
-            elif type(props[key]) == PropertyCombo:
+            elif props[key].type_ == "combo":
                 prop_list.append(QtWidgets.QComboBox(self.dockWidgetContents))
                 prop_list[prop_index].insertItems(0, props[key].values)
                 prop_list[prop_index].activated[str].connect(props[key].set_value)
                 prop_list[prop_index].activated[str].connect(self.fomod_modified)
+                prop_list[prop_index].activated[str].connect(self.current_object.write_attribs)
+                prop_list[prop_index].activated[str].connect(self.current_object.update_item_name)
 
             """self.widget = QtWidgets.QWidget(self.dockWidgetContents)
             self.widget.setObjectName("widget")
@@ -264,41 +252,25 @@ class MainFrame(QtWidgets.QMainWindow, template.Ui_MainWindow):
             prop_list[prop_index].setObjectName(str(prop_index))
             prop_index += 1
 
-    def get_from_index(self, index):
-
-        item = self.tree_model.itemFromIndex(index)
-
-        for node in self.info_root.iter():
-            if node.model_item is item:
-                return item, node
-
-        for node in self.config_root.iter():
-            if node.model_item is item:
-                return item, node
-
-        return None
-
     def selected_object_list(self, index):
         item = self.list_model.itemFromIndex(index)
 
-        for child in self.current_children_list:
-            if child.model_item is item:
-                new_child = type(child)()
-                self.current_object.add_child(new_child)
+        new_child = type(item.xml_node)()
+        self.current_object.add_child(new_child)
 
-                # reload the object box
-                self.update_box_list()
+        # expand the parent
+        current_index = self.tree_model.indexFromItem(self.current_object.model_item)
+        self.object_tree_view.expand(current_index)
 
-                # expand the parent
-                current_index = self.tree_model.indexFromItem(self.current_item)
-                self.object_tree_view.expand(current_index)
+        # select the new item
+        self.object_tree_view.setCurrentIndex(self.tree_model.indexFromItem(new_child.model_item))
+        self.selected_object_tree(self.tree_model.indexFromItem(new_child.model_item))
 
-                # select the new item
-                self.object_tree_view.setCurrentIndex(self.tree_model.indexFromItem(new_child.model_item))
-                self.selected_object_tree(self.tree_model.indexFromItem(new_child.model_item))
+        # reload the object box
+        self.update_box_list()
 
-                # set the installer as changed
-                self.fomod_modified(True)
+        # set the installer as changed
+        self.fomod_modified(True)
 
     def fomod_modified(self, changed):
         if changed is False:

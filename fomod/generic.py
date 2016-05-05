@@ -14,15 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import mainframe, exceptions
-from PyQt5 import QtWidgets
-import sys
+from PyQt5 import QtWidgets, QtGui
+from os.path import join
+from . import cur_folder
 
 
-def main():
-    sys.excepthook = exceptions.excepthook
+def not_implemented():
+    generic_errorbox("Nope", "Sorry, this part hasn't been implemented yet!")
 
-    app = QtWidgets.QApplication(sys.argv)
-    window = mainframe.MainFrame()
-    window.show()
-    sys.exit(app.exec_())
+
+def generic_errorbox(title, text, detail=""):
+    errorbox = QtWidgets.QMessageBox()
+    errorbox.setText(text)
+    errorbox.setWindowTitle(title)
+    errorbox.setDetailedText(detail)
+    errorbox.setIconPixmap(QtGui.QPixmap(join(cur_folder, "resources/logos/logo_admin.png")))
+    errorbox.exec_()

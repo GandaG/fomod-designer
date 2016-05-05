@@ -6,7 +6,7 @@ import os
 a = Analysis(['pyinstaller-bootstrap.py'],
              pathex=[os.getcwd()],
              binaries=None,
-             datas=[('../fomod/gui/logos', 'fomod/gui/logos'),
+             datas=[('../resources', 'resources'),
                     ('../setup.cfg', '.'),],
              hiddenimports=[],
              hookspath=[],

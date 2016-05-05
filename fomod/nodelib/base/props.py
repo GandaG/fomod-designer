@@ -14,12 +14,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import base
+from .exceptions import BaseInstanceException
 
 
-class PropertyText(base.PropertyBase):
-    def __init__(self, name, tag, text="", editable=True):
-        super().__init__(name, tag, (), editable)
+class _PropertyBase(object):
+    def __init__(self, type_, name, values, editable=True):
+        if type(self) is _PropertyBase:
+            raise BaseInstanceException(self)
+
+        self.type_ = type_
+        self.name = name
+        self.editable = editable
+
+        self.value = ""
+        self.values = values
+
+
+class PropertyText(_PropertyBase):
+    def __init__(self, name, text="", editable=True):
+        super().__init__("text", name, (), editable)
         self.value = text
 
     def set_value(self, text):
@@ -27,9 +40,9 @@ class PropertyText(base.PropertyBase):
             self.value = text
 
 
-class PropertyCombo(base.PropertyBase):
-    def __init__(self, name, tag, values, editable=True):
-        super().__init__(name, tag, values, editable)
+class PropertyCombo(_PropertyBase):
+    def __init__(self, name, values, editable=True):
+        super().__init__("combo", name, values, editable)
         self.value = values[0]
 
     def set_value(self, value):
@@ -37,13 +50,13 @@ class PropertyCombo(base.PropertyBase):
             self.value = value
 
 
-class PropertyInt(base.PropertyBase):
-    def __init__(self, name, tag, min_value, max_value, default, editable=True):
+class PropertyInt(_PropertyBase):
+    def __init__(self, name, min_value, max_value, default, editable=True):
         self.min = min_value
         self.max = max_value
         values = range(min_value, max_value + 1)
 
-        super().__init__(name, tag, values, editable)
+        super().__init__("int", name, values, editable)
         self.value = default
 
     def set_value(self, value):

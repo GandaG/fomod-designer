@@ -14,4 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .serializer import serialize
+from os import listdir
+from .exceptions import MissingFileError
+
+
+def check_file(base_path, file_):
+    base_file = file_
+    try:
+        for item in listdir(base_path):
+            if item.casefold() == base_file.casefold():
+                return item
+        raise MissingFileError(base_file)
+    except FileNotFoundError:
+        raise MissingFileError(base_file)
