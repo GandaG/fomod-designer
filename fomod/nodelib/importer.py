@@ -16,9 +16,97 @@
 
 import os
 from lxml import etree
-from .base.factory import from_element
 from .utility import check_file
 from .exceptions import MissingFileError, ParserError
+from .base import info, config, base
+
+
+class NodeLookup(etree.PythonElementClassLookup):
+    def lookup(self, doc, element):
+        if element.tag == "fomod":
+            return info.NodeInfo
+        elif element.tag == "Name":
+            return info.NodeName
+        elif element.tag == "Author":
+            return info.NodeAuthor
+        elif element.tag == "Version":
+            return info.NodeVersion
+        elif element.tag == "Id":
+            return info.NodeID
+        elif element.tag == "Website":
+            return info.NodeWebsite
+        elif element.tag == "Description":
+            return info.NodeDescription
+        elif element.tag == "Groups":
+            return info.NodeGroup
+        elif element.tag == "element":
+            return info.NodeElement
+
+        elif element.tag == "config":
+            return config.NodeConfig
+        elif element.tag == "moduleName":
+            return config.NodeModName
+        elif element.tag == "moduleDependencies":
+            return config.NodeModDepend
+        elif element.tag == "requiredInstallFiles":
+            return config.NodeReqFiles
+        elif element.tag == "installSteps":
+            return config.NodeInstallSteps
+        elif element.tag == "conditionalFileInstalls":
+            return config.NodeCondInstall
+        elif element.tag == "fileDependency":
+            return config.NodeDependFile
+        elif element.tag == "flagDependency":
+            return config.NodeDependFlag
+        elif element.tag == "file":
+            return config.NodeFile
+        elif element.tag == "folder":
+            return config.NodeFolder
+        elif element.tag == "patterns":
+            if element.getparent().tag == "dependencyType":
+                return config.NodeInstallPatterns
+            elif element.getparent().tag == "conditionalFileInstalls":
+                return config.NodePatterns
+        elif element.tag == "pattern":
+            if element.getparent().getparent().tag == "conditionalFileInstalls":
+                return config.NodePattern
+            elif element.getparent().getparent().tag == "dependencyType":
+                return config.NodeInstallPattern
+        elif element.tag == "files":
+            return config.NodeFiles
+        elif element.tag == "dependencies":
+            return config.NodeDependencies
+        elif element.tag == "installStep":
+            return config.NodeInstallStep
+        elif element.tag == "visible":
+            return config.NodeVisible
+        elif element.tag == "optionalFileGroups":
+            return config.NodeOptGroups
+        elif element.tag == "group":
+            return config.NodeGroup
+        elif element.tag == "plugins":
+            return config.NodePlugins
+        elif element.tag == "plugin":
+            return config.NodePlugin
+        elif element.tag == "description":
+            return config.NodePluginDescription
+        elif element.tag == "image":
+            return config.NodeImage
+        elif element.tag == "conditionFlags":
+            return config.NodeConditionFlags
+        elif element.tag == "typeDescriptor":
+            return config.NodeTypeDesc
+        elif element.tag == "flag":
+            return config.NodeFlag
+        elif element.tag == "dependencyType":
+            return config.NodeDependencyType
+        elif element.tag == "defaultType":
+            return config.NodeDefaultType
+        elif element.tag == "type":
+            return config.NodeType
+
+        else:
+            return base.NodeBase
 
 
 def import_(package_path):
@@ -32,34 +120,60 @@ def import_(package_path):
         info_path = os.path.join(fomod_folder_path, info_file)
         config_path = os.path.join(fomod_folder_path, config_file)
 
-        info_tree = etree.parse(info_path)
-        config_tree = etree.parse(config_path)
+        info_context = etree.iterparse(info_path, remove_comments=True, remove_pis=True, remove_blank_text=True)
+        config_context = etree.iterparse(config_path, remove_comments=True, remove_pis=True, remove_blank_text=True)
+        info_context.set_element_class_lookup(NodeLookup())
+        config_context.set_element_class_lookup(NodeLookup())
+
+        for action, element in info_context:
+            element.parse_attribs()
+
+            for elem in element:
+                element.model_item.appendRow(elem.model_item)
+
+                valid_child = True
+                if elem.allowed_instances:
+                    instances = 0
+                    for item in element:
+                        if type(item) == type(elem):
+                            instances += 1
+                    if instances > elem.allowed_instances:
+                        valid_child = False
+                if type(elem) in element.allowed_children and valid_child:
+                    valid_child = True
+                else:
+                    valid_child = False
+                if not valid_child:
+                    element.remove_child(elem)
+
+        for action, element in config_context:
+            element.parse_attribs()
+
+            for elem in element:
+                element.model_item.appendRow(elem.model_item)
+
+                valid_child = True
+                if elem.allowed_instances:
+                    instances = 0
+                    for item in element:
+                        if type(item) == type(elem):
+                            instances += 1
+                    if instances > elem.allowed_instances:
+                        valid_child = False
+                if type(elem) in element.allowed_children and valid_child:
+                    valid_child = True
+                else:
+                    valid_child = False
+                if not valid_child:
+                    element.remove_child(elem)
+
+        info_root = info_context.root
+        config_root = config_context.root
 
     except etree.ParseError as e:
         raise ParserError(str(e))
     except MissingFileError:
         return new()
-
-    info_root = from_element(info_tree.getroot())
-    config_root = from_element(config_tree.getroot())
-
-    for element in info_tree.getroot().iter():
-        if element is info_tree.getroot() or element.tag is etree.Comment:
-            continue
-        parsed_element = from_element(element)
-
-        for node in info_root.iter():
-            if node.element is element.getparent():
-                node.add_child(parsed_element)
-
-    for element in config_tree.getroot().iter():
-        if element is config_tree.getroot() or element.tag is etree.Comment:
-            continue
-        parsed_element = from_element(element)
-
-        for node in config_root.iter():
-            if node.element is element.getparent():
-                node.add_child(parsed_element)
 
     return info_root, config_root
 

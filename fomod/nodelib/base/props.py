@@ -18,13 +18,12 @@ from .exceptions import BaseInstanceException
 
 
 class _PropertyBase(object):
-    def __init__(self, type_id, name, tag, values, editable=True):
+    def __init__(self, type_, name, values, editable=True):
         if type(self) is _PropertyBase:
             raise BaseInstanceException(self)
 
-        self.type_id = type_id
+        self.type_ = type_
         self.name = name
-        self.tag = tag
         self.editable = editable
 
         self.value = ""
@@ -32,8 +31,8 @@ class _PropertyBase(object):
 
 
 class PropertyText(_PropertyBase):
-    def __init__(self, name, tag, text="", editable=True):
-        super().__init__(str, name, tag, (), editable)
+    def __init__(self, name, text="", editable=True):
+        super().__init__("text", name, (), editable)
         self.value = text
 
     def set_value(self, text):
@@ -42,8 +41,8 @@ class PropertyText(_PropertyBase):
 
 
 class PropertyCombo(_PropertyBase):
-    def __init__(self, name, tag, values, editable=True):
-        super().__init__(list, name, tag, values, editable)
+    def __init__(self, name, values, editable=True):
+        super().__init__("combo", name, values, editable)
         self.value = values[0]
 
     def set_value(self, value):
@@ -52,12 +51,12 @@ class PropertyCombo(_PropertyBase):
 
 
 class PropertyInt(_PropertyBase):
-    def __init__(self, name, tag, min_value, max_value, default, editable=True):
+    def __init__(self, name, min_value, max_value, default, editable=True):
         self.min = min_value
         self.max = max_value
         values = range(min_value, max_value + 1)
 
-        super().__init__(int, name, tag, values, editable)
+        super().__init__("int", name, values, editable)
         self.value = default
 
     def set_value(self, value):

@@ -18,52 +18,74 @@ from .base import NodeBase
 
 
 class NodeInfo(NodeBase):
-    def __init__(self, element=None):
-        allowed_children = (NodeName, NodeAuthor, NodeDescription,
-                            NodeID, NodeGroup, NodeVersion, NodeWebsite)
+    tag = "fomod"
 
-        super().__init__("Info", "fomod", 1, element, False,
-                         allowed_children=allowed_children)
+    def _init(self):
+        allowed_children = (NodeName, NodeAuthor, NodeDescription, NodeID, NodeGroup, NodeVersion, NodeWebsite)
+        self.init("Info", type(self).tag, 1, allow_text=False, allowed_children=allowed_children)
+        super()._init()
 
 
 class NodeName(NodeBase):
-    def __init__(self, element=None, text=""):
-        super().__init__("Name", "Name", 1, element, allow_text=True, default_text=text)
+    tag = "Name"
+
+    def _init(self):
+        self.init("Name", type(self).tag, 1, allow_text=True)
+        super()._init()
 
 
 class NodeAuthor(NodeBase):
-    def __init__(self, element=None, text=""):
-        super().__init__("Author", "Author", 1, element, allow_text=True, default_text=text)
+    tag = "Author"
+
+    def _init(self):
+        self.init("Author", type(self).tag, 1, allow_text=True)
+        super()._init()
 
 
 class NodeVersion(NodeBase):
-    def __init__(self, element=None, text=""):
-        super().__init__("Version", "Version", 1, element, allow_text=True, default_text=text)
+    tag = "Version"
+
+    def _init(self):
+        self.init("Version", type(self).tag, 1, allow_text=True)
+        super()._init()
 
 
 class NodeID(NodeBase):
-    def __init__(self, element=None, text=""):
-        super().__init__("ID", "Id", 1, element, allow_text=True, default_text=text)
+    tag = "Id"
+
+    def _init(self):
+        self.init("ID", type(self).tag, 1, allow_text=True)
+        super()._init()
 
 
 class NodeWebsite(NodeBase):
-    def __init__(self, element=None, text=""):
-        super().__init__("Website", "Website", 1, element, allow_text=True, default_text=text)
+    tag = "Website"
+
+    def _init(self):
+        self.init("Website", type(self).tag, 1, allow_text=True)
+        super()._init()
 
 
 class NodeDescription(NodeBase):
-    def __init__(self, element=None, text=""):
-        super().__init__("Description", "Description", 1, element, allow_text=True, default_text=text)
+    tag = "Description"
+
+    def _init(self):
+        self.init("Description", type(self).tag, 1, allow_text=True)
+        super()._init()
 
 
 class NodeGroup(NodeBase):
-    def __init__(self, element=None):
-        allowed_child = (NodeElement,)
+    tag = "Groups"
 
-        super().__init__("Group", "Groups", 1, element,
-                         allowed_children=allowed_child)
+    def _init(self):
+        allowed_child = (NodeElement,)
+        self.init("Group", type(self).tag, 1, allowed_children=allowed_child)
+        super()._init()
 
 
 class NodeElement(NodeBase):
-    def __init__(self, element=None, text=""):
-        super().__init__("Element", "element", 0, element, allow_text=True, default_text=text)
+    tag = "element"
+
+    def _init(self):
+        self.init("Element", type(self).tag, 0, allow_text=True)
+        super()._init()

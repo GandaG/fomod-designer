@@ -85,7 +85,6 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.package_name = ""
         self.info_root = None
         self.config_root = None
-        self.current_item = None
         self.current_object = None
         self.current_prop_list = []
         self.current_children_list = []
@@ -104,7 +103,6 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.package_path = open_dialog.getExistingDirectory(self, "Select package root directory:", expanduser("~"))
 
         if self.package_path:
-
             try:
                 self.info_root, self.config_root = import_(normpath(self.package_path))
             except NodeLibError as p:
@@ -123,11 +121,7 @@ class MainFrame(base_ui[0], base_ui[1]):
     def save(self):
         from .nodelib import export
 
-        if not self.fomod_changed:
-            from . import generic
-            generic.generic_errorbox("I REFUSE TO SAVE",
-                                     "There are no changes to save!")
-        elif not self.info_root and not self.config_root:
+        if not self.info_root and not self.config_root:
             from . import generic
             generic.generic_errorbox("I REFUSE TO SAVE",
                                      "There is nothing... literally.")
@@ -145,16 +139,12 @@ class MainFrame(base_ui[0], base_ui[1]):
 
     def delete(self):
         try:
-            if self.current_object:
+            if self.current_object is not None:
                 object_to_delete = self.current_object
-                object_to_delete.parent.remove_child(object_to_delete)
+                new_index = self.tree_model.indexFromItem(self.current_object.getparent().model_item)
+                object_to_delete.getparent().remove_child(object_to_delete)
 
-                new_index = self.tree_model.indexFromItem(self.current_object.parent.model_item)
                 self.selected_object_tree(new_index)
-            else:
-                from . import generic
-                generic.generic_errorbox("What are trying to do? o.O",
-                                         "You can't delete nothing... Try to select something before deleting.")
         except AttributeError:
             from . import generic
             generic.generic_errorbox("You can't do that...",
@@ -169,7 +159,7 @@ class MainFrame(base_ui[0], base_ui[1]):
         generic.not_implemented()
 
     def selected_object_tree(self, index):
-        self.current_item, self.current_object = self.get_from_index(index)
+        self.current_object = self.tree_model.itemFromIndex(index).xml_node
 
         self.update_box_list()
         self.update_props_list()
@@ -205,6 +195,7 @@ class MainFrame(base_ui[0], base_ui[1]):
             prop_list[prop_index].setText(self.current_object.text)
             prop_list[prop_index].textEdited[str].connect(self.current_object.set_text)
             prop_list[prop_index].textEdited[str].connect(self.fomod_modified)
+            prop_list[prop_index].textEdited[str].connect(self.current_object.write_attribs)
             self.formLayout.setWidget(prop_index, QtWidgets.QFormLayout.FieldRole,
                                       prop_list[prop_index])
 
@@ -219,27 +210,30 @@ class MainFrame(base_ui[0], base_ui[1]):
             label.setText(props[key].name)
             self.formLayout.setWidget(prop_index, QtWidgets.QFormLayout.LabelRole, label)
 
-            if props[key].type_id == str:
+            if props[key].type_ == "text":
                 prop_list.append(QtWidgets.QLineEdit(self.dockWidgetContents))
                 prop_list[prop_index].setText(props[key].value)
                 prop_list[prop_index].textEdited[str].connect(props[key].set_value)
                 prop_list[prop_index].textEdited[str].connect(self.fomod_modified)
-                if key == "name" or key == "source":
-                    prop_list[prop_index].textEdited[str].connect(self.current_object.set_item_name)
+                prop_list[prop_index].textEdited[str].connect(self.current_object.write_attribs)
+                prop_list[prop_index].textEdited[str].connect(self.current_object.update_item_name)
 
-            elif props[key].type_id == int:
+            elif props[key].type_ == "int":
                 prop_list.append(QtWidgets.QSpinBox(self.dockWidgetContents))
                 prop_list[prop_index].setValue(int(props[key].value))
                 prop_list[prop_index].valueChanged.connect(props[key].set_value)
                 prop_list[prop_index].valueChanged.connect(self.fomod_modified)
+                prop_list[prop_index].valueChanged.connect(self.current_object.write_attribs)
                 prop_list[prop_index].setMinimum(props[key].min)
                 prop_list[prop_index].setMaximum(props[key].max)
 
-            elif props[key].type_id == list:
+            elif props[key].type_ == "combo":
                 prop_list.append(QtWidgets.QComboBox(self.dockWidgetContents))
                 prop_list[prop_index].insertItems(0, props[key].values)
                 prop_list[prop_index].activated[str].connect(props[key].set_value)
                 prop_list[prop_index].activated[str].connect(self.fomod_modified)
+                prop_list[prop_index].activated[str].connect(self.current_object.write_attribs)
+                prop_list[prop_index].activated[str].connect(self.current_object.update_item_name)
 
             """self.widget = QtWidgets.QWidget(self.dockWidgetContents)
             self.widget.setObjectName("widget")
@@ -258,27 +252,22 @@ class MainFrame(base_ui[0], base_ui[1]):
             prop_list[prop_index].setObjectName(str(prop_index))
             prop_index += 1
 
-    def get_from_index(self, index):
-
-        item = self.tree_model.itemFromIndex(index)
-        return item, item.xml_node
-
     def selected_object_list(self, index):
         item = self.list_model.itemFromIndex(index)
 
         new_child = type(item.xml_node)()
         self.current_object.add_child(new_child)
 
-        # reload the object box
-        self.update_box_list()
-
         # expand the parent
-        current_index = self.tree_model.indexFromItem(self.current_item)
+        current_index = self.tree_model.indexFromItem(self.current_object.model_item)
         self.object_tree_view.expand(current_index)
 
         # select the new item
         self.object_tree_view.setCurrentIndex(self.tree_model.indexFromItem(new_child.model_item))
         self.selected_object_tree(self.tree_model.indexFromItem(new_child.model_item))
+
+        # reload the object box
+        self.update_box_list()
 
         # set the installer as changed
         self.fomod_modified(True)

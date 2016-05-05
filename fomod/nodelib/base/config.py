@@ -19,277 +19,262 @@ from .props import PropertyCombo, PropertyInt, PropertyText
 
 
 class NodeConfig(NodeBase):
-    def __init__(self, element=None):
-        allowed_children = (NodeModName, NodeModDepend, NodeInstallSteps,
-                            NodeReqFiles, NodeCondInstall)
+    tag = "config"
 
-        properties = {"xsi": PropertyText("xsi",
-                                          "{http://www.w3.org/2001/XMLSchema-instance}noNamespaceSchemaLocation",
-                                          "http://qconsulting.ca/fo3/ModConfig5.0.xsd",
-                                          False)}
-
-        super().__init__("Config", "config", 1, element, False,
-                         allowed_children=allowed_children,
-                         properties=properties)
+    def _init(self):
+        allowed_children = (NodeModName, NodeModDepend, NodeInstallSteps, NodeReqFiles, NodeCondInstall)
+        properties = {"{http://www.w3.org/2001/XMLSchema-instance}noNamespaceSchemaLocation":
+                      PropertyText("xsi", "http://qconsulting.ca/fo3/ModConfig5.0.xsd", False)}
+        self.init("Config", type(self).tag, 1, allowed_children=allowed_children, properties=properties)
 
 
 class NodeModName(NodeBase):
-    def __init__(self, element=None, text=""):
-        super().__init__("Name", "moduleName", 0, element, allow_text=True, default_text=text)
+    tag = "moduleName"
+
+    def _init(self):
+        self.init("Name", type(self).tag, 0, allow_text=True)
 
 
 class NodeModDepend(NodeBase):
-    def __init__(self, element=None):
-        allowed_children = (NodeDependFile, NodeDependFlag)
+    tag = "moduleDependencies"
 
-        super().__init__("Mod Dependencies", "moduleDependencies", 1, element,
-                         allowed_children=allowed_children)
+    def _init(self):
+        allowed_children = (NodeDependFile, NodeDependFlag)
+        self.init("Mod Dependencies", type(self).tag, 1, allowed_children=allowed_children)
 
 
 class NodeReqFiles(NodeBase):
-    def __init__(self, element=None):
-        allowed_children = (NodeFile, NodeFolder)
+    tag = "requiredInstallFiles"
 
-        super().__init__("Mod Requirements", "requiredInstallFiles", 1, element,
-                         allowed_children=allowed_children)
+    def _init(self):
+        allowed_children = (NodeFile, NodeFolder)
+        self.init("Mod Requirements", type(self).tag, 1, allowed_children=allowed_children)
 
 
 class NodeInstallSteps(NodeBase):
-    def __init__(self, element=None):
+    tag = "installSteps"
+
+    def _init(self):
         allowed_children = (NodeInstallStep,)
-
-        properties = {"order": PropertyText("Order", "order", "Explicit", False)}
-
-        super().__init__("Installation Steps", "installSteps", 1, element,
-                         allowed_children=allowed_children, properties=properties)
+        properties = {"order": PropertyText("Order", "Explicit", False)}
+        self.init("Installation Steps", type(self).tag, 1, allowed_children=allowed_children, properties=properties)
 
 
 class NodeCondInstall(NodeBase):
-    def __init__(self, element=None):
-        allowed_children = (NodePatterns,)
+    tag = "conditionalFileInstalls"
 
-        super().__init__("Conditional Installation", "conditionalFileInstalls", 1, element,
-                         allowed_children=allowed_children)
+    def _init(self):
+        allowed_children = (NodePatterns,)
+        self.init("Conditional Installation", type(self).tag, 1, allowed_children=allowed_children)
 
 
 class NodeDependFile(NodeBase):
-    def __init__(self, element=None, default_properties=None):
-        properties = {"file": PropertyText("File", "file", ""),
-                      "state": PropertyCombo("State", "state", ("Active", "Inactive", "Missing"))}
+    tag = "fileDependency"
 
-        super().__init__("File Dependency", "fileDependency", 0, element,
-                         properties=properties, default_properties=default_properties)
+    def _init(self):
+        properties = {"file": PropertyText("File", ""),
+                      "state": PropertyCombo("State", ("Active", "Inactive", "Missing"))}
+        self.init("File Dependency", type(self).tag, 0, properties=properties)
 
 
 class NodeDependFlag(NodeBase):
-    def __init__(self, element=None, default_properties=None):
-        properties = {"flag": PropertyText("Flag", "flag", ""),
-                      "value": PropertyText("Value", "value", "")}
+    tag = "flagDependency"
 
-        super().__init__("Flag Dependency", "flagDependency", 0, element,
-                         properties=properties, default_properties=default_properties)
+    def _init(self):
+        properties = {"flag": PropertyText("Flag", ""), "value": PropertyText("Value", "")}
+        self.init("Flag Dependency", type(self).tag, 0, properties=properties)
 
 
 class NodeFile(NodeBase):
-    def __init__(self, element=None, default_properties=None):
-        properties = {"source": PropertyText("Source", "source", ""),
-                      "destination": PropertyText("Destination", "destination", ""),
-                      "priority": PropertyInt("Priority", "priority", 0, 99, 0)}
+    tag = "file"
 
-        super().__init__("File", "file", 0, element,
-                         properties=properties, default_properties=default_properties)
+    def _init(self):
+        properties = {"source": PropertyText("Source", ""),
+                      "destination": PropertyText("Destination", ""),
+                      "priority": PropertyInt("Priority", 0, 99, 0)}
+        self.init("File", type(self).tag, 0, properties=properties)
 
 
 class NodeFolder(NodeBase):
-    def __init__(self, element=None, default_properties=None):
-        properties = {"source": PropertyText("Source", "source", ""),
-                      "destination": PropertyText("Destination", "destination", ""),
-                      "priority": PropertyInt("Priority", "priority", 0, 99, 0)}
+    tag = "folder"
 
-        super().__init__("Folder", "folder", 0, element,
-                         properties=properties, default_properties=default_properties)
+    def _init(self):
+        properties = {"source": PropertyText("Source", ""),
+                      "destination": PropertyText("Destination", ""),
+                      "priority": PropertyInt("Priority", 0, 99, 0)}
+        self.init("Folder", type(self).tag, 0, properties=properties)
 
 
 class NodePatterns(NodeBase):
-    def __init__(self, element=None):
-        allowed_children = (NodePattern,)
+    tag = "patterns"
 
-        super().__init__("Patterns", "patterns", 0, element,
-                         allowed_children=allowed_children)
+    def _init(self):
+        allowed_children = (NodePattern,)
+        self.init("Patterns", type(self).tag, 0, allowed_children=allowed_children)
 
 
 class NodePattern(NodeBase):
-    def __init__(self, element=None):
-        allowed_children = (NodeFiles, NodeDependencies)
+    tag = "pattern"
 
-        super().__init__("Pattern", "pattern", 0, element,
-                         allowed_children=allowed_children)
+    def _init(self):
+        allowed_children = (NodeFiles, NodeDependencies)
+        self.init("Pattern", type(self).tag, 0, allowed_children=allowed_children)
 
 
 class NodeFiles(NodeBase):
-    def __init__(self, element=None):
-        allowed_children = (NodeFile, NodeFolder)
+    tag = "files"
 
-        super().__init__("Files", "files", 0, element,
-                         allowed_children=allowed_children)
+    def _init(self):
+        allowed_children = (NodeFile, NodeFolder)
+        self.init("Files", type(self).tag, 0, allowed_children=allowed_children)
 
 
 class NodeDependencies(NodeBase):
-    def __init__(self, element=None, default_properties=None):
+    tag = "dependencies"
+
+    def _init(self):
         allowed_children = (NodeDependFile, NodeDependFlag, NodeDependencies)
-
-        properties = {"operator": PropertyCombo("Type", "operator", ["And", "Or"])}
-
-        super().__init__("Dependencies", "dependencies", 0, element,
-                         allowed_children=allowed_children,
-                         properties=properties, default_properties=default_properties)
+        properties = {"operator": PropertyCombo("Type", ["And", "Or"])}
+        self.init("Dependencies", type(self).tag, 0, allowed_children=allowed_children, properties=properties)
 
 
 class NodeInstallStep(NodeBase):
-    def __init__(self, element=None, default_properties=None):
+    tag = "installStep"
+
+    def _init(self):
         allowed_children = (NodeVisible, NodeOptGroups)
-
-        properties = {"name": PropertyText("Name", "name", "")}
-
-        super().__init__("Install Step", "installStep", 0, element,
-                         allowed_children=allowed_children,
-                         properties=properties, default_properties=default_properties)
+        properties = {"name": PropertyText("Name", "")}
+        self.init("Install Step", type(self).tag, 0, allowed_children=allowed_children, properties=properties)
 
 
 class NodeVisible(NodeBase):
-    def __init__(self, element=None):
-        allowed_children = (NodeDependFile, NodeDependFlag)
+    tag = "visible"
 
-        super().__init__("Visibility", "visible", 1, element,
-                         allowed_children=allowed_children)
+    def _init(self):
+        allowed_children = (NodeDependFile, NodeDependFlag)
+        self.init("Visibility", type(self).tag, 1, allowed_children=allowed_children)
 
 
 class NodeOptGroups(NodeBase):
-    def __init__(self, element=None, default_properties=None):
+    tag = "optionalFileGroups"
+
+    def _init(self):
         allowed_children = (NodeGroup,)
-
-        properties = {"order": PropertyCombo("Order", "order", ["Ascending", "Descending", "Explicit"])}
-
-        super().__init__("Option Group", "optionalFileGroups", 0, element,
-                         allowed_children=allowed_children,
-                         properties=properties, default_properties=default_properties)
+        properties = {"order": PropertyCombo("Order", ["Ascending", "Descending", "Explicit"])}
+        self.init("Option Group", type(self).tag, 0, allowed_children=allowed_children, properties=properties)
 
 
 class NodeGroup(NodeBase):
-    def __init__(self, element=None, default_properties=None):
+    tag = "group"
+
+    def _init(self):
         allowed_children = (NodePlugins,)
-
-        properties = {"name": PropertyText("Name", "name", ""),
-                      "type": PropertyCombo("Type", "type", ["SelectAny", "SelectAtMostOne",
-                                                             "SelectExactlyOne", "SelectAll", "SelectAtLeastOne"])}
-
-        super().__init__("Group", "group", 0, element,
-                         allowed_children=allowed_children,
-                         properties=properties, default_properties=default_properties)
+        properties = {"name": PropertyText("Name", ""),
+                      "type": PropertyCombo("Type", ["SelectAny", "SelectAtMostOne",
+                                                     "SelectExactlyOne", "SelectAll", "SelectAtLeastOne"])}
+        self.init("Group", type(self).tag, 0, allowed_children=allowed_children, properties=properties)
 
 
 class NodePlugins(NodeBase):
-    def __init__(self, element=None, default_properties=None):
+    tag = "plugins"
+
+    def _init(self):
         allowed_children = (NodePlugin,)
-
-        properties = {"order": PropertyCombo("Order", "order", ["Ascending", "Descending", "Explicit"])}
-
-        super().__init__("Plugins", "plugins", 0, element,
-                         allowed_children=allowed_children,
-                         properties=properties, default_properties=default_properties)
+        properties = {"order": PropertyCombo("Order", ["Ascending", "Descending", "Explicit"])}
+        self.init("Plugins", type(self).tag, 0, allowed_children=allowed_children, properties=properties)
 
 
 class NodePlugin(NodeBase):
-    def __init__(self, element=None, default_properties=None):
-        allowed_children = (NodePluginDescription, NodeImage, NodeFiles,
-                            NodeConditionFlags, NodeTypeDesc)
+    tag = "plugin"
 
-        required_children = (NodeConditionFlags, NodeFiles)
-
-        properties = {"name": PropertyText("Name", "name", "")}
-
-        super().__init__("Plugin", "plugin", 0, element,
-                         allowed_children=allowed_children, properties=properties,
-                         required_children=required_children, default_properties=default_properties)
+    def _init(self):
+        allowed_children = (NodePluginDescription, NodeImage, NodeFiles, NodeConditionFlags, NodeTypeDesc)
+        properties = {"name": PropertyText("Name", "")}
+        self.init("Plugin", type(self).tag, 0, allowed_children=allowed_children, properties=properties)
 
 
 class NodePluginDescription(NodeBase):
-    def __init__(self, element=None, text=""):
-        super().__init__("Description", "description", 0, element,
-                         allow_text=True, default_text=text)
+    tag = "description"
+
+    def _init(self):
+        self.init("Description", type(self).tag, 0, allow_text=True)
 
 
 class NodeImage(NodeBase):
-    def __init__(self, element=None, default_properties=None):
-        properties = {"path": PropertyText("Path", "path", "")}
+    tag = "image"
 
-        super().__init__("Image", "image", 0, element,
-                         properties=properties, default_properties=default_properties)
+    def _init(self):
+        properties = {"path": PropertyText("Path", "")}
+        self.init("Image", type(self).tag, 0, properties=properties)
 
 
 class NodeConditionFlags(NodeBase):
-    def __init__(self, element=None):
-        allowed_children = (NodeFlag,)
+    tag = "conditionFlags"
 
-        super().__init__("Flags", "conditionFlags", 0, element,
-                         allowed_children=allowed_children)
+    def _init(self):
+        allowed_children = (NodeFlag,)
+        self.init("Flags", type(self).tag, 0, allowed_children=allowed_children)
 
 
 class NodeTypeDesc(NodeBase):
-    def __init__(self, element=None):
-        allowed_children = (NodeDependencyType, NodeType)
+    tag = "typeDescriptor"
 
-        super().__init__("Type Descriptor", "typeDescriptor", 0, element,
-                         allowed_children=allowed_children,
-                         max_children=1)
+    def _init(self):
+        allowed_children = (NodeDependencyType, NodeType)
+        self.init("Type Descriptor", type(self).tag, 0, allowed_children=allowed_children)
+
+    def can_add_child(self, child):
+        if super().can_add_child(child):
+            if len(self) < 1:
+                return True
+        return False
 
 
 class NodeFlag(NodeBase):
-    def __init__(self, element=None, default_properties=None, text=""):
-        properties = {"name": PropertyText("Name", "name", "")}
+    tag = "flag"
 
-        super().__init__("Flag", "flag", 0, element,
-                         properties=properties, allow_text=True,
-                         default_properties=default_properties, default_text=text)
+    def _init(self):
+        properties = {"name": PropertyText("Name", "")}
+        self.init("Flag", type(self).tag, 0, properties=properties, allow_text=True)
 
 
 class NodeDependencyType(NodeBase):
-    def __init__(self, element=None):
-        allowed_children = (NodeInstallPatterns, NodeDefaultType)
+    tag = "dependencyType"
 
-        super().__init__("Dependency Type", "dependencyType", 0, element,
-                         allowed_children=allowed_children)
+    def _init(self):
+        allowed_children = (NodeInstallPatterns, NodeDefaultType)
+        self.init("Dependency Type", type(self).tag, 0, allowed_children=allowed_children)
 
 
 class NodeDefaultType(NodeBase):
-    def __init__(self, element=None, default_properties=None):
-        properties = {"name": PropertyCombo("Name", "name",
-                                            ["Required", "Recommended", "Optional", "CouldBeUsable", "NotUsable"])}
+    tag = "defaultType"
 
-        super().__init__("Default Type", "defaultType", 0, element,
-                         properties=properties, default_properties=default_properties)
+    def _init(self):
+        properties = {"name": PropertyCombo("Name",
+                                            ["Required", "Recommended", "Optional", "CouldBeUsable", "NotUsable"])}
+        self.init("Default Type", type(self).tag, 0, properties=properties)
 
 
 class NodeType(NodeBase):
-    def __init__(self, element=None, default_properties=None):
-        properties = {"name": PropertyCombo("Name", "name",
-                                            ["Required", "Recommended", "Optional", "CouldBeUsable", "NotUsable"])}
+    tag = "type"
 
-        super().__init__("Type", "type", 0, element,
-                         properties=properties, default_properties=default_properties)
+    def _init(self):
+        properties = {"name": PropertyCombo("Name",
+                                            ["Required", "Recommended", "Optional", "CouldBeUsable", "NotUsable"])}
+        self.init("Type", type(self).tag, 0, properties=properties)
 
 
 class NodeInstallPatterns(NodeBase):
-    def __init__(self, element=None):
-        allowed_children = (NodeInstallPattern,)
+    tag = "patterns"
 
-        super().__init__("Patterns", "patterns", 0, element,
-                         allowed_children=allowed_children)
+    def _init(self):
+        allowed_children = (NodeInstallPattern,)
+        self.init("Patterns", type(self).tag, 0, allowed_children=allowed_children)
 
 
 class NodeInstallPattern(NodeBase):
-    def __init__(self, element=None):
-        allowed_children = (NodeType, NodeDependencies)
+    tag = "pattern"
 
-        super().__init__("Pattern", "pattern", 0, element,
-                         allowed_children=allowed_children)
+    def _init(self):
+        allowed_children = (NodeType, NodeDependencies)
+        self.init("Pattern", type(self).tag, 0, allowed_children=allowed_children)
