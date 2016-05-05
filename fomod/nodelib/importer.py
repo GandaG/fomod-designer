@@ -125,47 +125,27 @@ def import_(package_path):
         info_context.set_element_class_lookup(NodeLookup())
         config_context.set_element_class_lookup(NodeLookup())
 
-        for action, element in info_context:
-            element.parse_attribs()
+        for context in (info_context, config_context):
+            for action, element in context:
+                element.parse_attribs()
 
-            for elem in element:
-                element.model_item.appendRow(elem.model_item)
+                for elem in element:
+                    element.model_item.appendRow(elem.model_item)
 
-                valid_child = True
-                if elem.allowed_instances:
-                    instances = 0
-                    for item in element:
-                        if type(item) == type(elem):
-                            instances += 1
-                    if instances > elem.allowed_instances:
-                        valid_child = False
-                if type(elem) in element.allowed_children and valid_child:
                     valid_child = True
-                else:
-                    valid_child = False
-                if not valid_child:
-                    element.remove_child(elem)
-
-        for action, element in config_context:
-            element.parse_attribs()
-
-            for elem in element:
-                element.model_item.appendRow(elem.model_item)
-
-                valid_child = True
-                if elem.allowed_instances:
-                    instances = 0
-                    for item in element:
-                        if type(item) == type(elem):
-                            instances += 1
-                    if instances > elem.allowed_instances:
+                    if elem.allowed_instances:
+                        instances = 0
+                        for item in element:
+                            if type(item) == type(elem):
+                                instances += 1
+                        if instances > elem.allowed_instances:
+                            valid_child = False
+                    if type(elem) in element.allowed_children and valid_child:
+                        valid_child = True
+                    else:
                         valid_child = False
-                if type(elem) in element.allowed_children and valid_child:
-                    valid_child = True
-                else:
-                    valid_child = False
-                if not valid_child:
-                    element.remove_child(elem)
+                    if not valid_child:
+                        element.remove_child(elem)
 
         info_root = info_context.root
         config_root = config_context.root
