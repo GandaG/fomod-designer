@@ -46,6 +46,8 @@ class NodeLookup(etree.PythonElementClassLookup):
             return config.NodeConfig
         elif element.tag == "moduleName":
             return config.NodeModName
+        elif element.tag == "moduleImage":
+            return config.NodeModImage
         elif element.tag == "moduleDependencies":
             return config.NodeModDepend
         elif element.tag == "requiredInstallFiles":
@@ -58,6 +60,8 @@ class NodeLookup(etree.PythonElementClassLookup):
             return config.NodeDependFile
         elif element.tag == "flagDependency":
             return config.NodeDependFlag
+        elif element.tag == "gameDependency":
+            return config.NodeDependGame
         elif element.tag == "file":
             return config.NodeFile
         elif element.tag == "folder":
