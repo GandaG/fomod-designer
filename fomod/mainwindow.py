@@ -16,7 +16,7 @@
 
 from PyQt5 import QtWidgets, QtGui, QtCore, uic
 from os.path import join
-from . import cur_folder
+from . import cur_folder, settings
 
 
 base_ui = uic.loadUiType(join(cur_folder, "resources/templates/mainframe.ui"))
@@ -83,6 +83,7 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.original_title = self.windowTitle()
         self.package_path = ""
         self.package_name = ""
+        self.settings_dict = settings.read_settings()
         self.info_root = None
         self.config_root = None
         self.current_object = None
@@ -130,8 +131,10 @@ class MainFrame(base_ui[0], base_ui[1]):
             self.fomod_modified(False)
 
     def options(self):
-        from . import generic
-        generic.not_implemented()
+        config = settings.SettingsDialog()
+        config.setParent(self)
+        config.show()
+        self.settings_dict = settings.read_settings()
 
     def refresh(self):
         from . import generic
