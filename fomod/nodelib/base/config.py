@@ -22,7 +22,7 @@ class NodeConfig(NodeBase):
     tag = "config"
 
     def _init(self):
-        allowed_children = (NodeModName, NodeModDepend, NodeInstallSteps, NodeReqFiles, NodeCondInstall)
+        allowed_children = (NodeModName, NodeModImage, NodeModDepend, NodeInstallSteps, NodeReqFiles, NodeCondInstall)
         properties = {"{http://www.w3.org/2001/XMLSchema-instance}noNamespaceSchemaLocation":
                       PropertyText("xsi", "http://qconsulting.ca/fo3/ModConfig5.0.xsd", False)}
         self.init("Config", type(self).tag, 1, allowed_children=allowed_children, properties=properties)
@@ -54,7 +54,7 @@ class NodeModDepend(NodeBase):
     tag = "moduleDependencies"
 
     def _init(self):
-        allowed_children = (NodeDependFile, NodeDependFlag)
+        allowed_children = (NodeDependFile, NodeDependFlag, NodeDependGame)
         properties = {"operator": PropertyCombo("Type", ["And", "Or"])}
         self.init("Mod Dependencies", type(self).tag, 1, allowed_children=allowed_children, properties=properties)
         super()._init()
@@ -173,7 +173,7 @@ class NodeDependencies(NodeBase):
     tag = "dependencies"
 
     def _init(self):
-        allowed_children = (NodeDependFile, NodeDependFlag, NodeDependencies)
+        allowed_children = (NodeDependFile, NodeDependFlag, NodeDependGame, NodeDependencies)
         properties = {"operator": PropertyCombo("Type", ["And", "Or"])}
         self.init("Dependencies", type(self).tag, 1, allowed_children=allowed_children, properties=properties)
         super()._init()
@@ -193,7 +193,7 @@ class NodeVisible(NodeBase):
     tag = "visible"
 
     def _init(self):
-        allowed_children = (NodeDependFile, NodeDependFlag)
+        allowed_children = (NodeDependFile, NodeDependFlag, NodeDependGame)
         self.init("Visibility", type(self).tag, 1, allowed_children=allowed_children)
         super()._init()
 

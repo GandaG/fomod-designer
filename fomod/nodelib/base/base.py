@@ -76,7 +76,7 @@ class NodeBase(etree.ElementBase):
 
     def write_attribs(self):
         for key in self.properties:
-            self.set(key, self.properties[key].value)
+            self.set(key, str(self.properties[key].value))
 
     def update_item_name(self):
         if "name" in self.properties:
