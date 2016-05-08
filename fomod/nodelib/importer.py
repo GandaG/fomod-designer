@@ -157,7 +157,7 @@ def import_(package_path):
     except etree.ParseError as e:
         raise ParserError(str(e))
     except MissingFileError:
-        return new()
+        return None, None
 
     return info_root, config_root
 

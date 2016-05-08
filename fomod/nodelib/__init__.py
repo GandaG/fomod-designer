@@ -14,6 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .importer import import_
+from .importer import import_, new
 from .exporter import export
 from .exceptions import *

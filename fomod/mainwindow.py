@@ -98,42 +98,62 @@ class MainFrame(base_ui[0], base_ui[1]):
 
     def open(self):
         from os.path import expanduser, normpath, basename
-        from .nodelib import import_, NodeLibError
+        from validator import validate_tree, check_warnings, ValidatorError
+        from .nodelib import import_, new, NodeLibError
 
-        open_dialog = QtWidgets.QFileDialog()
-        self.package_path = open_dialog.getExistingDirectory(self, "Select package root directory:", expanduser("~"))
+        try:
+            open_dialog = QtWidgets.QFileDialog()
+            package_path = open_dialog.getExistingDirectory(self, "Select package root directory:", expanduser("~"))
 
-        if self.package_path:
-            try:
-                self.info_root, self.config_root = import_(normpath(self.package_path))
-            except NodeLibError as p:
-                from .generic import generic_errorbox
-                generic_errorbox(p.title, str(p))
-                return
+            if self.package_path:
+                self.package_path = package_path
+                info_root, config_root = import_(normpath(self.package_path))
+                if info_root and config_root:
+                    if self.settings_dict["Load"]["validate"]:
+                        validate_tree(config_root, join(cur_folder, "resources", "mod_schema.xsd"))
+                    if self.settings_dict["Load"]["warnings"]:
+                        check_warnings(self.package_path, config_root)
+                else:
+                    info_root, config_root = new()
 
-            self.tree_model.clear()
+                self.info_root, self.config_root = info_root, config_root
 
-            self.tree_model.appendRow(self.info_root.model_item)
-            self.tree_model.appendRow(self.config_root.model_item)
+                self.tree_model.clear()
 
-            self.package_name = basename(normpath(self.package_path))
-            self.fomod_modified(False)
+                self.tree_model.appendRow(self.info_root.model_item)
+                self.tree_model.appendRow(self.config_root.model_item)
+
+                self.package_name = basename(normpath(self.package_path))
+                self.fomod_modified(False)
+        except (NodeLibError, ValidatorError) as p:
+            from .generic import generic_errorbox
+            generic_errorbox(p.title, str(p))
+            return
 
     def save(self):
         from .nodelib import export
+        from validator import validate_tree, check_warnings, ValidatorError
 
-        if not self.info_root and not self.config_root:
-            from . import generic
-            generic.generic_errorbox("I REFUSE TO SAVE",
-                                     "There is nothing... literally.")
-        else:
-            export(self.info_root, self.config_root, self.package_path)
-            self.fomod_modified(False)
+        try:
+            if not self.info_root and not self.config_root:
+                from . import generic
+                generic.generic_errorbox("I REFUSE TO SAVE",
+                                         "There is nothing... literally.")
+            else:
+                if self.settings_dict["save"]["validate"]:
+                    validate_tree(self.config_root, join(cur_folder, "resources", "mod_schema.xsd"))
+                if self.settings_dict["save"]["warnings"]:
+                    check_warnings(self.package_path, self.config_root)
+                export(self.info_root, self.config_root, self.package_path)
+                self.fomod_modified(False)
+        except ValidatorError as e:
+            from .generic import generic_errorbox
+            generic_errorbox(p.title, str(p))
+            return
 
     def options(self):
         config = settings.SettingsDialog()
-        config.setParent(self)
-        config.show()
+        config.exec_()
         self.settings_dict = settings.read_settings()
 
     def refresh(self):

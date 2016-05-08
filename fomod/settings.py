@@ -66,14 +66,16 @@ class SettingsDialog(settings_ui[0], settings_ui[1]):
     def accepted(self):
         config = ConfigParser()
         config.read_dict(default_settings)
-        config["Load"]["validate"] = self.check_valid_load.isChecked()
-        config["Load"]["warnings"] = self.check_warn_load.isChecked()
-        config["Save"]["validate"] = self.check_valid_save.isChecked()
-        config["Save"]["warnings"] = self.check_warn_save.isChecked()
+        config["Load"]["validate"] = str(self.check_valid_load.isChecked()).lower()
+        config["Load"]["warnings"] = str(self.check_warn_load.isChecked()).lower()
+        config["Save"]["validate"] = str(self.check_valid_save.isChecked()).lower()
+        config["Save"]["warnings"] = str(self.check_warn_save.isChecked()).lower()
 
         makedirs(join(expanduser("~"), ".fomod"), exist_ok=True)
         with open(join(expanduser("~"), ".fomod", ".designer"), "w") as configfile:
             config.write(configfile)
+
+        self.close()
 
     def rejected(self):
         self.close()
