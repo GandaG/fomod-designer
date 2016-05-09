@@ -124,13 +124,13 @@ def import_(package_path):
         info_path = os.path.join(fomod_folder_path, info_file)
         config_path = os.path.join(fomod_folder_path, config_file)
 
-        info_context = etree.iterparse(info_path, remove_comments=True, remove_pis=True, remove_blank_text=True)
-        config_context = etree.iterparse(config_path, remove_comments=True, remove_pis=True, remove_blank_text=True)
-        info_context.set_element_class_lookup(NodeLookup())
-        config_context.set_element_class_lookup(NodeLookup())
+        parser = etree.XMLParser(remove_comments=True, remove_pis=True, remove_blank_text=True)
+        parser.set_element_class_lookup(NodeLookup())
+        info_root = etree.parse(info_path, parser=parser).getroot()
+        config_root = etree.parse(config_path, parser=parser).getroot()
 
-        for context in (info_context, config_context):
-            for action, element in context:
+        for root in (info_root, config_root):
+            for element in root.iter():
                 element.parse_attribs()
 
                 for elem in element:
@@ -150,9 +150,6 @@ def import_(package_path):
                         valid_child = False
                     if not valid_child:
                         element.remove_child(elem)
-
-        info_root = info_context.root
-        config_root = config_context.root
 
     except etree.ParseError as e:
         raise ParserError(str(e))
