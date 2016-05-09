@@ -98,7 +98,7 @@ class MainFrame(base_ui[0], base_ui[1]):
 
     def open(self):
         from os.path import expanduser, normpath, basename
-        from validator import validate_tree, check_warnings, ValidatorError
+        from validator import validate_tree, check_warnings, ValidatorError, ValidationError, WarningError
         from .nodelib import import_, new, NodeLibError
 
         try:
@@ -106,16 +106,28 @@ class MainFrame(base_ui[0], base_ui[1]):
             package_path = open_dialog.getExistingDirectory(self, "Select package root directory:", expanduser("~"))
 
             if package_path:
-                self.package_path = package_path
-                info_root, config_root = import_(normpath(self.package_path))
+                info_root, config_root = import_(normpath(package_path))
                 if info_root and config_root:
-                    if self.settings_dict["Load"]["validate"]:
-                        validate_tree(config_root, join(cur_folder, "resources", "mod_schema.xsd"))
-                    if self.settings_dict["Load"]["warnings"]:
-                        check_warnings(self.package_path, config_root)
+                    try:
+                        if self.settings_dict["Load"]["validate"]:
+                            validate_tree(config_root, join(cur_folder, "resources", "mod_schema.xsd"))
+                    except ValidationError as e:
+                        from .generic import generic_errorbox
+                        generic_errorbox(e.title, str(e))
+                        if not self.settings_dict["Load"]["validate_ignore"]:
+                            return
+                    try:
+                        if self.settings_dict["Load"]["warnings"]:
+                            check_warnings(package_path, config_root)
+                    except WarningError as e:
+                        from .generic import generic_errorbox
+                        generic_errorbox(e.title, str(e))
+                        if not self.settings_dict["Load"]["warn_ignore"]:
+                            return
                 else:
                     info_root, config_root = new()
 
+                self.package_path = package_path
                 self.info_root, self.config_root = info_root, config_root
 
                 self.tree_model.clear()
@@ -132,7 +144,7 @@ class MainFrame(base_ui[0], base_ui[1]):
 
     def save(self):
         from .nodelib import export
-        from validator import validate_tree, check_warnings, ValidatorError
+        from validator import validate_tree, check_warnings, ValidatorError, ValidationError, WarningError
 
         try:
             if not self.info_root and not self.config_root:
@@ -140,15 +152,27 @@ class MainFrame(base_ui[0], base_ui[1]):
                 generic.generic_errorbox("I REFUSE TO SAVE",
                                          "There is nothing... literally.")
             else:
-                if self.settings_dict["save"]["validate"]:
-                    validate_tree(self.config_root, join(cur_folder, "resources", "mod_schema.xsd"))
-                if self.settings_dict["save"]["warnings"]:
-                    check_warnings(self.package_path, self.config_root)
+                try:
+                    if self.settings_dict["save"]["validate"]:
+                        validate_tree(self.config_root, join(cur_folder, "resources", "mod_schema.xsd"))
+                except ValidationError as e:
+                    from .generic import generic_errorbox
+                    generic_errorbox(e.title, str(e))
+                    if not self.settings_dict["save"]["validate_ignore"]:
+                        return
+                try:
+                    if self.settings_dict["save"]["warnings"]:
+                        check_warnings(self.package_path, self.config_root)
+                except WarningError as e:
+                    from .generic import generic_errorbox
+                    generic_errorbox(e.title, str(e))
+                    if not self.settings_dict["save"]["warn_ignore"]:
+                        return
                 export(self.info_root, self.config_root, self.package_path)
                 self.fomod_modified(False)
         except ValidatorError as e:
             from .generic import generic_errorbox
-            generic_errorbox(p.title, str(p))
+            generic_errorbox(e.title, str(e))
             return
 
     def options(self):

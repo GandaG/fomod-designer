@@ -22,9 +22,13 @@ from . import cur_folder
 
 settings_ui = uic.loadUiType(join(cur_folder, "resources/templates/settings.ui"))
 default_settings = {"Load": {"validate": True,
-                             "warnings": True},
+                             "validate_ignore": False,
+                             "warnings": True,
+                             "warn_ignore": True},
                     "Save": {"validate": True,
-                             "warnings": True}}
+                             "validate_ignore": False,
+                             "warnings": True,
+                             "warn_ignore": True}}
 
 
 def read_settings():
@@ -56,20 +60,32 @@ class SettingsDialog(settings_ui[0], settings_ui[1]):
 
         self.buttonBox.accepted.connect(self.accepted)
         self.buttonBox.rejected.connect(self.rejected)
+        self.check_valid_load.stateChanged.connect(self.update_valid_load)
+        self.check_warn_load.stateChanged.connect(self.update_warn_load)
+        self.check_valid_save.stateChanged.connect(self.update_valid_save)
+        self.check_warn_save.stateChanged.connect(self.update_warn_save)
 
         config = read_settings()
         self.check_valid_load.setChecked(config["Load"]["validate"])
+        self.check_valid_load_ignore.setChecked(config["Load"]["validate_ignore"])
         self.check_warn_load.setChecked(config["Load"]["warnings"])
+        self.check_warn_load_ignore.setChecked(config["Load"]["warn_ignore"])
         self.check_valid_save.setChecked(config["Save"]["validate"])
+        self.check_valid_save_ignore.setChecked(config["Save"]["validate_ignore"])
         self.check_warn_save.setChecked(config["Save"]["warnings"])
+        self.check_warn_save_ignore.setChecked(config["Save"]["warn_ignore"])
 
     def accepted(self):
         config = ConfigParser()
         config.read_dict(default_settings)
         config["Load"]["validate"] = str(self.check_valid_load.isChecked()).lower()
+        config["Load"]["validate_ignore"] = str(self.check_valid_load_ignore.isChecked()).lower()
         config["Load"]["warnings"] = str(self.check_warn_load.isChecked()).lower()
+        config["Load"]["warn_ignore"] = str(self.check_warn_load_ignore.isChecked()).lower()
         config["Save"]["validate"] = str(self.check_valid_save.isChecked()).lower()
+        config["Save"]["validate_ignore"] = str(self.check_valid_save_ignore.isChecked()).lower()
         config["Save"]["warnings"] = str(self.check_warn_save.isChecked()).lower()
+        config["Save"]["warn_ignore"] = str(self.check_warn_save_ignore.isChecked()).lower()
 
         makedirs(join(expanduser("~"), ".fomod"), exist_ok=True)
         with open(join(expanduser("~"), ".fomod", ".designer"), "w") as configfile:
@@ -79,3 +95,27 @@ class SettingsDialog(settings_ui[0], settings_ui[1]):
 
     def rejected(self):
         self.close()
+
+    def update_valid_load(self, new_state):
+        if not new_state:
+            self.check_valid_load_ignore.setEnabled(False)
+        else:
+            self.check_valid_load_ignore.setEnabled(True)
+
+    def update_warn_load(self, new_state):
+        if not new_state:
+            self.check_warn_load_ignore.setEnabled(False)
+        else:
+            self.check_warn_load_ignore.setEnabled(True)
+
+    def update_valid_save(self, new_state):
+        if not new_state:
+            self.check_valid_save_ignore.setEnabled(False)
+        else:
+            self.check_valid_save_ignore.setEnabled(True)
+
+    def update_warn_save(self, new_state):
+        if not new_state:
+            self.check_warn_save_ignore.setEnabled(False)
+        else:
+            self.check_warn_save_ignore.setEnabled(True)

@@ -134,22 +134,8 @@ def import_(package_path):
                 element.parse_attribs()
 
                 for elem in element:
-                    element.model_item.appendRow(elem.model_item)
-
-                    valid_child = True
-                    if elem.allowed_instances:
-                        instances = 0
-                        for item in element:
-                            if type(item) == type(elem):
-                                instances += 1
-                        if instances > elem.allowed_instances:
-                            valid_child = False
-                    if type(elem) in element.allowed_children and valid_child:
-                        valid_child = True
-                    else:
-                        valid_child = False
-                    if not valid_child:
-                        element.remove_child(elem)
+                    if _validate_child(elem):
+                        element.model_item.appendRow(elem.model_item)
 
     except etree.ParseError as e:
         raise ParserError(str(e))
@@ -163,3 +149,17 @@ def new():
     from .base import info, config
 
     return info.NodeInfo(), config.NodeConfig()
+
+
+def _validate_child(child):
+    if type(child) in child.getparent().allowed_children:
+        if child.allowed_instances:
+            instances = 0
+            for item in child.getparent():
+                if type(item) == type(child):
+                    instances += 1
+            if instances <= child.allowed_instances:
+                return True
+        else:
+            return True
+    return False

@@ -63,8 +63,8 @@ class NodeBase(etree.ElementBase):
 
     def remove_child(self, child):
         if child in self:
-            self.remove(child)
             self.model_item.takeRow(child.model_item.row())
+            self.remove(child)
 
     def parse_attribs(self):
         attrib = dict(self.attrib)
