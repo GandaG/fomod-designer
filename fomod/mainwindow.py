@@ -105,7 +105,7 @@ class MainFrame(base_ui[0], base_ui[1]):
             open_dialog = QtWidgets.QFileDialog()
             package_path = open_dialog.getExistingDirectory(self, "Select package root directory:", expanduser("~"))
 
-            if self.package_path:
+            if package_path:
                 self.package_path = package_path
                 info_root, config_root = import_(normpath(self.package_path))
                 if info_root and config_root:
