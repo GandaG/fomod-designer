@@ -193,7 +193,7 @@ class NodeVisible(NodeBase):
     tag = "visible"
 
     def _init(self):
-        allowed_children = (NodeDependFile, NodeDependFlag, NodeDependGame)
+        allowed_children = (NodeDependFile, NodeDependFlag, NodeDependGame, NodeDependencies)
         self.init("Visibility", type(self).tag, 1, allowed_children=allowed_children)
         super()._init()
 
