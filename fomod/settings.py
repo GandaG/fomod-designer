@@ -75,6 +75,11 @@ class SettingsDialog(settings_ui[0], settings_ui[1]):
         self.check_warn_save.setChecked(config["Save"]["warnings"])
         self.check_warn_save_ignore.setChecked(config["Save"]["warn_ignore"])
 
+        self.check_valid_load.stateChanged.emit(self.check_valid_load.isChecked())
+        self.check_warn_load.stateChanged.emit(self.check_warn_load.isChecked())
+        self.check_valid_save.stateChanged.emit(self.check_valid_save.isChecked())
+        self.check_warn_save.stateChanged.emit(self.check_warn_save.isChecked())
+
     def accepted(self):
         config = ConfigParser()
         config.read_dict(default_settings)
