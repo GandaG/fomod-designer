@@ -173,9 +173,19 @@ class NodeDependencies(NodeBase):
     tag = "dependencies"
 
     def _init(self):
-        allowed_children = (NodeDependFile, NodeDependFlag, NodeDependGame, NodeDependencies)
+        allowed_children = (NodeDependFile, NodeDependFlag, NodeDependGame, NodeNestedDependencies)
         properties = {"operator": PropertyCombo("Type", ["And", "Or"])}
         self.init("Dependencies", type(self).tag, 1, allowed_children=allowed_children, properties=properties)
+        super()._init()
+
+
+class NodeNestedDependencies(NodeBase):
+    tag = "dependencies"
+
+    def _init(self):
+        allowed_children = (NodeDependFile, NodeDependFlag, NodeDependGame, NodeNestedDependencies)
+        properties = {"operator": PropertyCombo("Type", ["And", "Or"])}
+        self.init("Dependencies", type(self).tag, 0, allowed_children=allowed_children, properties=properties)
         super()._init()
 
 

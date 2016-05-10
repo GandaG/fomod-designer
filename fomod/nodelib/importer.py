@@ -79,7 +79,10 @@ class NodeLookup(etree.PythonElementClassLookup):
         elif element.tag == "files":
             return config.NodeFiles
         elif element.tag == "dependencies":
-            return config.NodeDependencies
+            if element.getparent().tag == "dependencies":
+                return config.NodeNestedDependencies
+            else:
+                return config.NodeDependencies
         elif element.tag == "installStep":
             return config.NodeInstallStep
         elif element.tag == "visible":
@@ -134,8 +137,9 @@ def import_(package_path):
                 element.parse_attribs()
 
                 for elem in element:
-                    if _validate_child(elem):
-                        element.model_item.appendRow(elem.model_item)
+                    element.model_item.appendRow(elem.model_item)
+                    if not _validate_child(elem):
+                        element.remove_child(elem)
 
     except etree.ParseError as e:
         raise ParserError(str(e))

@@ -153,20 +153,20 @@ class MainFrame(base_ui[0], base_ui[1]):
                                          "There is nothing... literally.")
             else:
                 try:
-                    if self.settings_dict["save"]["validate"]:
+                    if self.settings_dict["Save"]["validate"]:
                         validate_tree(self.config_root, join(cur_folder, "resources", "mod_schema.xsd"))
                 except ValidationError as e:
                     from .generic import generic_errorbox
                     generic_errorbox(e.title, str(e))
-                    if not self.settings_dict["save"]["validate_ignore"]:
+                    if not self.settings_dict["Save"]["validate_ignore"]:
                         return
                 try:
-                    if self.settings_dict["save"]["warnings"]:
+                    if self.settings_dict["Save"]["warnings"]:
                         check_warnings(self.package_path, self.config_root)
                 except WarningError as e:
                     from .generic import generic_errorbox
                     generic_errorbox(e.title, str(e))
-                    if not self.settings_dict["save"]["warn_ignore"]:
+                    if not self.settings_dict["Save"]["warn_ignore"]:
                         return
                 export(self.info_root, self.config_root, self.package_path)
                 self.fomod_modified(False)
