@@ -67,11 +67,10 @@ class NodeBase(etree.ElementBase):
             self.remove(child)
 
     def parse_attribs(self):
-        attrib = dict(self.attrib)
-        for key in attrib:
-            if self.properties[key].editable and (attrib[key] in self.properties[key].values or
-                                                  isinstance(attrib[key], str)):
-                self.properties[key].value = attrib[key]
+        for key in self.properties:
+            if key not in self.attrib.keys():
+                continue
+            self.properties[key].set_value(self.attrib[key])
         self.update_item_name()
 
     def write_attribs(self):

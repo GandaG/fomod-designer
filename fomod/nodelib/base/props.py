@@ -29,15 +29,15 @@ class _PropertyBase(object):
         self.value = ""
         self.values = values
 
+    def set_value(self, value):
+        if self.editable:
+            self.value = value
+
 
 class PropertyText(_PropertyBase):
     def __init__(self, name, text="", editable=True):
         super().__init__("text", name, (), editable)
         self.value = text
-
-    def set_value(self, text):
-        if self.editable:
-            self.value = text
 
 
 class PropertyCombo(_PropertyBase):
@@ -46,8 +46,8 @@ class PropertyCombo(_PropertyBase):
         self.value = values[0]
 
     def set_value(self, value):
-        if self.editable and value in self.values:
-            self.value = value
+        if value in self.values:
+            super().set_value(value)
 
 
 class PropertyInt(_PropertyBase):
@@ -60,5 +60,5 @@ class PropertyInt(_PropertyBase):
         self.value = default
 
     def set_value(self, value):
-        if self.editable and value in self.values:
-            self.value = value
+        if value in self.values:
+            super().set_value(value)
