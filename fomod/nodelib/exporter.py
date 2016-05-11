@@ -15,7 +15,10 @@
 # limitations under the License.
 
 import os
-from lxml import etree
+from lxml import etree, objectify
+from pygments import highlight
+from pygments.lexers.html import XmlLexer
+from pygments.formatters.html import HtmlFormatter
 from .utility import check_file
 from .exceptions import MissingFileError
 
@@ -49,3 +52,10 @@ def export(info_root, config_root, package_path):
     with open(config_path, "wb") as config:
         config_tree = etree.ElementTree(config_root)
         config_tree.write(config, pretty_print=True)
+
+
+def export_fragment(element):
+    new_elem = etree.XML(etree.tostring(element))
+    objectify.deannotate(new_elem, cleanup_namespaces=True)
+    code = etree.tostring(new_elem, encoding="Unicode", pretty_print=True, xml_declaration=False)
+    return highlight(code, XmlLexer(), HtmlFormatter(noclasses=True, style="autumn"))

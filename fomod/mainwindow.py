@@ -107,7 +107,7 @@ class MainFrame(base_ui[0], base_ui[1]):
 
             if package_path:
                 info_root, config_root = import_(normpath(package_path))
-                if info_root and config_root:
+                if info_root is not None and config_root is not None:
                     try:
                         if self.settings_dict["Load"]["validate"]:
                             validate_tree(config_root, join(cur_folder, "resources", "mod_schema.xsd"))
@@ -137,6 +137,8 @@ class MainFrame(base_ui[0], base_ui[1]):
 
                 self.package_name = basename(normpath(self.package_path))
                 self.fomod_modified(False)
+                self.current_object = None
+                self.update_gen_code()
         except (NodeLibError, ValidatorError) as p:
             from .generic import generic_errorbox
             generic_errorbox(p.title, str(p))
@@ -207,6 +209,7 @@ class MainFrame(base_ui[0], base_ui[1]):
 
     def selected_object_tree(self, index):
         self.current_object = self.tree_model.itemFromIndex(index).xml_node
+        self.update_gen_code()
 
         self.update_box_list()
         self.update_props_list()
@@ -300,9 +303,11 @@ class MainFrame(base_ui[0], base_ui[1]):
             prop_index += 1
 
     def selected_object_list(self, index):
+        from .nodelib import elem_factory
+
         item = self.list_model.itemFromIndex(index)
 
-        new_child = type(item.xml_node)()
+        new_child = elem_factory(item.xml_node.tag, self.current_object)
         self.current_object.add_child(new_child)
 
         # expand the parent
@@ -318,6 +323,13 @@ class MainFrame(base_ui[0], base_ui[1]):
 
         # set the installer as changed
         self.fomod_modified(True)
+
+    def update_gen_code(self):
+        from .nodelib import export_fragment
+        if self.current_object is not None:
+            self.xml_code_browser.setHtml(export_fragment(self.current_object))
+        else:
+            self.xml_code_browser.setText("")
 
     def fomod_modified(self, changed):
         if changed is False:

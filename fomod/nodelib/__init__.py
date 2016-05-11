@@ -14,6 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .importer import import_, new
-from .exporter import export
+from .importer import import_, new, elem_factory
+from .exporter import export, export_fragment
 from .exceptions import *

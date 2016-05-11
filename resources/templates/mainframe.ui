@@ -15,17 +15,70 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout_3">
+    <property name="spacing">
+     <number>6</number>
+    </property>
+    <property name="bottomMargin">
+     <number>9</number>
+    </property>
     <item>
-     <widget class="QLabel" name="preview_label">
-      <property name="text">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The preview is not ready yet!&lt;/p&gt;&lt;p&gt;Meanwhile, try to install your mod using NMM or MO to check if everything is ok.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="currentIndex">
+       <number>1</number>
       </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-      <property name="wordWrap">
-       <bool>true</bool>
-      </property>
+      <widget class="QWidget" name="tabWidgetPage1" native="true">
+       <attribute name="title">
+        <string>Preview</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <item>
+         <widget class="QLabel" name="preview_label">
+          <property name="text">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The preview is not ready yet!&lt;/p&gt;&lt;p&gt;Meanwhile, try to install your mod using NMM or MO to check if everything is ok.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tabWidgetPage2" native="true">
+       <attribute name="title">
+        <string>XML Code</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <widget class="QLabel" name="label">
+          <property name="lineWidth">
+           <number>1</number>
+          </property>
+          <property name="text">
+           <string>Generated XML Code</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QTextBrowser" name="xml_code_browser">
+          <property name="horizontalScrollBarPolicy">
+           <enum>Qt::ScrollBarAsNeeded</enum>
+          </property>
+          <property name="lineWrapMode">
+           <enum>QTextEdit::NoWrap</enum>
+          </property>
+          <property name="placeholderText">
+           <string>Click a node to see the generated XML code here.</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
    </layout>
@@ -130,7 +183,7 @@
   <action name="action_Open">
    <property name="icon">
     <iconset>
-     <normaloff>../logos/1456477639_file.png</normaloff>../logos/1456477639_file.png</iconset>
+     <normaloff>../logos/logo_open_file.png</normaloff>../logos/logo_open_file.png</iconset>
    </property>
    <property name="text">
     <string>&amp;New/&amp;Open</string>
@@ -151,7 +204,7 @@
   <action name="action_Save">
    <property name="icon">
     <iconset>
-     <normaloff>../logos/1456477689_disc-floopy.png</normaloff>../logos/1456477689_disc-floopy.png</iconset>
+     <normaloff>../logos/logo_floppy_disk.png</normaloff>../logos/logo_floppy_disk.png</iconset>
    </property>
    <property name="text">
     <string>&amp;Save</string>
@@ -166,7 +219,7 @@
   <action name="actionO_ptions">
    <property name="icon">
     <iconset>
-     <normaloff>../logos/1456477700_configuration.png</normaloff>../logos/1456477700_configuration.png</iconset>
+     <normaloff>../logos/logo_gear.png</normaloff>../logos/logo_gear.png</iconset>
    </property>
    <property name="text">
     <string>O&amp;ptions</string>
@@ -181,7 +234,7 @@
   <action name="action_Refresh">
    <property name="icon">
     <iconset>
-     <normaloff>../logos/1456477730_refresh.png</normaloff>../logos/1456477730_refresh.png</iconset>
+     <normaloff>../logos/logo_refresh.png</normaloff>../logos/logo_refresh.png</iconset>
    </property>
    <property name="text">
     <string>&amp;Refresh</string>
@@ -196,7 +249,7 @@
   <action name="action_Delete">
    <property name="icon">
     <iconset>
-     <normaloff>../logos/1456477717_error.png</normaloff>../logos/1456477717_error.png</iconset>
+     <normaloff>../logos/logo_cross.png</normaloff>../logos/logo_cross.png</iconset>
    </property>
    <property name="text">
     <string>&amp;Delete</string>
@@ -235,7 +288,7 @@
   <action name="actionHe_lp">
    <property name="icon">
     <iconset>
-     <normaloff>../logos/1457582991_info.png</normaloff>../logos/1457582991_info.png</iconset>
+     <normaloff>../logos/logo_info.png</normaloff>../logos/logo_info.png</iconset>
    </property>
    <property name="text">
     <string>He&amp;lp</string>

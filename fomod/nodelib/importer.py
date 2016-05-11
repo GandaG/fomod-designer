@@ -116,6 +116,28 @@ class NodeLookup(etree.PythonElementClassLookup):
             return base.NodeBase
 
 
+module_parser = etree.XMLParser(remove_comments=True, remove_pis=True, remove_blank_text=True)
+module_parser.set_element_class_lookup(NodeLookup())
+
+
+def elem_factory(tag, parent):
+    list_ = [parent]
+    for elem in parent.iterancestors():
+        list_.append(elem)
+
+    list_ = list_[::-1]
+    list_[0] = etree.Element(list_[0].tag)
+    for elem in list_[1:]:
+        list_[list_.index(elem)] = etree.SubElement(list_[list_.index(elem) - 1], elem.tag)
+    etree.SubElement(list_[len(list_) - 1], tag)
+
+    root = etree.fromstring(etree.tostring(list_[0]), module_parser)
+    parsed_list = []
+    for elem in root.iterdescendants():
+        parsed_list.append(elem)
+    return parsed_list[len(parsed_list) - 1]
+
+
 def import_(package_path):
     try:
         fomod_folder = check_file(package_path, "fomod")
@@ -127,10 +149,8 @@ def import_(package_path):
         info_path = os.path.join(fomod_folder_path, info_file)
         config_path = os.path.join(fomod_folder_path, config_file)
 
-        parser = etree.XMLParser(remove_comments=True, remove_pis=True, remove_blank_text=True)
-        parser.set_element_class_lookup(NodeLookup())
-        info_root = etree.parse(info_path, parser=parser).getroot()
-        config_root = etree.parse(config_path, parser=parser).getroot()
+        info_root = etree.parse(info_path, parser=module_parser).getroot()
+        config_root = etree.parse(config_path, parser=module_parser).getroot()
 
         for root in (info_root, config_root):
             for element in root.iter():
@@ -150,9 +170,10 @@ def import_(package_path):
 
 
 def new():
-    from .base import info, config
+    info_root = module_parser.makeelement(info.NodeInfo.tag)
+    config_root = module_parser.makeelement(config.NodeConfig.tag)
 
-    return info.NodeInfo(), config.NodeConfig()
+    return info_root, config_root
 
 
 def _validate_child(child):

@@ -44,6 +44,8 @@ class NodeBase(etree.ElementBase):
         self.model_item.setText(self.name)
         self.model_item.setEditable(False)
 
+        self.write_attribs()
+
     def can_add_child(self, child):
         if child.allowed_instances:
             instances = 0
@@ -74,6 +76,7 @@ class NodeBase(etree.ElementBase):
         self.update_item_name()
 
     def write_attribs(self):
+        self.attrib.clear()
         for key in self.properties:
             self.set(key, str(self.properties[key].value))
 
