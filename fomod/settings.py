@@ -21,7 +21,8 @@ from os.path import join, expanduser
 from . import cur_folder
 
 settings_ui = uic.loadUiType(join(cur_folder, "resources/templates/settings.ui"))
-default_settings = {"Load": {"validate": True,
+default_settings = {"General": {"code_refresh": 3},
+                    "Load": {"validate": True,
                              "validate_ignore": False,
                              "warnings": True,
                              "warn_ignore": True},
@@ -66,6 +67,7 @@ class SettingsDialog(settings_ui[0], settings_ui[1]):
         self.check_warn_save.stateChanged.connect(self.update_warn_save)
 
         config = read_settings()
+        self.combo_code_refresh.setCurrentIndex(config["General"]["code_refresh"])
         self.check_valid_load.setChecked(config["Load"]["validate"])
         self.check_valid_load_ignore.setChecked(config["Load"]["validate_ignore"])
         self.check_warn_load.setChecked(config["Load"]["warnings"])
@@ -83,6 +85,7 @@ class SettingsDialog(settings_ui[0], settings_ui[1]):
     def accepted(self):
         config = ConfigParser()
         config.read_dict(default_settings)
+        config["General"]["code_refresh"] = str(self.combo_code_refresh.currentIndex())
         config["Load"]["validate"] = str(self.check_valid_load.isChecked()).lower()
         config["Load"]["validate_ignore"] = str(self.check_valid_load_ignore.isChecked()).lower()
         config["Load"]["warnings"] = str(self.check_warn_load.isChecked()).lower()

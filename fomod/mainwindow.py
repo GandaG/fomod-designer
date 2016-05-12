@@ -138,7 +138,6 @@ class MainFrame(base_ui[0], base_ui[1]):
                 self.package_name = basename(normpath(self.package_path))
                 self.fomod_modified(False)
                 self.current_object = None
-                self.update_gen_code()
         except (NodeLibError, ValidatorError) as p:
             from .generic import generic_errorbox
             generic_errorbox(p.title, str(p))
@@ -181,10 +180,11 @@ class MainFrame(base_ui[0], base_ui[1]):
         config = settings.SettingsDialog()
         config.exec_()
         self.settings_dict = settings.read_settings()
+        print(self.settings_dict)
 
     def refresh(self):
-        from . import generic
-        generic.not_implemented()
+        if self.settings_dict["General"]["code_refresh"] >= 1:
+            self.update_gen_code()
 
     def delete(self):
         try:
@@ -209,7 +209,8 @@ class MainFrame(base_ui[0], base_ui[1]):
 
     def selected_object_tree(self, index):
         self.current_object = self.tree_model.itemFromIndex(index).xml_node
-        self.update_gen_code()
+        if self.settings_dict["General"]["code_refresh"] >= 2:
+            self.update_gen_code()
 
         self.update_box_list()
         self.update_props_list()
@@ -244,8 +245,8 @@ class MainFrame(base_ui[0], base_ui[1]):
             prop_list[prop_index].setObjectName(str(prop_index))
             prop_list[prop_index].setText(self.current_object.text)
             prop_list[prop_index].textEdited[str].connect(self.current_object.set_text)
-            prop_list[prop_index].textEdited[str].connect(self.fomod_modified)
             prop_list[prop_index].textEdited[str].connect(self.current_object.write_attribs)
+            prop_list[prop_index].textEdited[str].connect(self.fomod_modified)
             self.formLayout.setWidget(prop_index, QtWidgets.QFormLayout.FieldRole,
                                       prop_list[prop_index])
 
@@ -264,26 +265,26 @@ class MainFrame(base_ui[0], base_ui[1]):
                 prop_list.append(QtWidgets.QLineEdit(self.dockWidgetContents))
                 prop_list[prop_index].setText(props[key].value)
                 prop_list[prop_index].textEdited[str].connect(props[key].set_value)
-                prop_list[prop_index].textEdited[str].connect(self.fomod_modified)
                 prop_list[prop_index].textEdited[str].connect(self.current_object.write_attribs)
                 prop_list[prop_index].textEdited[str].connect(self.current_object.update_item_name)
+                prop_list[prop_index].textEdited[str].connect(self.fomod_modified)
 
             elif props[key].type_ == "int":
                 prop_list.append(QtWidgets.QSpinBox(self.dockWidgetContents))
                 prop_list[prop_index].setValue(int(props[key].value))
-                prop_list[prop_index].valueChanged.connect(props[key].set_value)
-                prop_list[prop_index].valueChanged.connect(self.fomod_modified)
-                prop_list[prop_index].valueChanged.connect(self.current_object.write_attribs)
                 prop_list[prop_index].setMinimum(props[key].min)
                 prop_list[prop_index].setMaximum(props[key].max)
+                prop_list[prop_index].valueChanged.connect(props[key].set_value)
+                prop_list[prop_index].valueChanged.connect(self.current_object.write_attribs)
+                prop_list[prop_index].valueChanged.connect(self.fomod_modified)
 
             elif props[key].type_ == "combo":
                 prop_list.append(QtWidgets.QComboBox(self.dockWidgetContents))
                 prop_list[prop_index].insertItems(0, props[key].values)
                 prop_list[prop_index].activated[str].connect(props[key].set_value)
-                prop_list[prop_index].activated[str].connect(self.fomod_modified)
                 prop_list[prop_index].activated[str].connect(self.current_object.write_attribs)
                 prop_list[prop_index].activated[str].connect(self.current_object.update_item_name)
+                prop_list[prop_index].activated[str].connect(self.fomod_modified)
 
             """self.widget = QtWidgets.QWidget(self.dockWidgetContents)
             self.widget.setObjectName("widget")
@@ -332,6 +333,8 @@ class MainFrame(base_ui[0], base_ui[1]):
             self.xml_code_browser.setText("")
 
     def fomod_modified(self, changed):
+        if self.settings_dict["General"]["code_refresh"] >= 3:
+            self.update_gen_code()
         if changed is False:
             self.fomod_changed = False
             self.setWindowTitle(self.package_name + " - " + self.original_title)
