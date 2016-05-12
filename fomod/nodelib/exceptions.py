@@ -40,3 +40,19 @@ class ParserError(NodeLibError):
                        msg.split(",")[len(msg.split(",")) - 2] + \
                        ". If you need help visit <a href = http://www.w3schools.com/xml/xml_syntax.asp>W3Schools</a>."
         Exception.__init__(self, self.msg)
+
+
+class BaseInstanceException(Exception):
+    def __init__(self, base):
+        self.title = "Instance Error"
+        self.message = "{} is not meant to be instanced. You should be using a subclass instead.".format(type(base))
+        self.detailed = ""
+        Exception.__init__(self, self.message)
+
+
+class TagNotFound(Exception):
+    def __init__(self, tag):
+        self.title = "Tag Lookup Error"
+        self.message = "Tag {} could not be matched.".format(tag)
+        self.detailed = ""
+        Exception.__init__(self, self.message)
