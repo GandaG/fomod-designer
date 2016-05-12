@@ -27,7 +27,7 @@ class NodeBase(etree.ElementBase):
             raise BaseInstanceException(self)
         super()._init()
 
-    def init(self, name, tag, allowed_instances, allow_text=False, allowed_children=None, properties=None):
+    def init(self, name, tag, allowed_instances, sort_order=0, allow_text=False, allowed_children=None, properties=None):
 
         if not properties:
             properties = {}
@@ -36,6 +36,7 @@ class NodeBase(etree.ElementBase):
 
         self.name = name
         self.tag = tag
+        self.sort_order = sort_order
         self.properties = properties
         self.allowed_children = allowed_children
         self.allow_text = allow_text
@@ -44,8 +45,6 @@ class NodeBase(etree.ElementBase):
         self.model_item = NodeStandardItem(self)
         self.model_item.setText(self.name)
         self.model_item.setEditable(False)
-
-        self.write_attribs()
 
     def can_add_child(self, child):
         if child.allowed_instances:
@@ -201,7 +200,7 @@ class NodeConfigModName(NodeBase):
     def _init(self):
         properties = {"position": PropertyCombo("Position", ("Left", "Right", "RightOfImage")),
                       "colour": PropertyText("Colour", "000000")}
-        self.init("Name", type(self).tag, 1, allow_text=True, properties=properties)
+        self.init("Name", type(self).tag, 1, allow_text=True, properties=properties, sort_order=1)
         super()._init()
 
 
@@ -212,7 +211,7 @@ class NodeConfigModImage(NodeBase):
         properties = {"path": PropertyText("Path"), "showImage": PropertyCombo("Show Image", ("true", "false")),
                       "showFade": PropertyCombo("Show Fade", ("true", "false")),
                       "height": PropertyInt("Height", -1, 9999, -1)}
-        self.init("Image", "moduleImage", 1, properties=properties)
+        self.init("Image", "moduleImage", 1, properties=properties, sort_order=2)
         super()._init()
 
 
@@ -222,7 +221,8 @@ class NodeConfigModDepend(NodeBase):
     def _init(self):
         allowed_children = (NodeConfigDependFile, NodeConfigDependFlag, NodeConfigDependGame)
         properties = {"operator": PropertyCombo("Type", ["And", "Or"])}
-        self.init("Mod Dependencies", type(self).tag, 1, allowed_children=allowed_children, properties=properties)
+        self.init("Mod Dependencies", type(self).tag, 1, allowed_children=allowed_children,
+                  properties=properties, sort_order=3)
         super()._init()
 
 
@@ -231,7 +231,7 @@ class NodeConfigReqFiles(NodeBase):
 
     def _init(self):
         allowed_children = (NodeConfigFile, NodeConfigFolder)
-        self.init("Mod Requirements", type(self).tag, 0, allowed_children=allowed_children)
+        self.init("Mod Requirements", type(self).tag, 0, allowed_children=allowed_children, sort_order=4)
         super()._init()
 
 
@@ -241,7 +241,8 @@ class NodeConfigInstallSteps(NodeBase):
     def _init(self):
         allowed_children = (NodeConfigInstallStep,)
         properties = {"order": PropertyCombo("Order", ["Ascending", "Descending", "Explicit"])}
-        self.init("Installation Steps", type(self).tag, 1, allowed_children=allowed_children, properties=properties)
+        self.init("Installation Steps", type(self).tag, 1, allowed_children=allowed_children,
+                  properties=properties, sort_order=5)
         super()._init()
 
 
@@ -250,7 +251,7 @@ class NodeConfigCondInstall(NodeBase):
 
     def _init(self):
         allowed_children = (NodeConfigPatterns,)
-        self.init("Conditional Installation", type(self).tag, 1, allowed_children=allowed_children)
+        self.init("Conditional Installation", type(self).tag, 1, allowed_children=allowed_children, sort_order=6)
         super()._init()
 
 
@@ -331,7 +332,7 @@ class NodeConfigFiles(NodeBase):
 
     def _init(self):
         allowed_children = (NodeConfigFile, NodeConfigFolder)
-        self.init("Files", type(self).tag, 1, allowed_children=allowed_children)
+        self.init("Files", type(self).tag, 1, allowed_children=allowed_children, sort_order=3)
         super()._init()
 
 
@@ -342,7 +343,8 @@ class NodeConfigDependencies(NodeBase):
         allowed_children = (NodeConfigDependFile, NodeConfigDependFlag,
                             NodeConfigDependGame, NodeConfigNestedDependencies)
         properties = {"operator": PropertyCombo("Type", ["And", "Or"])}
-        self.init("Dependencies", type(self).tag, 1, allowed_children=allowed_children, properties=properties)
+        self.init("Dependencies", type(self).tag, 1, allowed_children=allowed_children,
+                  properties=properties, sort_order=1)
         super()._init()
 
 
@@ -372,7 +374,7 @@ class NodeConfigVisible(NodeBase):
 
     def _init(self):
         allowed_children = (NodeConfigDependFile, NodeConfigDependFlag, NodeConfigDependGame, NodeConfigDependencies)
-        self.init("Visibility", type(self).tag, 1, allowed_children=allowed_children)
+        self.init("Visibility", type(self).tag, 1, allowed_children=allowed_children, sort_order=1)
         super()._init()
 
 
@@ -382,7 +384,8 @@ class NodeConfigOptGroups(NodeBase):
     def _init(self):
         allowed_children = (NodeConfigGroup,)
         properties = {"order": PropertyCombo("Order", ["Ascending", "Descending", "Explicit"])}
-        self.init("Option Group", type(self).tag, 0, allowed_children=allowed_children, properties=properties)
+        self.init("Option Group", type(self).tag, 0, allowed_children=allowed_children,
+                  properties=properties, sort_order=2)
         super()._init()
 
 
@@ -423,7 +426,7 @@ class NodeConfigPluginDescription(NodeBase):
     tag = "description"
 
     def _init(self):
-        self.init("Description", type(self).tag, 1, allow_text=True)
+        self.init("Description", type(self).tag, 1, allow_text=True, sort_order=1)
         super()._init()
 
 
@@ -432,7 +435,7 @@ class NodeConfigImage(NodeBase):
 
     def _init(self):
         properties = {"path": PropertyText("Path")}
-        self.init("Image", type(self).tag, 1, properties=properties)
+        self.init("Image", type(self).tag, 1, properties=properties, sort_order=2)
         super()._init()
 
 
@@ -441,7 +444,7 @@ class NodeConfigConditionFlags(NodeBase):
 
     def _init(self):
         allowed_children = (NodeConfigFlag,)
-        self.init("Flags", type(self).tag, 1, allowed_children=allowed_children)
+        self.init("Flags", type(self).tag, 1, allowed_children=allowed_children, sort_order=3)
         super()._init()
 
 
@@ -450,7 +453,7 @@ class NodeConfigTypeDesc(NodeBase):
 
     def _init(self):
         allowed_children = (NodeConfigDependencyType, NodeConfigType)
-        self.init("Type Descriptor", type(self).tag, 1, allowed_children=allowed_children)
+        self.init("Type Descriptor", type(self).tag, 1, allowed_children=allowed_children, sort_order=4)
         super()._init()
 
     def can_add_child(self, child):
@@ -484,7 +487,7 @@ class NodeConfigDefaultType(NodeBase):
     def _init(self):
         properties = {"name": PropertyCombo("Name",
                                             ["Required", "Recommended", "Optional", "CouldBeUsable", "NotUsable"])}
-        self.init("Default Type", type(self).tag, 1, properties=properties)
+        self.init("Default Type", type(self).tag, 1, properties=properties, sort_order=1)
         super()._init()
 
 
@@ -494,7 +497,7 @@ class NodeConfigType(NodeBase):
     def _init(self):
         properties = {"name": PropertyCombo("Name",
                                             ["Required", "Recommended", "Optional", "CouldBeUsable", "NotUsable"])}
-        self.init("Type", type(self).tag, 1, properties=properties)
+        self.init("Type", type(self).tag, 1, properties=properties, sort_order=2)
         super()._init()
 
 
@@ -503,7 +506,7 @@ class NodeConfigInstallPatterns(NodeBase):
 
     def _init(self):
         allowed_children = (NodeConfigInstallPattern,)
-        self.init("Patterns", type(self).tag, 1, allowed_children=allowed_children)
+        self.init("Patterns", type(self).tag, 1, allowed_children=allowed_children, sort_order=2)
         super()._init()
 
 

@@ -14,5 +14,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .io import import_, new, elem_factory, export, export_fragment
+from .io import import_, new, elem_factory, export, export_fragment, sort_elements
 from .exceptions import NodeLibError, MissingFileError, ParserError

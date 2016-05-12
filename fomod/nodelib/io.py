@@ -238,7 +238,18 @@ def export(info_root, config_root, package_path):
 
 
 def export_fragment(element):
+    element.write_attribs()
     new_elem = XML(tostring(element))
     deannotate(new_elem, cleanup_namespaces=True)
     code = tostring(new_elem, encoding="Unicode", pretty_print=True, xml_declaration=False)
     return highlight(code, XmlLexer(), HtmlFormatter(noclasses=True, style="autumn"))
+
+
+def sort_elements(info_root, config_root):
+    print(tostring(config_root, pretty_print=True, encoding="Unicode"))
+
+    for root in (info_root, config_root):
+        for parent in root.xpath('//*[./*]'):
+            parent[:] = sorted(parent, key=lambda x: x.sort_order)
+
+    print(tostring(config_root, pretty_print=True, encoding="Unicode"))

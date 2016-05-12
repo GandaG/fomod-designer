@@ -144,7 +144,7 @@ class MainFrame(base_ui[0], base_ui[1]):
             return
 
     def save(self):
-        from .nodelib import export
+        from .nodelib import export, sort_elements
         from validator import validate_tree, check_warnings, ValidatorError, ValidationError, WarningError
 
         try:
@@ -153,6 +153,7 @@ class MainFrame(base_ui[0], base_ui[1]):
                 generic.generic_errorbox("I REFUSE TO SAVE",
                                          "There is nothing... literally.")
             else:
+                sort_elements(self.info_root, self.config_root)
                 try:
                     if self.settings_dict["Save"]["validate"]:
                         validate_tree(self.config_root, join(cur_folder, "resources", "mod_schema.xsd"))
@@ -192,7 +193,7 @@ class MainFrame(base_ui[0], base_ui[1]):
                 object_to_delete = self.current_object
                 new_index = self.tree_model.indexFromItem(self.current_object.getparent().model_item)
                 object_to_delete.getparent().remove_child(object_to_delete)
-
+                self.fomod_modified(True)
                 self.selected_object_tree(new_index)
         except AttributeError:
             from . import generic
