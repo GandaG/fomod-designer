@@ -81,6 +81,9 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.delete_sec_shortcut.activated.connect(self.delete)
         self.actionHe_lp.triggered.connect(self.help)
         self.action_About.triggered.connect(self.about)
+        self.action_Object_Tree.toggled.connect(self.toggle_tree)
+        self.actionObject_Box.toggled.connect(self.toggle_list)
+        self.action_Property_Editor.toggled.connect(self.toggle_editor)
 
         self.object_tree_view.clicked.connect(self.selected_object_tree)
         self.object_box_list.activated.connect(self.selected_object_list)
@@ -145,8 +148,8 @@ class MainFrame(base_ui[0], base_ui[1]):
     def save(self):
         try:
             if not self.info_root and not self.config_root:
-                generic_errorbox("I REFUSE TO SAVE", "There is nothing... literally.")
-            else:
+                return
+            elif self.fomod_changed:
                 sort_elements(self.info_root, self.config_root)
                 try:
                     if self.settings_dict["Save"]["validate"]:
@@ -193,6 +196,24 @@ class MainFrame(base_ui[0], base_ui[1]):
 
     def about(self):
         not_implemented()
+
+    def toggle_tree(self, visible):
+        if visible:
+            self.object_tree.show()
+        else:
+            self.object_tree.hide()
+
+    def toggle_list(self, visible):
+        if visible:
+            self.object_box.show()
+        else:
+            self.object_box.hide()
+
+    def toggle_editor(self, visible):
+        if visible:
+            self.property_editor.show()
+        else:
+            self.property_editor.hide()
 
     def selected_object_tree(self, index):
         self.current_object = self.tree_model.itemFromIndex(index).xml_node
@@ -277,7 +298,6 @@ class MainFrame(base_ui[0], base_ui[1]):
                 def button_clicked():
                     open_dialog = QtWidgets.QFileDialog()
                     file_path = open_dialog.getOpenFileName(self, "Select File:", self.package_path)
-                    print(file_path)
                     if file_path[0]:
                         line_edit.setText(relpath(file_path[0], self.package_path))
 
@@ -394,6 +414,23 @@ class MainFrame(base_ui[0], base_ui[1]):
         else:
             self.fomod_changed = True
             self.setWindowTitle("*" + self.package_name + " - " + self.original_title)
+
+    def closeEvent(self, event):
+        if self.fomod_changed:
+            msg_box = QtWidgets.QMessageBox()
+            msg_box.setWindowTitle("The installer has been modified.")
+            msg_box.setText("Do you want to save your changes?")
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.Save |
+                                       QtWidgets.QMessageBox.Discard |
+                                       QtWidgets.QMessageBox.Cancel)
+            msg_box.setDefaultButton(QtWidgets.QMessageBox.Save)
+            answer = msg_box.exec_()
+            if answer == QtWidgets.QMessageBox.Save:
+                self.save()
+            elif answer == QtWidgets.QMessageBox.Discard:
+                pass
+            elif answer == QtWidgets.QMessageBox.Cancel:
+                event.ignore()
 
 
 class SettingsDialog(settings_ui[0], settings_ui[1]):
