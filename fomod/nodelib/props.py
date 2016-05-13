@@ -62,3 +62,21 @@ class PropertyInt(_PropertyBase):
     def set_value(self, value):
         if value in self.values:
             super().set_value(value)
+
+
+class PropertyFolder(_PropertyBase):
+    def __init__(self, name, text="", editable=True):
+        super().__init__("folder", name, (), editable)
+        self.value = text
+
+
+class PropertyFile(_PropertyBase):
+    def __init__(self, name, text="", editable=True):
+        super().__init__("file", name, (), editable)
+        self.value = text
+
+
+class PropertyColour(_PropertyBase):
+    def __init__(self, name, text="", editable=True):
+        super().__init__("colour", name, (), editable)
+        self.value = text

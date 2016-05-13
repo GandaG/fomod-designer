@@ -246,10 +246,6 @@ def export_fragment(element):
 
 
 def sort_elements(info_root, config_root):
-    print(tostring(config_root, pretty_print=True, encoding="Unicode"))
-
     for root in (info_root, config_root):
         for parent in root.xpath('//*[./*]'):
             parent[:] = sorted(parent, key=lambda x: x.sort_order)
-
-    print(tostring(config_root, pretty_print=True, encoding="Unicode"))

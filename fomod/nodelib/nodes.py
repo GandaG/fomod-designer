@@ -18,7 +18,7 @@ from PyQt5.QtGui import QStandardItem
 from lxml import etree
 from os import sep
 from .exceptions import BaseInstanceException
-from .props import PropertyCombo, PropertyInt, PropertyText
+from .props import PropertyCombo, PropertyInt, PropertyText, PropertyFile, PropertyFolder, PropertyColour
 
 
 class NodeBase(etree.ElementBase):
@@ -199,7 +199,7 @@ class NodeConfigModName(NodeBase):
 
     def _init(self):
         properties = {"position": PropertyCombo("Position", ("Left", "Right", "RightOfImage")),
-                      "colour": PropertyText("Colour", "000000")}
+                      "colour": PropertyColour("Colour", "000000")}
         self.init("Name", type(self).tag, 1, allow_text=True, properties=properties, sort_order=1)
         super()._init()
 
@@ -208,7 +208,7 @@ class NodeConfigModImage(NodeBase):
     tag = "moduleImage"
 
     def _init(self):
-        properties = {"path": PropertyText("Path"), "showImage": PropertyCombo("Show Image", ("true", "false")),
+        properties = {"path": PropertyFile("Path"), "showImage": PropertyCombo("Show Image", ("true", "false")),
                       "showFade": PropertyCombo("Show Fade", ("true", "false")),
                       "height": PropertyInt("Height", -1, 9999, -1)}
         self.init("Image", "moduleImage", 1, properties=properties, sort_order=2)
@@ -287,7 +287,7 @@ class NodeConfigFile(NodeBase):
     tag = "file"
 
     def _init(self):
-        properties = {"source": PropertyText("Source"),
+        properties = {"source": PropertyFile("Source"),
                       "destination": PropertyText("Destination"),
                       "priority": PropertyInt("Priority", 0, 99, 0),
                       "alwaysInstall": PropertyCombo("Always Install", ("true", "false")),
@@ -300,7 +300,7 @@ class NodeConfigFolder(NodeBase):
     tag = "folder"
 
     def _init(self):
-        properties = {"source": PropertyText("Source"),
+        properties = {"source": PropertyFolder("Source"),
                       "destination": PropertyText("Destination"),
                       "priority": PropertyInt("Priority", 0, 99, 0),
                       "alwaysInstall": PropertyCombo("Always Install", ("true", "false")),
@@ -434,7 +434,7 @@ class NodeConfigImage(NodeBase):
     tag = "image"
 
     def _init(self):
-        properties = {"path": PropertyText("Path")}
+        properties = {"path": PropertyFile("Path")}
         self.init("Image", type(self).tag, 1, properties=properties, sort_order=2)
         super()._init()
 

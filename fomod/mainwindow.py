@@ -181,7 +181,6 @@ class MainFrame(base_ui[0], base_ui[1]):
         config = settings.SettingsDialog()
         config.exec_()
         self.settings_dict = settings.read_settings()
-        print(self.settings_dict)
 
     def refresh(self):
         if self.settings_dict["General"]["code_refresh"] >= 1:
@@ -287,17 +286,90 @@ class MainFrame(base_ui[0], base_ui[1]):
                 prop_list[prop_index].activated[str].connect(self.current_object.update_item_name)
                 prop_list[prop_index].activated[str].connect(self.fomod_modified)
 
-            """self.widget = QtWidgets.QWidget(self.dockWidgetContents)
-            self.widget.setObjectName("widget")
-            self.horizontalLayout_4 = QtWidgets.QHBoxLayout(self.widget)
-            self.horizontalLayout_4.setObjectName("horizontalLayout_4")
-            self.lineEdit_2 = QtWidgets.QLineEdit(self.widget)
-            self.lineEdit_2.setObjectName("lineEdit_2")
-            self.horizontalLayout_4.addWidget(self.lineEdit_2)
-            self.pushButton = QtWidgets.QPushButton(self.widget)
-            self.pushButton.setObjectName("pushButton")
-            self.horizontalLayout_4.addWidget(self.pushButton)
-            self.formLayout.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.widget)"""
+            elif props[key].type_ == "file":
+                def button_clicked():
+                    from os.path import expanduser, relpath
+
+                    open_dialog = QtWidgets.QFileDialog()
+                    file_path = open_dialog.getOpenFileName(self, "Select File:", self.package_path)
+                    print(file_path)
+                    if file_path[0]:
+                        line_edit.setText(relpath(file_path[0], self.package_path))
+
+                prop_list.append(QtWidgets.QWidget(self.dockWidgetContents))
+                layout = QtWidgets.QHBoxLayout(prop_list[prop_index])
+                line_edit = QtWidgets.QLineEdit(prop_list[prop_index])
+                path_button = QtWidgets.QPushButton(prop_list[prop_index])
+                path_button.setText("...")
+                layout.addWidget(line_edit)
+                layout.addWidget(path_button)
+                layout.setContentsMargins(0, 0, 0, 0)
+                line_edit.setText(props[key].value)
+                line_edit.textChanged.connect(props[key].set_value)
+                line_edit.textChanged[str].connect(self.current_object.write_attribs)
+                line_edit.textChanged[str].connect(self.current_object.update_item_name)
+                line_edit.textChanged[str].connect(self.fomod_modified)
+                path_button.clicked.connect(button_clicked)
+
+            elif props[key].type_ == "folder":
+                def button_clicked():
+                    from os.path import expanduser, relpath
+
+                    open_dialog = QtWidgets.QFileDialog()
+                    folder_path = open_dialog.getExistingDirectory(self, "Select folder:", self.package_path)
+                    if folder_path:
+                        line_edit.setText(relpath(folder_path, self.package_path))
+
+                prop_list.append(QtWidgets.QWidget(self.dockWidgetContents))
+                layout = QtWidgets.QHBoxLayout(prop_list[prop_index])
+                line_edit = QtWidgets.QLineEdit(prop_list[prop_index])
+                path_button = QtWidgets.QPushButton(prop_list[prop_index])
+                path_button.setText("...")
+                layout.addWidget(line_edit)
+                layout.addWidget(path_button)
+                layout.setContentsMargins(0, 0, 0, 0)
+                line_edit.setText(props[key].value)
+                line_edit.textChanged.connect(props[key].set_value)
+                line_edit.textChanged.connect(self.current_object.write_attribs)
+                line_edit.textChanged.connect(self.current_object.update_item_name)
+                line_edit.textChanged.connect(self.fomod_modified)
+                path_button.clicked.connect(button_clicked)
+
+            elif props[key].type_ == "colour":
+                def button_clicked():
+                    init_colour = QtGui.QColor("#" + props[key].value)
+                    colour_dialog = QtWidgets.QColorDialog()
+                    colour = colour_dialog.getColor(init_colour, self, "Choose Colour:")
+                    if colour.isValid():
+                        line_edit.setText(colour.name()[1:])
+
+                def update_button_colour():
+                    colour = QtGui.QColor("#" + props[key].value)
+                    if colour.isValid():
+                        path_button.setStyleSheet("background-color: " + colour.name())
+                        path_button.setIcon(QtGui.QIcon())
+                    else:
+                        path_button.setStyleSheet("background-color: #ffffff")
+                        icon = QtGui.QIcon()
+                        icon.addPixmap(QtGui.QPixmap(join(cur_folder, "resources/logos/logo_danger.png")),
+                                       QtGui.QIcon.Normal, QtGui.QIcon.Off)
+                        path_button.setIcon(icon)
+
+                prop_list.append(QtWidgets.QWidget(self.dockWidgetContents))
+                layout = QtWidgets.QHBoxLayout(prop_list[prop_index])
+                line_edit = QtWidgets.QLineEdit(prop_list[prop_index])
+                line_edit.setMaxLength(6)
+                path_button = QtWidgets.QPushButton(prop_list[prop_index])
+                layout.addWidget(line_edit)
+                layout.addWidget(path_button)
+                layout.setContentsMargins(0, 0, 0, 0)
+                line_edit.setText(props[key].value)
+                update_button_colour()
+                line_edit.textChanged.connect(props[key].set_value)
+                line_edit.textChanged.connect(update_button_colour)
+                line_edit.textChanged.connect(self.current_object.write_attribs)
+                line_edit.textChanged.connect(self.fomod_modified)
+                path_button.clicked.connect(button_clicked)
 
             self.formLayout.setWidget(prop_index, QtWidgets.QFormLayout.FieldRole,
                                       prop_list[prop_index])
