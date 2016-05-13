@@ -26,18 +26,7 @@ from . import nodes
 from .exceptions import MissingFileError, ParserError, TagNotFound
 
 
-def check_file(base_path, file_):
-    base_file = file_
-    try:
-        for item in listdir(base_path):
-            if item.casefold() == base_file.casefold():
-                return item
-        raise MissingFileError(base_file)
-    except FileNotFoundError:
-        raise MissingFileError(base_file)
-
-
-class NodeLookup(PythonElementClassLookup):
+class _NodeLookup(PythonElementClassLookup):
     def lookup(self, doc, element):
         if element.tag == "fomod":
             return nodes.NodeInfoRoot
@@ -129,11 +118,36 @@ class NodeLookup(PythonElementClassLookup):
             return nodes.NodeConfigType
 
         else:
-            raise TagNotFound(element.tag)
+            raise TagNotFound(element)
 
 
 module_parser = XMLParser(remove_comments=True, remove_pis=True, remove_blank_text=True)
-module_parser.set_element_class_lookup(NodeLookup())
+module_parser.set_element_class_lookup(_NodeLookup())
+
+
+def _check_file(base_path, file_):
+    base_file = file_
+    try:
+        for item in listdir(base_path):
+            if item.casefold() == base_file.casefold():
+                return item
+        raise MissingFileError(base_file)
+    except FileNotFoundError:
+        raise MissingFileError(base_file)
+
+
+def _validate_child(child):
+    if type(child) in child.getparent().allowed_children:
+        if child.allowed_instances:
+            instances = 0
+            for item in child.getparent():
+                if type(item) == type(child):
+                    instances += 1
+            if instances <= child.allowed_instances:
+                return True
+        else:
+            return True
+    return False
 
 
 def elem_factory(tag, parent):
@@ -156,11 +170,11 @@ def elem_factory(tag, parent):
 
 def import_(package_path):
     try:
-        fomod_folder = check_file(package_path, "fomod")
+        fomod_folder = _check_file(package_path, "fomod")
         fomod_folder_path = join(package_path, fomod_folder)
 
-        info_file = check_file(fomod_folder_path, "Info.xml")
-        config_file = check_file(fomod_folder_path, "ModuleConfig.xml")
+        info_file = _check_file(fomod_folder_path, "Info.xml")
+        config_file = _check_file(fomod_folder_path, "ModuleConfig.xml")
 
         info_path = join(fomod_folder_path, info_file)
         config_path = join(fomod_folder_path, config_file)
@@ -192,23 +206,9 @@ def new():
     return info_root, config_root
 
 
-def _validate_child(child):
-    if type(child) in child.getparent().allowed_children:
-        if child.allowed_instances:
-            instances = 0
-            for item in child.getparent():
-                if type(item) == type(child):
-                    instances += 1
-            if instances <= child.allowed_instances:
-                return True
-        else:
-            return True
-    return False
-
-
 def export(info_root, config_root, package_path):
     try:
-        fomod_folder = check_file(package_path, "fomod")
+        fomod_folder = _check_file(package_path, "fomod")
     except MissingFileError as e:
         makedirs(join(package_path, e.file))
         fomod_folder = join(package_path, e.file)
@@ -216,12 +216,12 @@ def export(info_root, config_root, package_path):
     fomod_folder_path = join(package_path, fomod_folder)
 
     try:
-        info_file = check_file(fomod_folder_path, "Info.xml")
+        info_file = _check_file(fomod_folder_path, "Info.xml")
     except MissingFileError as e:
         info_file = e.file
 
     try:
-        config_file = check_file(fomod_folder_path, "ModuleConfig.xml")
+        config_file = _check_file(fomod_folder_path, "ModuleConfig.xml")
     except MissingFileError as e:
         config_file = e.file
 
@@ -237,7 +237,7 @@ def export(info_root, config_root, package_path):
         config_tree.write(configfile, pretty_print=True)
 
 
-def export_fragment(element):
+def highlight_fragment(element):
     element.write_attribs()
     new_elem = XML(tostring(element))
     deannotate(new_elem, cleanup_namespaces=True)

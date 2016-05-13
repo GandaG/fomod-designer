@@ -14,12 +14,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from os import makedirs
+from os.path import expanduser, normpath, basename, join, relpath
+from configparser import ConfigParser
 from PyQt5 import QtWidgets, QtGui, QtCore, uic
-from os.path import join
-from . import cur_folder, settings
+from validator import validate_tree, check_warnings, ValidatorError, ValidationError, WarningError
+from . import cur_folder
+from .io import import_, new, export, sort_elements, elem_factory, highlight_fragment
+from .exceptions import GenericError
 
 
 base_ui = uic.loadUiType(join(cur_folder, "resources/templates/mainframe.ui"))
+settings_ui = uic.loadUiType(join(cur_folder, "resources/templates/settings.ui"))
 
 
 class MainFrame(base_ui[0], base_ui[1]):
@@ -83,7 +89,7 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.original_title = self.windowTitle()
         self.package_path = ""
         self.package_name = ""
-        self.settings_dict = settings.read_settings()
+        self.settings_dict = read_settings()
         self.info_root = None
         self.config_root = None
         self.current_object = None
@@ -97,10 +103,6 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.object_box_list.setModel(self.list_model)
 
     def open(self):
-        from os.path import expanduser, normpath, basename
-        from validator import validate_tree, check_warnings, ValidatorError, ValidationError, WarningError
-        from .nodelib import import_, new, NodeLibError
-
         try:
             open_dialog = QtWidgets.QFileDialog()
             package_path = open_dialog.getExistingDirectory(self, "Select package root directory:", expanduser("~"))
@@ -112,7 +114,6 @@ class MainFrame(base_ui[0], base_ui[1]):
                         if self.settings_dict["Load"]["validate"]:
                             validate_tree(config_root, join(cur_folder, "resources", "mod_schema.xsd"))
                     except ValidationError as e:
-                        from .generic import generic_errorbox
                         generic_errorbox(e.title, str(e))
                         if not self.settings_dict["Load"]["validate_ignore"]:
                             return
@@ -120,7 +121,6 @@ class MainFrame(base_ui[0], base_ui[1]):
                         if self.settings_dict["Load"]["warnings"]:
                             check_warnings(package_path, config_root)
                     except WarningError as e:
-                        from .generic import generic_errorbox
                         generic_errorbox(e.title, str(e))
                         if not self.settings_dict["Load"]["warn_ignore"]:
                             return
@@ -138,27 +138,20 @@ class MainFrame(base_ui[0], base_ui[1]):
                 self.package_name = basename(normpath(self.package_path))
                 self.fomod_modified(False)
                 self.current_object = None
-        except (NodeLibError, ValidatorError) as p:
-            from .generic import generic_errorbox
-            generic_errorbox(p.title, str(p))
+        except (GenericError, ValidatorError) as p:
+            generic_errorbox(p.title, str(p), p.detailed)
             return
 
     def save(self):
-        from .nodelib import export, sort_elements
-        from validator import validate_tree, check_warnings, ValidatorError, ValidationError, WarningError
-
         try:
             if not self.info_root and not self.config_root:
-                from . import generic
-                generic.generic_errorbox("I REFUSE TO SAVE",
-                                         "There is nothing... literally.")
+                generic_errorbox("I REFUSE TO SAVE", "There is nothing... literally.")
             else:
                 sort_elements(self.info_root, self.config_root)
                 try:
                     if self.settings_dict["Save"]["validate"]:
                         validate_tree(self.config_root, join(cur_folder, "resources", "mod_schema.xsd"))
                 except ValidationError as e:
-                    from .generic import generic_errorbox
                     generic_errorbox(e.title, str(e))
                     if not self.settings_dict["Save"]["validate_ignore"]:
                         return
@@ -166,21 +159,19 @@ class MainFrame(base_ui[0], base_ui[1]):
                     if self.settings_dict["Save"]["warnings"]:
                         check_warnings(self.package_path, self.config_root)
                 except WarningError as e:
-                    from .generic import generic_errorbox
                     generic_errorbox(e.title, str(e))
                     if not self.settings_dict["Save"]["warn_ignore"]:
                         return
                 export(self.info_root, self.config_root, self.package_path)
                 self.fomod_modified(False)
         except ValidatorError as e:
-            from .generic import generic_errorbox
             generic_errorbox(e.title, str(e))
             return
 
     def options(self):
-        config = settings.SettingsDialog()
+        config = SettingsDialog()
         config.exec_()
-        self.settings_dict = settings.read_settings()
+        self.settings_dict = read_settings()
 
     def refresh(self):
         if self.settings_dict["General"]["code_refresh"] >= 1:
@@ -195,17 +186,13 @@ class MainFrame(base_ui[0], base_ui[1]):
                 self.fomod_modified(True)
                 self.selected_object_tree(new_index)
         except AttributeError:
-            from . import generic
-            generic.generic_errorbox("You can't do that...",
-                                     "You can't delete root objects!")
+            generic_errorbox("You can't do that...", "You can't delete root objects!")
 
     def help(self):
-        from . import generic
-        generic.not_implemented()
+        not_implemented()
 
     def about(self):
-        from . import generic
-        generic.not_implemented()
+        not_implemented()
 
     def selected_object_tree(self, index):
         self.current_object = self.tree_model.itemFromIndex(index).xml_node
@@ -288,8 +275,6 @@ class MainFrame(base_ui[0], base_ui[1]):
 
             elif props[key].type_ == "file":
                 def button_clicked():
-                    from os.path import expanduser, relpath
-
                     open_dialog = QtWidgets.QFileDialog()
                     file_path = open_dialog.getOpenFileName(self, "Select File:", self.package_path)
                     print(file_path)
@@ -313,8 +298,6 @@ class MainFrame(base_ui[0], base_ui[1]):
 
             elif props[key].type_ == "folder":
                 def button_clicked():
-                    from os.path import expanduser, relpath
-
                     open_dialog = QtWidgets.QFileDialog()
                     folder_path = open_dialog.getExistingDirectory(self, "Select folder:", self.package_path)
                     if folder_path:
@@ -343,9 +326,9 @@ class MainFrame(base_ui[0], base_ui[1]):
                     if colour.isValid():
                         line_edit.setText(colour.name()[1:])
 
-                def update_button_colour():
-                    colour = QtGui.QColor("#" + props[key].value)
-                    if colour.isValid():
+                def update_button_colour(text):
+                    colour = QtGui.QColor("#" + text)
+                    if colour.isValid() and len(text) == 6:
                         path_button.setStyleSheet("background-color: " + colour.name())
                         path_button.setIcon(QtGui.QIcon())
                     else:
@@ -364,7 +347,7 @@ class MainFrame(base_ui[0], base_ui[1]):
                 layout.addWidget(path_button)
                 layout.setContentsMargins(0, 0, 0, 0)
                 line_edit.setText(props[key].value)
-                update_button_colour()
+                update_button_colour(line_edit.text())
                 line_edit.textChanged.connect(props[key].set_value)
                 line_edit.textChanged.connect(update_button_colour)
                 line_edit.textChanged.connect(self.current_object.write_attribs)
@@ -377,8 +360,6 @@ class MainFrame(base_ui[0], base_ui[1]):
             prop_index += 1
 
     def selected_object_list(self, index):
-        from .nodelib import elem_factory
-
         item = self.list_model.itemFromIndex(index)
 
         new_child = elem_factory(item.xml_node.tag, self.current_object)
@@ -399,9 +380,8 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.fomod_modified(True)
 
     def update_gen_code(self):
-        from .nodelib import export_fragment
         if self.current_object is not None:
-            self.xml_code_browser.setHtml(export_fragment(self.current_object))
+            self.xml_code_browser.setHtml(highlight_fragment(self.current_object))
         else:
             self.xml_code_browser.setText("")
 
@@ -414,3 +394,122 @@ class MainFrame(base_ui[0], base_ui[1]):
         else:
             self.fomod_changed = True
             self.setWindowTitle("*" + self.package_name + " - " + self.original_title)
+
+
+class SettingsDialog(settings_ui[0], settings_ui[1]):
+    def __init__(self):
+        super().__init__()
+        self.setupUi(self)
+
+        self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint)
+
+        self.buttonBox.accepted.connect(self.accepted)
+        self.buttonBox.rejected.connect(self.rejected)
+        self.check_valid_load.stateChanged.connect(self.update_valid_load)
+        self.check_warn_load.stateChanged.connect(self.update_warn_load)
+        self.check_valid_save.stateChanged.connect(self.update_valid_save)
+        self.check_warn_save.stateChanged.connect(self.update_warn_save)
+
+        config = read_settings()
+        self.combo_code_refresh.setCurrentIndex(config["General"]["code_refresh"])
+        self.check_valid_load.setChecked(config["Load"]["validate"])
+        self.check_valid_load_ignore.setChecked(config["Load"]["validate_ignore"])
+        self.check_warn_load.setChecked(config["Load"]["warnings"])
+        self.check_warn_load_ignore.setChecked(config["Load"]["warn_ignore"])
+        self.check_valid_save.setChecked(config["Save"]["validate"])
+        self.check_valid_save_ignore.setChecked(config["Save"]["validate_ignore"])
+        self.check_warn_save.setChecked(config["Save"]["warnings"])
+        self.check_warn_save_ignore.setChecked(config["Save"]["warn_ignore"])
+
+        self.check_valid_load.stateChanged.emit(self.check_valid_load.isChecked())
+        self.check_warn_load.stateChanged.emit(self.check_warn_load.isChecked())
+        self.check_valid_save.stateChanged.emit(self.check_valid_save.isChecked())
+        self.check_warn_save.stateChanged.emit(self.check_warn_save.isChecked())
+
+    def accepted(self):
+        config = ConfigParser()
+        config.read_dict(read_settings())
+        config["General"]["code_refresh"] = str(self.combo_code_refresh.currentIndex())
+        config["Load"]["validate"] = str(self.check_valid_load.isChecked()).lower()
+        config["Load"]["validate_ignore"] = str(self.check_valid_load_ignore.isChecked()).lower()
+        config["Load"]["warnings"] = str(self.check_warn_load.isChecked()).lower()
+        config["Load"]["warn_ignore"] = str(self.check_warn_load_ignore.isChecked()).lower()
+        config["Save"]["validate"] = str(self.check_valid_save.isChecked()).lower()
+        config["Save"]["validate_ignore"] = str(self.check_valid_save_ignore.isChecked()).lower()
+        config["Save"]["warnings"] = str(self.check_warn_save.isChecked()).lower()
+        config["Save"]["warn_ignore"] = str(self.check_warn_save_ignore.isChecked()).lower()
+
+        makedirs(join(expanduser("~"), ".fomod"), exist_ok=True)
+        with open(join(expanduser("~"), ".fomod", ".designer"), "w") as configfile:
+            config.write(configfile)
+
+        self.close()
+
+    def rejected(self):
+        self.close()
+
+    def update_valid_load(self, new_state):
+        if not new_state:
+            self.check_valid_load_ignore.setEnabled(False)
+        else:
+            self.check_valid_load_ignore.setEnabled(True)
+
+    def update_warn_load(self, new_state):
+        if not new_state:
+            self.check_warn_load_ignore.setEnabled(False)
+        else:
+            self.check_warn_load_ignore.setEnabled(True)
+
+    def update_valid_save(self, new_state):
+        if not new_state:
+            self.check_valid_save_ignore.setEnabled(False)
+        else:
+            self.check_valid_save_ignore.setEnabled(True)
+
+    def update_warn_save(self, new_state):
+        if not new_state:
+            self.check_warn_save_ignore.setEnabled(False)
+        else:
+            self.check_warn_save_ignore.setEnabled(True)
+
+
+def not_implemented():
+    generic_errorbox("Nope", "Sorry, this part hasn't been implemented yet!")
+
+
+def generic_errorbox(title, text, detail=""):
+    errorbox = QtWidgets.QMessageBox()
+    errorbox.setText(text)
+    errorbox.setWindowTitle(title)
+    errorbox.setDetailedText(detail)
+    errorbox.setIconPixmap(QtGui.QPixmap(join(cur_folder, "resources/logos/logo_admin.png")))
+    errorbox.exec_()
+
+
+def read_settings():
+    default_settings = {"General": {"code_refresh": 3},
+                        "Load": {"validate": True,
+                                 "validate_ignore": False,
+                                 "warnings": True,
+                                 "warn_ignore": True},
+                        "Save": {"validate": True,
+                                 "validate_ignore": False,
+                                 "warnings": True,
+                                 "warn_ignore": True}}
+    config = ConfigParser()
+    config.read_dict(default_settings)
+    config.read(join(expanduser("~"), ".fomod", ".designer"))
+
+    settings = {}
+    for section in config:
+        settings[section] = {}
+        for key in config[section]:
+            if isinstance(default_settings[section][key], bool):
+                settings[section][key] = config.getboolean(section, key)
+            elif isinstance(default_settings[section][key], int):
+                settings[section][key] = config.getint(section, key)
+            elif isinstance(default_settings[section][key], float):
+                settings[section][key] = config.getfloat(section, key)
+            else:
+                settings[section][key] = config.get(section, key)
+    return settings

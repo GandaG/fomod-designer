@@ -14,16 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from os import sep
 from PyQt5.QtGui import QStandardItem
 from lxml import etree
-from os import sep
 from .exceptions import BaseInstanceException
 from .props import PropertyCombo, PropertyInt, PropertyText, PropertyFile, PropertyFolder, PropertyColour
 
 
-class NodeBase(etree.ElementBase):
+class _NodeBase(etree.ElementBase):
     def _init(self):
-        if type(self) is NodeBase:
+        if type(self) is _NodeBase:
             raise BaseInstanceException(self)
         super()._init()
 
@@ -107,7 +107,7 @@ class NodeStandardItem(QStandardItem):
         super().__init__()
 
 
-class NodeInfoRoot(NodeBase):
+class NodeInfoRoot(_NodeBase):
     tag = "fomod"
 
     def _init(self):
@@ -117,7 +117,7 @@ class NodeInfoRoot(NodeBase):
         super()._init()
 
 
-class NodeInfoName(NodeBase):
+class NodeInfoName(_NodeBase):
     tag = "Name"
 
     def _init(self):
@@ -125,7 +125,7 @@ class NodeInfoName(NodeBase):
         super()._init()
 
 
-class NodeInfoAuthor(NodeBase):
+class NodeInfoAuthor(_NodeBase):
     tag = "Author"
 
     def _init(self):
@@ -133,7 +133,7 @@ class NodeInfoAuthor(NodeBase):
         super()._init()
 
 
-class NodeInfoVersion(NodeBase):
+class NodeInfoVersion(_NodeBase):
     tag = "Version"
 
     def _init(self):
@@ -141,7 +141,7 @@ class NodeInfoVersion(NodeBase):
         super()._init()
 
 
-class NodeInfoID(NodeBase):
+class NodeInfoID(_NodeBase):
     tag = "Id"
 
     def _init(self):
@@ -149,7 +149,7 @@ class NodeInfoID(NodeBase):
         super()._init()
 
 
-class NodeInfoWebsite(NodeBase):
+class NodeInfoWebsite(_NodeBase):
     tag = "Website"
 
     def _init(self):
@@ -157,7 +157,7 @@ class NodeInfoWebsite(NodeBase):
         super()._init()
 
 
-class NodeInfoDescription(NodeBase):
+class NodeInfoDescription(_NodeBase):
     tag = "Description"
 
     def _init(self):
@@ -165,7 +165,7 @@ class NodeInfoDescription(NodeBase):
         super()._init()
 
 
-class NodeInfoGroup(NodeBase):
+class NodeInfoGroup(_NodeBase):
     tag = "Groups"
 
     def _init(self):
@@ -174,7 +174,7 @@ class NodeInfoGroup(NodeBase):
         super()._init()
 
 
-class NodeInfoElement(NodeBase):
+class NodeInfoElement(_NodeBase):
     tag = "element"
 
     def _init(self):
@@ -182,7 +182,7 @@ class NodeInfoElement(NodeBase):
         super()._init()
 
 
-class NodeConfigRoot(NodeBase):
+class NodeConfigRoot(_NodeBase):
     tag = "config"
 
     def _init(self):
@@ -194,7 +194,7 @@ class NodeConfigRoot(NodeBase):
         super()._init()
 
 
-class NodeConfigModName(NodeBase):
+class NodeConfigModName(_NodeBase):
     tag = "moduleName"
 
     def _init(self):
@@ -204,7 +204,7 @@ class NodeConfigModName(NodeBase):
         super()._init()
 
 
-class NodeConfigModImage(NodeBase):
+class NodeConfigModImage(_NodeBase):
     tag = "moduleImage"
 
     def _init(self):
@@ -215,7 +215,7 @@ class NodeConfigModImage(NodeBase):
         super()._init()
 
 
-class NodeConfigModDepend(NodeBase):
+class NodeConfigModDepend(_NodeBase):
     tag = "moduleDependencies"
 
     def _init(self):
@@ -226,7 +226,7 @@ class NodeConfigModDepend(NodeBase):
         super()._init()
 
 
-class NodeConfigReqFiles(NodeBase):
+class NodeConfigReqFiles(_NodeBase):
     tag = "requiredInstallFiles"
 
     def _init(self):
@@ -235,7 +235,7 @@ class NodeConfigReqFiles(NodeBase):
         super()._init()
 
 
-class NodeConfigInstallSteps(NodeBase):
+class NodeConfigInstallSteps(_NodeBase):
     tag = "installSteps"
 
     def _init(self):
@@ -246,7 +246,7 @@ class NodeConfigInstallSteps(NodeBase):
         super()._init()
 
 
-class NodeConfigCondInstall(NodeBase):
+class NodeConfigCondInstall(_NodeBase):
     tag = "conditionalFileInstalls"
 
     def _init(self):
@@ -255,7 +255,7 @@ class NodeConfigCondInstall(NodeBase):
         super()._init()
 
 
-class NodeConfigDependFile(NodeBase):
+class NodeConfigDependFile(_NodeBase):
     tag = "fileDependency"
 
     def _init(self):
@@ -265,7 +265,7 @@ class NodeConfigDependFile(NodeBase):
         super()._init()
 
 
-class NodeConfigDependFlag(NodeBase):
+class NodeConfigDependFlag(_NodeBase):
     tag = "flagDependency"
 
     def _init(self):
@@ -274,7 +274,7 @@ class NodeConfigDependFlag(NodeBase):
         super()._init()
 
 
-class NodeConfigDependGame(NodeBase):
+class NodeConfigDependGame(_NodeBase):
     tag = "gameDependency"
 
     def _init(self):
@@ -283,7 +283,7 @@ class NodeConfigDependGame(NodeBase):
         super()._init()
 
 
-class NodeConfigFile(NodeBase):
+class NodeConfigFile(_NodeBase):
     tag = "file"
 
     def _init(self):
@@ -296,7 +296,7 @@ class NodeConfigFile(NodeBase):
         super()._init()
 
 
-class NodeConfigFolder(NodeBase):
+class NodeConfigFolder(_NodeBase):
     tag = "folder"
 
     def _init(self):
@@ -309,7 +309,7 @@ class NodeConfigFolder(NodeBase):
         super()._init()
 
 
-class NodeConfigPatterns(NodeBase):
+class NodeConfigPatterns(_NodeBase):
     tag = "patterns"
 
     def _init(self):
@@ -318,7 +318,7 @@ class NodeConfigPatterns(NodeBase):
         super()._init()
 
 
-class NodeConfigPattern(NodeBase):
+class NodeConfigPattern(_NodeBase):
     tag = "pattern"
 
     def _init(self):
@@ -327,7 +327,7 @@ class NodeConfigPattern(NodeBase):
         super()._init()
 
 
-class NodeConfigFiles(NodeBase):
+class NodeConfigFiles(_NodeBase):
     tag = "files"
 
     def _init(self):
@@ -336,7 +336,7 @@ class NodeConfigFiles(NodeBase):
         super()._init()
 
 
-class NodeConfigDependencies(NodeBase):
+class NodeConfigDependencies(_NodeBase):
     tag = "dependencies"
 
     def _init(self):
@@ -348,7 +348,7 @@ class NodeConfigDependencies(NodeBase):
         super()._init()
 
 
-class NodeConfigNestedDependencies(NodeBase):
+class NodeConfigNestedDependencies(_NodeBase):
     tag = "dependencies"
 
     def _init(self):
@@ -359,7 +359,7 @@ class NodeConfigNestedDependencies(NodeBase):
         super()._init()
 
 
-class NodeConfigInstallStep(NodeBase):
+class NodeConfigInstallStep(_NodeBase):
     tag = "installStep"
 
     def _init(self):
@@ -369,7 +369,7 @@ class NodeConfigInstallStep(NodeBase):
         super()._init()
 
 
-class NodeConfigVisible(NodeBase):
+class NodeConfigVisible(_NodeBase):
     tag = "visible"
 
     def _init(self):
@@ -378,7 +378,7 @@ class NodeConfigVisible(NodeBase):
         super()._init()
 
 
-class NodeConfigOptGroups(NodeBase):
+class NodeConfigOptGroups(_NodeBase):
     tag = "optionalFileGroups"
 
     def _init(self):
@@ -389,7 +389,7 @@ class NodeConfigOptGroups(NodeBase):
         super()._init()
 
 
-class NodeConfigGroup(NodeBase):
+class NodeConfigGroup(_NodeBase):
     tag = "group"
 
     def _init(self):
@@ -401,7 +401,7 @@ class NodeConfigGroup(NodeBase):
         super()._init()
 
 
-class NodeConfigPlugins(NodeBase):
+class NodeConfigPlugins(_NodeBase):
     tag = "plugins"
 
     def _init(self):
@@ -411,7 +411,7 @@ class NodeConfigPlugins(NodeBase):
         super()._init()
 
 
-class NodeConfigPlugin(NodeBase):
+class NodeConfigPlugin(_NodeBase):
     tag = "plugin"
 
     def _init(self):
@@ -422,7 +422,7 @@ class NodeConfigPlugin(NodeBase):
         super()._init()
 
 
-class NodeConfigPluginDescription(NodeBase):
+class NodeConfigPluginDescription(_NodeBase):
     tag = "description"
 
     def _init(self):
@@ -430,7 +430,7 @@ class NodeConfigPluginDescription(NodeBase):
         super()._init()
 
 
-class NodeConfigImage(NodeBase):
+class NodeConfigImage(_NodeBase):
     tag = "image"
 
     def _init(self):
@@ -439,7 +439,7 @@ class NodeConfigImage(NodeBase):
         super()._init()
 
 
-class NodeConfigConditionFlags(NodeBase):
+class NodeConfigConditionFlags(_NodeBase):
     tag = "conditionFlags"
 
     def _init(self):
@@ -448,7 +448,7 @@ class NodeConfigConditionFlags(NodeBase):
         super()._init()
 
 
-class NodeConfigTypeDesc(NodeBase):
+class NodeConfigTypeDesc(_NodeBase):
     tag = "typeDescriptor"
 
     def _init(self):
@@ -463,7 +463,7 @@ class NodeConfigTypeDesc(NodeBase):
         return False
 
 
-class NodeConfigFlag(NodeBase):
+class NodeConfigFlag(_NodeBase):
     tag = "flag"
 
     def _init(self):
@@ -472,7 +472,7 @@ class NodeConfigFlag(NodeBase):
         super()._init()
 
 
-class NodeConfigDependencyType(NodeBase):
+class NodeConfigDependencyType(_NodeBase):
     tag = "dependencyType"
 
     def _init(self):
@@ -481,7 +481,7 @@ class NodeConfigDependencyType(NodeBase):
         super()._init()
 
 
-class NodeConfigDefaultType(NodeBase):
+class NodeConfigDefaultType(_NodeBase):
     tag = "defaultType"
 
     def _init(self):
@@ -491,7 +491,7 @@ class NodeConfigDefaultType(NodeBase):
         super()._init()
 
 
-class NodeConfigType(NodeBase):
+class NodeConfigType(_NodeBase):
     tag = "type"
 
     def _init(self):
@@ -501,7 +501,7 @@ class NodeConfigType(NodeBase):
         super()._init()
 
 
-class NodeConfigInstallPatterns(NodeBase):
+class NodeConfigInstallPatterns(_NodeBase):
     tag = "patterns"
 
     def _init(self):
@@ -510,7 +510,7 @@ class NodeConfigInstallPatterns(NodeBase):
         super()._init()
 
 
-class NodeConfigInstallPattern(NodeBase):
+class NodeConfigInstallPattern(_NodeBase):
     tag = "pattern"
 
     def _init(self):
