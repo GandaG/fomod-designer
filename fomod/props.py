@@ -14,39 +14,68 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import base
+from .exceptions import BaseInstanceException
 
 
-class PropertyText(base.PropertyBase):
-    def __init__(self, name, tag, text="", editable=True):
-        super().__init__(name, tag, (), editable)
-        self.value = text
+class _PropertyBase(object):
+    def __init__(self, name, values, editable=True):
+        if type(self) is _PropertyBase:
+            raise BaseInstanceException(self)
 
-    def set_value(self, text):
-        if self.editable:
-            self.value = text
+        self.name = name
+        self.editable = editable
 
-
-class PropertyCombo(base.PropertyBase):
-    def __init__(self, name, tag, values, editable=True):
-        super().__init__(name, tag, values, editable)
-        self.value = values[0]
+        self.value = ""
+        self.values = values
 
     def set_value(self, value):
-        value = int(value)
-        if self.editable and value in self.values:
+        if self.editable:
             self.value = value
 
 
-class PropertyInt(base.PropertyBase):
-    def __init__(self, name, tag, min_value, max_value, default, editable=True):
+class PropertyText(_PropertyBase):
+    def __init__(self, name, text="", editable=True):
+        super().__init__(name, (), editable)
+        self.value = text
+
+
+class PropertyCombo(_PropertyBase):
+    def __init__(self, name, values, editable=True):
+        super().__init__(name, values, editable)
+        self.value = values[0]
+
+    def set_value(self, value):
+        if value in self.values:
+            super().set_value(value)
+
+
+class PropertyInt(_PropertyBase):
+    def __init__(self, name, min_value, max_value, default, editable=True):
         self.min = min_value
         self.max = max_value
         values = range(min_value, max_value + 1)
 
-        super().__init__(name, tag, values, editable)
+        super().__init__(name, values, editable)
         self.value = default
 
     def set_value(self, value):
-        if self.editable and value in self.values:
-            self.value = value
+        if value in self.values:
+            super().set_value(value)
+
+
+class PropertyFolder(_PropertyBase):
+    def __init__(self, name, text="", editable=True):
+        super().__init__(name, (), editable)
+        self.value = text
+
+
+class PropertyFile(_PropertyBase):
+    def __init__(self, name, text="", editable=True):
+        super().__init__(name, (), editable)
+        self.value = text
+
+
+class PropertyColour(_PropertyBase):
+    def __init__(self, name, text="", editable=True):
+        super().__init__(name, (), editable)
+        self.value = text

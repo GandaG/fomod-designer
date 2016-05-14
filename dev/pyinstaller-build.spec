@@ -6,7 +6,7 @@ import os
 a = Analysis(['pyinstaller-bootstrap.py'],
              pathex=[os.getcwd()],
              binaries=None,
-             datas=[('../fomod/gui/logos', 'fomod/gui/logos'),
+             datas=[('../resources', 'resources'),
                     ('../setup.cfg', '.'),],
              hiddenimports=[],
              hookspath=[],
@@ -26,4 +26,4 @@ exe = EXE(pyz,
           debug=False,
           strip=False,
           upx=True,
-          console=False )
+          console=False , icon='resources/file_icon.ico')

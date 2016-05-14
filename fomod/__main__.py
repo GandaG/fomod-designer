@@ -14,7 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .gui.main import main
+import sys
+from PyQt5 import QtWidgets
+from .exceptions import excepthook
+from .gui import MainFrame
+
+
+def main():
+    sys.excepthook = excepthook
+
+    app = QtWidgets.QApplication(sys.argv)
+    window = MainFrame()
+    window.show()
+    sys.exit(app.exec_())
 
 
 if __name__ == "__main__":
