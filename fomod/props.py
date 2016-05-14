@@ -18,11 +18,10 @@ from .exceptions import BaseInstanceException
 
 
 class _PropertyBase(object):
-    def __init__(self, type_, name, values, editable=True):
+    def __init__(self, name, values, editable=True):
         if type(self) is _PropertyBase:
             raise BaseInstanceException(self)
 
-        self.type_ = type_
         self.name = name
         self.editable = editable
 
@@ -36,13 +35,13 @@ class _PropertyBase(object):
 
 class PropertyText(_PropertyBase):
     def __init__(self, name, text="", editable=True):
-        super().__init__("text", name, (), editable)
+        super().__init__(name, (), editable)
         self.value = text
 
 
 class PropertyCombo(_PropertyBase):
     def __init__(self, name, values, editable=True):
-        super().__init__("combo", name, values, editable)
+        super().__init__(name, values, editable)
         self.value = values[0]
 
     def set_value(self, value):
@@ -56,7 +55,7 @@ class PropertyInt(_PropertyBase):
         self.max = max_value
         values = range(min_value, max_value + 1)
 
-        super().__init__("int", name, values, editable)
+        super().__init__(name, values, editable)
         self.value = default
 
     def set_value(self, value):
@@ -66,17 +65,17 @@ class PropertyInt(_PropertyBase):
 
 class PropertyFolder(_PropertyBase):
     def __init__(self, name, text="", editable=True):
-        super().__init__("folder", name, (), editable)
+        super().__init__(name, (), editable)
         self.value = text
 
 
 class PropertyFile(_PropertyBase):
     def __init__(self, name, text="", editable=True):
-        super().__init__("file", name, (), editable)
+        super().__init__(name, (), editable)
         self.value = text
 
 
 class PropertyColour(_PropertyBase):
     def __init__(self, name, text="", editable=True):
-        super().__init__("colour", name, (), editable)
+        super().__init__(name, (), editable)
         self.value = text

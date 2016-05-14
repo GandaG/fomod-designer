@@ -22,6 +22,7 @@ from PyQt5 import QtWidgets, QtGui, QtCore, uic
 from validator import validate_tree, check_warnings, ValidatorError, ValidationError, WarningError
 from . import cur_folder, __version__
 from .io import import_, new, export, sort_elements, elem_factory, highlight_fragment
+from .props import PropertyFile, PropertyColour, PropertyFolder, PropertyCombo, PropertyInt, PropertyText
 from .exceptions import GenericError
 
 
@@ -332,7 +333,7 @@ class MainFrame(base_ui[0], base_ui[1]):
             label.setText(props[key].name)
             self.formLayout.setWidget(prop_index, QtWidgets.QFormLayout.LabelRole, label)
 
-            if props[key].type_ == "text":
+            if  isinstance(props[key], PropertyText):
                 prop_list.append(QtWidgets.QLineEdit(self.dockWidgetContents))
                 prop_list[prop_index].setText(props[key].value)
                 prop_list[prop_index].textEdited[str].connect(props[key].set_value)
@@ -340,7 +341,7 @@ class MainFrame(base_ui[0], base_ui[1]):
                 prop_list[prop_index].textEdited[str].connect(self.current_object.update_item_name)
                 prop_list[prop_index].textEdited[str].connect(self.fomod_modified)
 
-            elif props[key].type_ == "int":
+            elif isinstance(props[key], PropertyInt):
                 prop_list.append(QtWidgets.QSpinBox(self.dockWidgetContents))
                 prop_list[prop_index].setValue(int(props[key].value))
                 prop_list[prop_index].setMinimum(props[key].min)
@@ -349,15 +350,16 @@ class MainFrame(base_ui[0], base_ui[1]):
                 prop_list[prop_index].valueChanged.connect(self.current_object.write_attribs)
                 prop_list[prop_index].valueChanged.connect(self.fomod_modified)
 
-            elif props[key].type_ == "combo":
+            elif isinstance(props[key], PropertyCombo):
                 prop_list.append(QtWidgets.QComboBox(self.dockWidgetContents))
                 prop_list[prop_index].insertItems(0, props[key].values)
+                prop_list[prop_index].setCurrentIndex(props[key].values.index(props[key].value))
                 prop_list[prop_index].activated[str].connect(props[key].set_value)
                 prop_list[prop_index].activated[str].connect(self.current_object.write_attribs)
                 prop_list[prop_index].activated[str].connect(self.current_object.update_item_name)
                 prop_list[prop_index].activated[str].connect(self.fomod_modified)
 
-            elif props[key].type_ == "file":
+            elif isinstance(props[key], PropertyFile):
                 def button_clicked():
                     open_dialog = QtWidgets.QFileDialog()
                     file_path = open_dialog.getOpenFileName(self, "Select File:", self.package_path)
@@ -379,7 +381,7 @@ class MainFrame(base_ui[0], base_ui[1]):
                 line_edit.textChanged[str].connect(self.fomod_modified)
                 path_button.clicked.connect(button_clicked)
 
-            elif props[key].type_ == "folder":
+            elif isinstance(props[key], PropertyFolder):
                 def button_clicked():
                     open_dialog = QtWidgets.QFileDialog()
                     folder_path = open_dialog.getExistingDirectory(self, "Select folder:", self.package_path)
@@ -401,7 +403,7 @@ class MainFrame(base_ui[0], base_ui[1]):
                 line_edit.textChanged.connect(self.fomod_modified)
                 path_button.clicked.connect(button_clicked)
 
-            elif props[key].type_ == "colour":
+            elif isinstance(props[key], PropertyColour):
                 def button_clicked():
                     init_colour = QtGui.QColor("#" + props[key].value)
                     colour_dialog = QtWidgets.QColorDialog()
@@ -437,8 +439,7 @@ class MainFrame(base_ui[0], base_ui[1]):
                 line_edit.textChanged.connect(self.fomod_modified)
                 path_button.clicked.connect(button_clicked)
 
-            self.formLayout.setWidget(prop_index, QtWidgets.QFormLayout.FieldRole,
-                                      prop_list[prop_index])
+            self.formLayout.setWidget(prop_index, QtWidgets.QFormLayout.FieldRole, prop_list[prop_index])
             prop_list[prop_index].setObjectName(str(prop_index))
             prop_index += 1
 
