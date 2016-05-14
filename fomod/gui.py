@@ -37,6 +37,11 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.setupUi(self)
 
         # setup the icons properly
+        window_icon = QtGui.QIcon()
+        window_icon.addPixmap(QtGui.QPixmap(join(cur_folder, "resources/window_icon.jpg")),
+                              QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.setWindowIcon(window_icon)
+
         icon_open = QtGui.QIcon()
         icon_open.addPixmap(QtGui.QPixmap(join(cur_folder, "resources/logos/logo_open_file.png")),
                             QtGui.QIcon.Normal, QtGui.QIcon.Off)
