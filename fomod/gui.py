@@ -80,9 +80,11 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.actionO_ptions.triggered.connect(self.options)
         self.action_Refresh.triggered.connect(self.refresh)
         self.action_Delete.triggered.connect(self.delete)
+        # noinspection PyUnresolvedReferences
         self.delete_sec_shortcut.activated.connect(self.delete)
         self.actionHe_lp.triggered.connect(self.help)
         self.action_About.triggered.connect(self.about)
+        self.actionClear.triggered.connect(self.clear_recent_files)
         self.action_Object_Tree.toggled.connect(self.toggle_tree)
         self.actionObject_Box.toggled.connect(self.toggle_list)
         self.action_Property_Editor.toggled.connect(self.toggle_editor)
@@ -107,10 +109,15 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.object_tree_view.header().hide()
         self.object_box_list.setModel(self.list_model)
 
-    def open(self):
+        self.update_recent_files()
+
+    def open(self, path=""):
         try:
-            open_dialog = QtWidgets.QFileDialog()
-            package_path = open_dialog.getExistingDirectory(self, "Select package root directory:", expanduser("~"))
+            if not path:
+                open_dialog = QtWidgets.QFileDialog()
+                package_path = open_dialog.getExistingDirectory(self, "Select package root directory:", expanduser("~"))
+            else:
+                package_path = path
 
             if package_path:
                 info_root, config_root = import_(normpath(package_path))
@@ -143,6 +150,7 @@ class MainFrame(base_ui[0], base_ui[1]):
                 self.package_name = basename(normpath(self.package_path))
                 self.fomod_modified(False)
                 self.current_object = None
+                self.update_recent_files(self.package_path)
         except (GenericError, ValidatorError) as p:
             generic_errorbox(p.title, str(p), p.detailed)
             return
@@ -197,6 +205,7 @@ class MainFrame(base_ui[0], base_ui[1]):
         not_implemented()
 
     def about(self):
+        # noinspection PyTypeChecker
         about_dialog = About(self)
         about_dialog.exec_()
 
@@ -218,6 +227,56 @@ class MainFrame(base_ui[0], base_ui[1]):
         else:
             self.property_editor.hide()
 
+    def clear_recent_files(self):
+        config = ConfigParser()
+        config.read_dict(read_settings())
+        for key in config["Recent Files"]:
+            config["Recent Files"][key] = ""
+        makedirs(join(expanduser("~"), ".fomod"), exist_ok=True)
+        with open(join(expanduser("~"), ".fomod", ".designer"), "w") as configfile:
+            config.write(configfile)
+
+        for child in self.menu_Recent_Files.actions():
+            if child is not self.actionClear:
+                self.menu_Recent_Files.removeAction(child)
+                del child
+
+    def update_recent_files(self, add_new=None):
+        def open_path(instance, package):
+            def open_():
+                instance.open(package)
+            return open_
+
+        file_list = []
+        settings = read_settings()
+        for index in range(1, 5):
+            if settings["Recent Files"]["file" + str(index)]:
+                file_list.append(settings["Recent Files"]["file" + str(index)])
+        self.clear_recent_files()
+
+        if add_new:
+            if add_new in file_list:
+                file_list.remove(add_new)
+            elif len(file_list) == 5:
+                file_list.pop()
+            file_list.insert(0, add_new)
+
+        config = ConfigParser()
+        config.read_dict(settings)
+        for path in file_list:
+            config["Recent Files"]["file" + str(file_list.index(path) + 1)] = path
+        makedirs(join(expanduser("~"), ".fomod"), exist_ok=True)
+        with open(join(expanduser("~"), ".fomod", ".designer"), "w") as configfile:
+            config.write(configfile)
+
+        self.menu_Recent_Files.removeAction(self.actionClear)
+        for path in file_list:
+            action = self.menu_Recent_Files.addAction(path)
+            action.triggered.connect(open_path(self, path))
+        self.menu_Recent_Files.addSeparator()
+        self.menu_Recent_Files.addAction(self.actionClear)
+
+
     def selected_object_tree(self, index):
         self.current_object = self.tree_model.itemFromIndex(index).xml_node
         if self.settings_dict["General"]["code_refresh"] >= 2:
@@ -236,6 +295,7 @@ class MainFrame(base_ui[0], base_ui[1]):
                 self.list_model.appendRow(new_object.model_item)
                 self.current_children_list.append(new_object)
 
+    # noinspection PyUnresolvedReferences
     def update_props_list(self):
         self.current_prop_list.clear()
         for index in reversed(range(self.formLayout.count())):
@@ -557,7 +617,12 @@ def read_settings():
                         "Save": {"validate": True,
                                  "validate_ignore": False,
                                  "warnings": True,
-                                 "warn_ignore": True}}
+                                 "warn_ignore": True},
+                        "Recent Files": {"file1": "",
+                                         "file2": "",
+                                         "file3": "",
+                                         "file4": "",
+                                         "file5": ""}}
     config = ConfigParser()
     config.read_dict(default_settings)
     config.read(join(expanduser("~"), ".fomod", ".designer"))

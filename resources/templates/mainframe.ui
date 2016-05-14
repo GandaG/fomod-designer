@@ -221,8 +221,15 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
+    <widget class="QMenu" name="menu_Recent_Files">
+     <property name="title">
+      <string>&amp;Recent Files</string>
+     </property>
+     <addaction name="actionClear"/>
+    </widget>
     <addaction name="action_Open"/>
     <addaction name="action_Save"/>
+    <addaction name="menu_Recent_Files"/>
     <addaction name="separator"/>
     <addaction name="actionO_ptions"/>
    </widget>
@@ -254,6 +261,9 @@
    <addaction name="menu_Help"/>
   </widget>
   <action name="action_Open">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset>
      <normaloff>../logos/logo_open_file.png</normaloff>../logos/logo_open_file.png</iconset>
@@ -404,6 +414,16 @@
    </property>
    <property name="text">
     <string>Object &amp;Box</string>
+   </property>
+  </action>
+  <action name="action">
+   <property name="text">
+    <string>1</string>
+   </property>
+  </action>
+  <action name="actionClear">
+   <property name="text">
+    <string>Clear</string>
    </property>
   </action>
  </widget>
