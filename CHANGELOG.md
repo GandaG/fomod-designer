@@ -1,5 +1,25 @@
 # Changelog
 
+0.4.0 (2016-05-14)
+
+* Added file and window icons.
+* Fixed combo boxes not being set at start.
+* Added recent files menu.
+* Added about dialog.
+* Added view menu.
+* Closing the main window with unsaved changes should now display a warning.
+* Not identified tags should be properly handled now.
+* Syntax errors in the xml should be properly handled now.
+* File, folder and colour properties now have a proper specific widget.
+* Added sorting to xml elements when saving.
+* Added xml code preview.
+* Added settings window.
+* Attribute parsing should now properly ignore the ones that are unknown.
+* Validation and warning checks added.
+* Multiple bugfixes.
+
+----------------------------------
+
 0.3.1 (2016-04-17)
 
 * Tags/item with name/source property now have that as the title instead of the tag's name.
