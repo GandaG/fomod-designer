@@ -16,16 +16,18 @@
 
 from os import makedirs
 from os.path import expanduser, normpath, basename, join, relpath
+from datetime import datetime
 from configparser import ConfigParser
 from PyQt5 import QtWidgets, QtGui, QtCore, uic
 from validator import validate_tree, check_warnings, ValidatorError, ValidationError, WarningError
-from . import cur_folder
+from . import cur_folder, __version__
 from .io import import_, new, export, sort_elements, elem_factory, highlight_fragment
 from .exceptions import GenericError
 
 
 base_ui = uic.loadUiType(join(cur_folder, "resources/templates/mainframe.ui"))
 settings_ui = uic.loadUiType(join(cur_folder, "resources/templates/settings.ui"))
+about_ui = uic.loadUiType(join(cur_folder, "resources/templates/about.ui"))
 
 
 class MainFrame(base_ui[0], base_ui[1]):
@@ -195,7 +197,8 @@ class MainFrame(base_ui[0], base_ui[1]):
         not_implemented()
 
     def about(self):
-        not_implemented()
+        about_dialog = About(self)
+        about_dialog.exec_()
 
     def toggle_tree(self, visible):
         if visible:
@@ -508,6 +511,28 @@ class SettingsDialog(settings_ui[0], settings_ui[1]):
             self.check_warn_save_ignore.setEnabled(False)
         else:
             self.check_warn_save_ignore.setEnabled(True)
+
+
+class About(about_ui[0], about_ui[1]):
+    def __init__(self, parent):
+        super().__init__()
+        self.setupUi(self)
+
+        self.move(parent.window().frameGeometry().topLeft() + parent.window().rect().center() - self.rect().center())
+
+        self.setWindowFlags(QtCore.Qt.WindowTitleHint)
+
+        self.version.setText("Version: " + __version__)
+
+        copyright_text = self.copyright.text()
+        new_year = "2016-" + str(datetime.now().year) if datetime.now().year != 2016 else "2016"
+        copyright_text.replace("2016", new_year)
+        self.copyright.setText(copyright_text)
+
+        self.button.clicked.connect(self.button_click)
+
+    def button_click(self):
+        self.close()
 
 
 def not_implemented():
