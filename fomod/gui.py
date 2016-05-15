@@ -111,6 +111,8 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.tree_model = QtGui.QStandardItemModel()
         self.list_model = QtGui.QStandardItemModel()
 
+        self.wizard_button.hide()
+
         self.object_tree_view.setModel(self.tree_model)
         self.object_tree_view.header().hide()
         self.object_box_list.setModel(self.list_model)
@@ -282,7 +284,6 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.menu_Recent_Files.addSeparator()
         self.menu_Recent_Files.addAction(self.actionClear)
 
-
     def selected_object_tree(self, index):
         self.current_object = self.tree_model.itemFromIndex(index).xml_node
         if self.settings_dict["General"]["code_refresh"] >= 2:
@@ -290,6 +291,7 @@ class MainFrame(base_ui[0], base_ui[1]):
 
         self.update_box_list()
         self.update_props_list()
+        self.update_wizards()
 
     def update_box_list(self):
         self.list_model.clear()
@@ -338,7 +340,7 @@ class MainFrame(base_ui[0], base_ui[1]):
             label.setText(props[key].name)
             self.formLayout.setWidget(prop_index, QtWidgets.QFormLayout.LabelRole, label)
 
-            if  isinstance(props[key], PropertyText):
+            if isinstance(props[key], PropertyText):
                 prop_list.append(QtWidgets.QLineEdit(self.dockWidgetContents))
                 prop_list[prop_index].setText(props[key].value)
                 prop_list[prop_index].textEdited[str].connect(props[key].set_value)
@@ -447,6 +449,13 @@ class MainFrame(base_ui[0], base_ui[1]):
             self.formLayout.setWidget(prop_index, QtWidgets.QFormLayout.FieldRole, prop_list[prop_index])
             prop_list[prop_index].setObjectName(str(prop_index))
             prop_index += 1
+
+    def update_wizards(self):
+        if self.current_object.wizards:
+            self.wizard_button.show()
+            # do something here, build the wizard gui
+        else:
+            self.wizard_button.hide()
 
     def selected_object_list(self, index):
         item = self.list_model.itemFromIndex(index)
@@ -592,13 +601,10 @@ class About(about_ui[0], about_ui[1]):
 
         copyright_text = self.copyright.text()
         new_year = "2016-" + str(datetime.now().year) if datetime.now().year != 2016 else "2016"
-        copyright_text.replace("2016", new_year)
+        copyright_text = copyright_text.replace("2016", new_year)
         self.copyright.setText(copyright_text)
 
-        self.button.clicked.connect(self.button_click)
-
-    def button_click(self):
-        self.close()
+        self.button.clicked.connect(self.close)
 
 
 def not_implemented():
