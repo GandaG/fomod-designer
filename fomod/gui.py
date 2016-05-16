@@ -19,7 +19,8 @@ from os.path import expanduser, normpath, basename, join, relpath
 from datetime import datetime
 from configparser import ConfigParser
 from PyQt5.uic import loadUiType
-from PyQt5.QtWidgets import QShortcut, QFileDialog, QColorDialog, QMessageBox
+from PyQt5.QtWidgets import (QShortcut, QFileDialog, QColorDialog, QMessageBox, QLabel, QHBoxLayout,
+                             QFormLayout, QLineEdit, QSpinBox, QComboBox, QWidget, QPushButton)
 from PyQt5.QtGui import QIcon, QPixmap, QStandardItemModel, QColor
 from PyQt5.QtCore import Qt
 from validator import validate_tree, check_warnings, ValidatorError, ValidationError, WarningError
@@ -319,17 +320,17 @@ class MainFrame(base_ui[0], base_ui[1]):
         props = self.current_object.properties
 
         if self.current_object.allow_text:
-            text_label = QtWidgets.QLabel(self.dockWidgetContents)
+            text_label = QLabel(self.dockWidgetContents)
             text_label.setObjectName("text_label")
             text_label.setText("Text")
-            self.formLayout.setWidget(prop_index, QtWidgets.QFormLayout.LabelRole, text_label)
-            prop_list.append(QtWidgets.QLineEdit(self.dockWidgetContents))
+            self.formLayout.setWidget(prop_index, QFormLayout.LabelRole, text_label)
+            prop_list.append(QLineEdit(self.dockWidgetContents))
             prop_list[prop_index].setObjectName(str(prop_index))
             prop_list[prop_index].setText(self.current_object.text)
             prop_list[prop_index].textEdited[str].connect(self.current_object.set_text)
             prop_list[prop_index].textEdited[str].connect(self.current_object.write_attribs)
             prop_list[prop_index].textEdited[str].connect(self.fomod_modified)
-            self.formLayout.setWidget(prop_index, QtWidgets.QFormLayout.FieldRole,
+            self.formLayout.setWidget(prop_index, QFormLayout.FieldRole,
                                       prop_list[prop_index])
 
             prop_index += 1
@@ -338,13 +339,13 @@ class MainFrame(base_ui[0], base_ui[1]):
             if not props[key].editable:
                 continue
 
-            label = QtWidgets.QLabel(self.dockWidgetContents)
+            label = QLabel(self.dockWidgetContents)
             label.setObjectName("label_" + str(prop_index))
             label.setText(props[key].name)
-            self.formLayout.setWidget(prop_index, QtWidgets.QFormLayout.LabelRole, label)
+            self.formLayout.setWidget(prop_index, QFormLayout.LabelRole, label)
 
             if isinstance(props[key], PropertyText):
-                prop_list.append(QtWidgets.QLineEdit(self.dockWidgetContents))
+                prop_list.append(QLineEdit(self.dockWidgetContents))
                 prop_list[prop_index].setText(props[key].value)
                 prop_list[prop_index].textEdited[str].connect(props[key].set_value)
                 prop_list[prop_index].textEdited[str].connect(self.current_object.write_attribs)
@@ -352,7 +353,7 @@ class MainFrame(base_ui[0], base_ui[1]):
                 prop_list[prop_index].textEdited[str].connect(self.fomod_modified)
 
             elif isinstance(props[key], PropertyInt):
-                prop_list.append(QtWidgets.QSpinBox(self.dockWidgetContents))
+                prop_list.append(QSpinBox(self.dockWidgetContents))
                 prop_list[prop_index].setValue(int(props[key].value))
                 prop_list[prop_index].setMinimum(props[key].min)
                 prop_list[prop_index].setMaximum(props[key].max)
@@ -361,7 +362,7 @@ class MainFrame(base_ui[0], base_ui[1]):
                 prop_list[prop_index].valueChanged.connect(self.fomod_modified)
 
             elif isinstance(props[key], PropertyCombo):
-                prop_list.append(QtWidgets.QComboBox(self.dockWidgetContents))
+                prop_list.append(QComboBox(self.dockWidgetContents))
                 prop_list[prop_index].insertItems(0, props[key].values)
                 prop_list[prop_index].setCurrentIndex(props[key].values.index(props[key].value))
                 prop_list[prop_index].activated[str].connect(props[key].set_value)
@@ -376,10 +377,10 @@ class MainFrame(base_ui[0], base_ui[1]):
                     if file_path[0]:
                         line_edit.setText(relpath(file_path[0], self.package_path))
 
-                prop_list.append(QtWidgets.QWidget(self.dockWidgetContents))
-                layout = QtWidgets.QHBoxLayout(prop_list[prop_index])
-                line_edit = QtWidgets.QLineEdit(prop_list[prop_index])
-                path_button = QtWidgets.QPushButton(prop_list[prop_index])
+                prop_list.append(QWidget(self.dockWidgetContents))
+                layout = QHBoxLayout(prop_list[prop_index])
+                line_edit = QLineEdit(prop_list[prop_index])
+                path_button = QPushButton(prop_list[prop_index])
                 path_button.setText("...")
                 layout.addWidget(line_edit)
                 layout.addWidget(path_button)
@@ -398,10 +399,10 @@ class MainFrame(base_ui[0], base_ui[1]):
                     if folder_path:
                         line_edit.setText(relpath(folder_path, self.package_path))
 
-                prop_list.append(QtWidgets.QWidget(self.dockWidgetContents))
-                layout = QtWidgets.QHBoxLayout(prop_list[prop_index])
-                line_edit = QtWidgets.QLineEdit(prop_list[prop_index])
-                path_button = QtWidgets.QPushButton(prop_list[prop_index])
+                prop_list.append(QWidget(self.dockWidgetContents))
+                layout = QHBoxLayout(prop_list[prop_index])
+                line_edit = QLineEdit(prop_list[prop_index])
+                path_button = QPushButton(prop_list[prop_index])
                 path_button.setText("...")
                 layout.addWidget(line_edit)
                 layout.addWidget(path_button)
@@ -433,11 +434,11 @@ class MainFrame(base_ui[0], base_ui[1]):
                                        QIcon.Normal, QIcon.Off)
                         path_button.setIcon(icon)
 
-                prop_list.append(QtWidgets.QWidget(self.dockWidgetContents))
-                layout = QtWidgets.QHBoxLayout(prop_list[prop_index])
-                line_edit = QtWidgets.QLineEdit(prop_list[prop_index])
+                prop_list.append(QWidget(self.dockWidgetContents))
+                layout = QHBoxLayout(prop_list[prop_index])
+                line_edit = QLineEdit(prop_list[prop_index])
                 line_edit.setMaxLength(6)
-                path_button = QtWidgets.QPushButton(prop_list[prop_index])
+                path_button = QPushButton(prop_list[prop_index])
                 layout.addWidget(line_edit)
                 layout.addWidget(path_button)
                 layout.setContentsMargins(0, 0, 0, 0)
@@ -449,7 +450,7 @@ class MainFrame(base_ui[0], base_ui[1]):
                 line_edit.textChanged.connect(self.fomod_modified)
                 path_button.clicked.connect(button_clicked)
 
-            self.formLayout.setWidget(prop_index, QtWidgets.QFormLayout.FieldRole, prop_list[prop_index])
+            self.formLayout.setWidget(prop_index, QFormLayout.FieldRole, prop_list[prop_index])
             prop_list[prop_index].setObjectName(str(prop_index))
             prop_index += 1
 
