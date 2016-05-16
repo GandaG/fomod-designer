@@ -27,12 +27,15 @@ class _NodeBase(etree.ElementBase):
             raise BaseInstanceException(self)
         super()._init()
 
-    def init(self, name, tag, allowed_instances, sort_order=0, allow_text=False, allowed_children=None, properties=None):
+    def init(self, name, tag, allowed_instances, sort_order=0, allow_text=False, allowed_children=None, properties=None,
+             wizards=None):
 
         if not properties:
             properties = {}
         if not allowed_children:
             allowed_children = ()
+        if not wizards:
+            wizards = []
 
         self.name = name
         self.tag = tag
@@ -41,6 +44,7 @@ class _NodeBase(etree.ElementBase):
         self.allowed_children = allowed_children
         self.allow_text = allow_text
         self.allowed_instances = allowed_instances
+        self.wizards = wizards
 
         self.model_item = NodeStandardItem(self)
         self.model_item.setText(self.name)
@@ -290,8 +294,8 @@ class NodeConfigFile(_NodeBase):
         properties = {"source": PropertyFile("Source"),
                       "destination": PropertyText("Destination"),
                       "priority": PropertyInt("Priority", 0, 99, 0),
-                      "alwaysInstall": PropertyCombo("Always Install", ("true", "false")),
-                      "installIfUsable": PropertyCombo("Install If Usable", ("true", "false"))}
+                      "alwaysInstall": PropertyCombo("Always Install", ("false", "true")),
+                      "installIfUsable": PropertyCombo("Install If Usable", ("false", "true"))}
         self.init("File", type(self).tag, 0, properties=properties)
         super()._init()
 
@@ -303,8 +307,8 @@ class NodeConfigFolder(_NodeBase):
         properties = {"source": PropertyFolder("Source"),
                       "destination": PropertyText("Destination"),
                       "priority": PropertyInt("Priority", 0, 99, 0),
-                      "alwaysInstall": PropertyCombo("Always Install", ("true", "false")),
-                      "installIfUsable": PropertyCombo("Install If Usable", ("true", "false"))}
+                      "alwaysInstall": PropertyCombo("Always Install", ("false", "true")),
+                      "installIfUsable": PropertyCombo("Install If Usable", ("false", "true"))}
         self.init("Folder", type(self).tag, 0, properties=properties)
         super()._init()
 
