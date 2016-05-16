@@ -18,7 +18,10 @@ from os import makedirs
 from os.path import expanduser, normpath, basename, join, relpath
 from datetime import datetime
 from configparser import ConfigParser
-from PyQt5 import QtWidgets, QtGui, QtCore, uic
+from PyQt5.uic import loadUiType
+from PyQt5.QtWidgets import QShortcut, QFileDialog, QColorDialog, QMessageBox
+from PyQt5.QtGui import QIcon, QPixmap, QStandardItemModel, QColor
+from PyQt5.QtCore import Qt
 from validator import validate_tree, check_warnings, ValidatorError, ValidationError, WarningError
 from . import cur_folder, __version__
 from .io import import_, new, export, sort_elements, elem_factory, highlight_fragment
@@ -26,9 +29,9 @@ from .props import PropertyFile, PropertyColour, PropertyFolder, PropertyCombo, 
 from .exceptions import GenericError
 
 
-base_ui = uic.loadUiType(join(cur_folder, "resources/templates/mainframe.ui"))
-settings_ui = uic.loadUiType(join(cur_folder, "resources/templates/settings.ui"))
-about_ui = uic.loadUiType(join(cur_folder, "resources/templates/about.ui"))
+base_ui = loadUiType(join(cur_folder, "resources/templates/mainframe.ui"))
+settings_ui = loadUiType(join(cur_folder, "resources/templates/settings.ui"))
+about_ui = loadUiType(join(cur_folder, "resources/templates/about.ui"))
 
 
 class MainFrame(base_ui[0], base_ui[1]):
@@ -37,49 +40,49 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.setupUi(self)
 
         # setup the icons properly
-        window_icon = QtGui.QIcon()
-        window_icon.addPixmap(QtGui.QPixmap(join(cur_folder, "resources/window_icon.jpg")),
-                              QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        window_icon = QIcon()
+        window_icon.addPixmap(QPixmap(join(cur_folder, "resources/window_icon.jpg")),
+                              QIcon.Normal, QIcon.Off)
         self.setWindowIcon(window_icon)
 
-        icon_open = QtGui.QIcon()
-        icon_open.addPixmap(QtGui.QPixmap(join(cur_folder, "resources/logos/logo_open_file.png")),
-                            QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon_open = QIcon()
+        icon_open.addPixmap(QPixmap(join(cur_folder, "resources/logos/logo_open_file.png")),
+                            QIcon.Normal, QIcon.Off)
         self.action_Open.setIcon(icon_open)
 
-        icon_save = QtGui.QIcon()
-        icon_save.addPixmap(QtGui.QPixmap(join(cur_folder, "resources/logos/logo_floppy_disk.png")),
-                            QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon_save = QIcon()
+        icon_save.addPixmap(QPixmap(join(cur_folder, "resources/logos/logo_floppy_disk.png")),
+                            QIcon.Normal, QIcon.Off)
         self.action_Save.setIcon(icon_save)
 
-        icon_options = QtGui.QIcon()
-        icon_options.addPixmap(QtGui.QPixmap(join(cur_folder, "resources/logos/logo_gear.png")),
-                               QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon_options = QIcon()
+        icon_options.addPixmap(QPixmap(join(cur_folder, "resources/logos/logo_gear.png")),
+                               QIcon.Normal, QIcon.Off)
         self.actionO_ptions.setIcon(icon_options)
 
-        icon_refresh = QtGui.QIcon()
-        icon_refresh.addPixmap(QtGui.QPixmap(join(cur_folder, "resources/logos/logo_refresh.png")),
-                               QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon_refresh = QIcon()
+        icon_refresh.addPixmap(QPixmap(join(cur_folder, "resources/logos/logo_refresh.png")),
+                               QIcon.Normal, QIcon.Off)
         self.action_Refresh.setIcon(icon_refresh)
 
-        icon_delete = QtGui.QIcon()
-        icon_delete.addPixmap(QtGui.QPixmap(join(cur_folder, "resources/logos/logo_cross.png")),
-                              QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon_delete = QIcon()
+        icon_delete.addPixmap(QPixmap(join(cur_folder, "resources/logos/logo_cross.png")),
+                              QIcon.Normal, QIcon.Off)
         self.action_Delete.setIcon(icon_delete)
 
-        icon_about = QtGui.QIcon()
-        icon_about.addPixmap(QtGui.QPixmap(join(cur_folder, "resources/logos/logo_notepad.png")),
-                             QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon_about = QIcon()
+        icon_about.addPixmap(QPixmap(join(cur_folder, "resources/logos/logo_notepad.png")),
+                             QIcon.Normal, QIcon.Off)
         self.action_About.setIcon(icon_about)
 
-        icon_help = QtGui.QIcon()
-        icon_help.addPixmap(QtGui.QPixmap(join(cur_folder, "resources/logos/logo_info.png")),
-                            QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon_help = QIcon()
+        icon_help.addPixmap(QPixmap(join(cur_folder, "resources/logos/logo_info.png")),
+                            QIcon.Normal, QIcon.Off)
         self.actionHe_lp.setIcon(icon_help)
 
         # setup any additional info left from designer
-        self.delete_sec_shortcut = QtWidgets.QShortcut(self)
-        self.delete_sec_shortcut.setKey(QtCore.Qt.Key_Delete)
+        self.delete_sec_shortcut = QShortcut(self)
+        self.delete_sec_shortcut.setKey(Qt.Key_Delete)
 
         self.action_Open.triggered.connect(self.open)
         self.action_Save.triggered.connect(self.save)
@@ -108,8 +111,8 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.current_object = None
         self.current_prop_list = []
         self.current_children_list = []
-        self.tree_model = QtGui.QStandardItemModel()
-        self.list_model = QtGui.QStandardItemModel()
+        self.tree_model = QStandardItemModel()
+        self.list_model = QStandardItemModel()
 
         self.wizard_button.hide()
 
@@ -122,7 +125,7 @@ class MainFrame(base_ui[0], base_ui[1]):
     def open(self, path=""):
         try:
             if not path:
-                open_dialog = QtWidgets.QFileDialog()
+                open_dialog = QFileDialog()
                 package_path = open_dialog.getExistingDirectory(self, "Select package root directory:", expanduser("~"))
             else:
                 package_path = path
@@ -368,7 +371,7 @@ class MainFrame(base_ui[0], base_ui[1]):
 
             elif isinstance(props[key], PropertyFile):
                 def button_clicked():
-                    open_dialog = QtWidgets.QFileDialog()
+                    open_dialog = QFileDialog()
                     file_path = open_dialog.getOpenFileName(self, "Select File:", self.package_path)
                     if file_path[0]:
                         line_edit.setText(relpath(file_path[0], self.package_path))
@@ -390,7 +393,7 @@ class MainFrame(base_ui[0], base_ui[1]):
 
             elif isinstance(props[key], PropertyFolder):
                 def button_clicked():
-                    open_dialog = QtWidgets.QFileDialog()
+                    open_dialog = QFileDialog()
                     folder_path = open_dialog.getExistingDirectory(self, "Select folder:", self.package_path)
                     if folder_path:
                         line_edit.setText(relpath(folder_path, self.package_path))
@@ -412,22 +415,22 @@ class MainFrame(base_ui[0], base_ui[1]):
 
             elif isinstance(props[key], PropertyColour):
                 def button_clicked():
-                    init_colour = QtGui.QColor("#" + props[key].value)
-                    colour_dialog = QtWidgets.QColorDialog()
+                    init_colour = QColor("#" + props[key].value)
+                    colour_dialog = QColorDialog()
                     colour = colour_dialog.getColor(init_colour, self, "Choose Colour:")
                     if colour.isValid():
                         line_edit.setText(colour.name()[1:])
 
                 def update_button_colour(text):
-                    colour = QtGui.QColor("#" + text)
+                    colour = QColor("#" + text)
                     if colour.isValid() and len(text) == 6:
                         path_button.setStyleSheet("background-color: " + colour.name())
-                        path_button.setIcon(QtGui.QIcon())
+                        path_button.setIcon(QIcon())
                     else:
                         path_button.setStyleSheet("background-color: #ffffff")
-                        icon = QtGui.QIcon()
-                        icon.addPixmap(QtGui.QPixmap(join(cur_folder, "resources/logos/logo_danger.png")),
-                                       QtGui.QIcon.Normal, QtGui.QIcon.Off)
+                        icon = QIcon()
+                        icon.addPixmap(QPixmap(join(cur_folder, "resources/logos/logo_danger.png")),
+                                       QIcon.Normal, QIcon.Off)
                         path_button.setIcon(icon)
 
                 prop_list.append(QtWidgets.QWidget(self.dockWidgetContents))
@@ -495,19 +498,19 @@ class MainFrame(base_ui[0], base_ui[1]):
 
     def closeEvent(self, event):
         if self.fomod_changed:
-            msg_box = QtWidgets.QMessageBox()
+            msg_box = QMessageBox()
             msg_box.setWindowTitle("The installer has been modified.")
             msg_box.setText("Do you want to save your changes?")
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.Save |
-                                       QtWidgets.QMessageBox.Discard |
-                                       QtWidgets.QMessageBox.Cancel)
-            msg_box.setDefaultButton(QtWidgets.QMessageBox.Save)
+            msg_box.setStandardButtons(QMessageBox.Save |
+                                       QMessageBox.Discard |
+                                       QMessageBox.Cancel)
+            msg_box.setDefaultButton(QMessageBox.Save)
             answer = msg_box.exec_()
-            if answer == QtWidgets.QMessageBox.Save:
+            if answer == QMessageBox.Save:
                 self.save()
-            elif answer == QtWidgets.QMessageBox.Discard:
+            elif answer == QMessageBox.Discard:
                 pass
-            elif answer == QtWidgets.QMessageBox.Cancel:
+            elif answer == QMessageBox.Cancel:
                 event.ignore()
 
 
@@ -516,7 +519,7 @@ class SettingsDialog(settings_ui[0], settings_ui[1]):
         super().__init__()
         self.setupUi(self)
 
-        self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint)
+        self.setWindowFlags(Qt.WindowSystemMenuHint | Qt.WindowTitleHint)
 
         self.buttonBox.accepted.connect(self.accepted)
         self.buttonBox.rejected.connect(self.rejected)
@@ -595,7 +598,7 @@ class About(about_ui[0], about_ui[1]):
 
         self.move(parent.window().frameGeometry().topLeft() + parent.window().rect().center() - self.rect().center())
 
-        self.setWindowFlags(QtCore.Qt.WindowTitleHint)
+        self.setWindowFlags(Qt.WindowTitleHint)
 
         self.version.setText("Version: " + __version__)
 
@@ -612,11 +615,11 @@ def not_implemented():
 
 
 def generic_errorbox(title, text, detail=""):
-    errorbox = QtWidgets.QMessageBox()
+    errorbox = QMessageBox()
     errorbox.setText(text)
     errorbox.setWindowTitle(title)
     errorbox.setDetailedText(detail)
-    errorbox.setIconPixmap(QtGui.QPixmap(join(cur_folder, "resources/logos/logo_admin.png")))
+    errorbox.setIconPixmap(QPixmap(join(cur_folder, "resources/logos/logo_admin.png")))
     errorbox.exec_()
 
 
