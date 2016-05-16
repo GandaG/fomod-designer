@@ -2,6 +2,13 @@
 
 0.4.0 (2016-05-14)
 
+* Urgent bugfix:Fixed wrong default attributes in file and folder tags.
+* Added wizard framework.
+
+----------------------------------
+
+0.4.0 (2016-05-14)
+
 * Added file and window icons.
 * Fixed combo boxes not being set at start.
 * Added recent files menu.
