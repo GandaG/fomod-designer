@@ -294,8 +294,8 @@ class NodeConfigFile(_NodeBase):
         properties = {"source": PropertyFile("Source"),
                       "destination": PropertyText("Destination"),
                       "priority": PropertyInt("Priority", 0, 99, 0),
-                      "alwaysInstall": PropertyCombo("Always Install", ("true", "false")),
-                      "installIfUsable": PropertyCombo("Install If Usable", ("true", "false"))}
+                      "alwaysInstall": PropertyCombo("Always Install", ("false", "true")),
+                      "installIfUsable": PropertyCombo("Install If Usable", ("false", "true"))}
         self.init("File", type(self).tag, 0, properties=properties)
         super()._init()
 
@@ -307,8 +307,8 @@ class NodeConfigFolder(_NodeBase):
         properties = {"source": PropertyFolder("Source"),
                       "destination": PropertyText("Destination"),
                       "priority": PropertyInt("Priority", 0, 99, 0),
-                      "alwaysInstall": PropertyCombo("Always Install", ("true", "false")),
-                      "installIfUsable": PropertyCombo("Install If Usable", ("true", "false"))}
+                      "alwaysInstall": PropertyCombo("Always Install", ("false", "true")),
+                      "installIfUsable": PropertyCombo("Install If Usable", ("false", "true"))}
         self.init("Folder", type(self).tag, 0, properties=properties)
         super()._init()
 
