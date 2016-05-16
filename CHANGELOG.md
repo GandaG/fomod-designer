@@ -1,8 +1,8 @@
 # Changelog
 
-0.4.0 (2016-05-14)
+0.4.1 (2016-05-16)
 
-* Urgent bugfix:Fixed wrong default attributes in file and folder tags.
+* **Urgent bugfix:** Fixed wrong default attributes in file and folder tags.
 * Added wizard framework.
 
 ----------------------------------
