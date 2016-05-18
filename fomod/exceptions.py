@@ -16,7 +16,10 @@
 
 from traceback import print_tb
 from io import StringIO
-from . import __version__
+from os.path import join
+from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtGui import QPixmap
+from . import __version__, cur_folder
 
 
 def excepthook(exc_type, exc_value, tracebackobj):
@@ -26,7 +29,6 @@ def excepthook(exc_type, exc_value, tracebackobj):
     :param exc_value: exception value
     :param tracebackobj: traceback object
     """
-    from .gui import generic_errorbox
 
     notice = (
         "An unhandled exception occurred. Please report the problem"
@@ -41,7 +43,13 @@ def excepthook(exc_type, exc_value, tracebackobj):
     errmsg = 'Error information:\n\nVersion: {}\n{}: {}\n'.format(version_info, str(exc_type), str(exc_value))
     sections = [errmsg, tbinfo]
     msg = '\n'.join(sections)
-    generic_errorbox("Nobody Panic!", notice, msg)
+
+    errorbox = QMessageBox()
+    errorbox.setText(notice)
+    errorbox.setWindowTitle("Nobody Panic!")
+    errorbox.setDetailedText(msg)
+    errorbox.setIconPixmap(QPixmap(join(cur_folder, "resources/logos/logo_admin.png")))
+    errorbox.exec_()
 
 
 class GenericError(Exception):
@@ -52,10 +60,10 @@ class GenericError(Exception):
 
 
 class MissingFileError(GenericError):
-    def __init__(self, file):
+    def __init__(self, fname):
         self.title = "I/O Error"
-        self.message = "{} is missing.".format(file.capitalize())
-        self.file = file
+        self.message = "{} is missing.".format(fname.capitalize())
+        self.file = fname
         Exception.__init__(self, self.message)
 
 
@@ -80,7 +88,7 @@ class TagNotFound(GenericError):
 
 
 class BaseInstanceException(Exception):
-    def __init__(self, base):
+    def __init__(self, base_instance):
         self.title = "Instance Error"
-        self.message = "{} is not meant to be instanced. A subclass should be used instead.".format(type(base))
+        self.message = "{} is not meant to be instanced. A subclass should be used instead.".format(type(base_instance))
         Exception.__init__(self, self.message)

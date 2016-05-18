@@ -17,8 +17,9 @@
 from os import sep
 from PyQt5.QtGui import QStandardItem
 from lxml import etree
-from .exceptions import BaseInstanceException
+from .wizards import WizardFiles
 from .props import PropertyCombo, PropertyInt, PropertyText, PropertyFile, PropertyFolder, PropertyColour
+from .exceptions import BaseInstanceException
 
 
 class _NodeBase(etree.ElementBase):
@@ -28,14 +29,12 @@ class _NodeBase(etree.ElementBase):
         super()._init()
 
     def init(self, name, tag, allowed_instances, sort_order=0, allow_text=False, allowed_children=None, properties=None,
-             wizards=None):
+             wizard=None):
 
         if not properties:
             properties = {}
         if not allowed_children:
             allowed_children = ()
-        if not wizards:
-            wizards = []
 
         self.name = name
         self.tag = tag
@@ -44,7 +43,7 @@ class _NodeBase(etree.ElementBase):
         self.allowed_children = allowed_children
         self.allow_text = allow_text
         self.allowed_instances = allowed_instances
-        self.wizards = wizards
+        self.wizard = wizard
 
         self.model_item = NodeStandardItem(self)
         self.model_item.setText(self.name)
@@ -66,6 +65,7 @@ class _NodeBase(etree.ElementBase):
         if self.can_add_child(child):
             self.append(child)
             self.model_item.appendRow(child.model_item)
+            child.write_attribs()
 
     def remove_child(self, child):
         if child in self:
@@ -235,7 +235,8 @@ class NodeConfigReqFiles(_NodeBase):
 
     def _init(self):
         allowed_children = (NodeConfigFile, NodeConfigFolder)
-        self.init("Mod Requirements", type(self).tag, 0, allowed_children=allowed_children, sort_order=4)
+        self.init("Mod Requirements", type(self).tag, 1, allowed_children=allowed_children,
+                  sort_order=4, wizard=WizardFiles)
         super()._init()
 
 
@@ -336,7 +337,7 @@ class NodeConfigFiles(_NodeBase):
 
     def _init(self):
         allowed_children = (NodeConfigFile, NodeConfigFolder)
-        self.init("Files", type(self).tag, 1, allowed_children=allowed_children, sort_order=3)
+        self.init("Files", type(self).tag, 1, allowed_children=allowed_children, sort_order=3, wizard=WizardFiles)
         super()._init()
 
 

@@ -15,198 +15,157 @@
 # limitations under the License.
 
 from abc import ABCMeta, abstractmethod
-from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QStackedWidget
+from copy import deepcopy
+from os.path import join, relpath
+from PyQt5.QtWidgets import (QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QSizePolicy, QLayout,
+                             QStackedWidget, QLineEdit, QLabel, QFormLayout, QFileDialog)
+from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import pyqtSignal
+from PyQt5.uic import loadUi
+from . import cur_folder
+from .io import elem_factory
 from .exceptions import BaseInstanceException
-
-
-class _PageBase(QWidget):
-    __metaclass__ = ABCMeta
-
-    def __init__(self, wizard):
-        super().__init__(wizard)
-        if type(self) is _PageBase:
-            raise BaseInstanceException(self)
-
-    @abstractmethod
-    def __create_buttons(self):
-        pass
-
-
-class PageSimple(_PageBase):
-    def __init__(self, wizard):
-        super().__init__(wizard)
-
-    def __create_buttons(self):
-        return
-
-
-class _PageComplex(_PageBase):
-    def __init__(self, wizard):
-        super().__init__(wizard)
-        if type(self) is _PageComplex:
-            raise BaseInstanceException(self)
-
-        self.main_widget = QWidget(self)
-        self.button_set = self.__create_buttons()
-        self.main_layout = QVBoxLayout(self)
-        self.main_layout.setContentsMargins(5, 5, 5, 5)
-        self.main_layout.addWidget(self.main_widget)
-        self.main_layout.addWidget(self.button_set)
-
-    @abstractmethod
-    def __create_buttons(self):
-        pass
-
-
-class PageInitial(_PageComplex):
-    def __init__(self, wizard):
-        super().__init__(wizard)
-        self.next_clicked = pyqtSignal()
-        self.cancel_clicked = pyqtSignal()
-
-    def __create_buttons(self):
-        next_button = QPushButton(self)
-        next_button.setText("Next")
-        next_button.clicked.connect(self.next_clicked.emit())
-        cancel_button = QPushButton(self)
-        cancel_button.setText("Cancel")
-        cancel_button.clicked.connect(self.cancel_clicked.emit())
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(next_button)
-        layout.addWidget(cancel_button)
-        return layout
-
-
-class PageMiddle(_PageComplex):
-    def __init__(self, wizard):
-        super().__init__(wizard)
-        self.next_clicked = pyqtSignal()
-        self.previous_clicked = pyqtSignal()
-        self.cancel_clicked = pyqtSignal()
-
-    def __create_buttons(self):
-        previous_button = QPushButton(self)
-        previous_button.setText("Previous")
-        previous_button.clicked.connect(self.previous_clicked.emit())
-        next_button = QPushButton(self)
-        next_button.setText("Next")
-        next_button.clicked.connect(self.next_clicked.emit())
-        cancel_button = QPushButton(self)
-        cancel_button.setText("Cancel")
-        cancel_button.clicked.connect(self.cancel_clicked.emit())
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(previous_button)
-        layout.addWidget(next_button)
-        layout.addWidget(cancel_button)
-        return layout
-
-
-class PageFinal(_PageComplex):
-    def __init__(self, wizard):
-        super().__init__(wizard)
-        self.finish_clicked = pyqtSignal()
-        self.previous_clicked = pyqtSignal()
-        self.cancel_clicked = pyqtSignal()
-
-    def __create_buttons(self):
-        previous_button = QPushButton(self)
-        previous_button.setText("Previous")
-        previous_button.clicked.connect(self.previous_clicked.emit())
-        finish_button = QPushButton(self)
-        finish_button.setText("Finish")
-        finish_button.clicked.connect(self.finish_clicked.emit())
-        cancel_button = QPushButton(self)
-        cancel_button.setText("Cancel")
-        cancel_button.clicked.connect(self.cancel_clicked.emit())
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(previous_button)
-        layout.addWidget(finish_button)
-        layout.addWidget(cancel_button)
-        return layout
 
 
 class _WizardBase(QStackedWidget):
     __metaclass__ = ABCMeta
 
-    def __init__(self, parent=None):
+    cancelled = pyqtSignal()
+    finished = pyqtSignal()
+
+    def __init__(self, parent, element, main_window):
         super().__init__(parent)
         if type(self) is _WizardBase:
             raise BaseInstanceException(self)
 
         self.return_data = None
-        self.pages = self.add_pages()
-
-    @abstractmethod
-    def process_results(self):
-        pass
-
-    @abstractmethod
-    def add_pages(self):
-        return []
-
-
-class _WizardSimple(_WizardBase):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        if type(self) is _WizardSimple:
-            raise BaseInstanceException(self)
-
-    @abstractmethod
-    def process_results(self):
-        pass
-
-    @abstractmethod
-    def add_pages(self):
-        return []
-
-
-class _WizardComplex(_WizardBase):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        if type(self) is _WizardComplex:
-            raise BaseInstanceException(self)
-
-        self.initial_page = PageInitial(self)
-        self.initial_page.next_clicked.connect(self.next_page)
-        self.initial_page.cancel_clicked.connect(self.cancelled_wizard.emit())
-        self.final_page = PageFinal(self)
-        self.final_page.previous_clicked.connect(self.previous_page)
-        self.final_page.finish_clicked.connect(self.finished_wizard.emit(self.process_results()))
-        self.final_page.cancel_clicked.connect(self.cancelled_wizard.emit())
-
-        self.cancelled_wizard = pyqtSignal()
-        self.finished_wizard = pyqtSignal()
-
+        self.element = element
+        self.parent = parent
+        self.main_window = main_window
+        self.pages = self._add_pages()
         for page in self.pages:
-            page.previous_clicked.connect(self.previous_page)
-            page.next_clicked.connect(self.next_page)
-            page.cancel_clicked.connect(self.cancelled_wizard.emit())
-
-        self.pages.insert(0, self.initial_page)
-        self.pages.append(self.final_page)
+            self.addWidget(page)
 
     @abstractmethod
-    def process_results(self):
+    def _process_results(self, result):
         pass
 
     @abstractmethod
-    def initial_page(self):
-        return PageInitial(self)
-
-    @abstractmethod
-    def add_pages(self):
+    def _add_pages(self):
         return []
 
-    @abstractmethod
-    def final_page(self):
-        return PageFinal(self)
 
-    def next_page(self):
-        self.setCurrentIndex(self.pages.index(self.sender()) + 1)
+class WizardFiles(_WizardBase):
+    def _process_results(self, result):
+        self.element.getparent().replace(self.element, result)
+        item_parent = self.element.model_item.parent()
+        row = self.element.model_item.row()
+        item_parent.removeRow(row)
+        item_parent.insertRow(row, result.model_item)
+        self.finished.emit()
 
-    def previous_page(self):
-        self.setCurrentIndex(self.pages.index(self.sender()) - 1)
+    def _add_pages(self):
+        def add_elem(element_, layout):
+            """
+            :param element_: The element to be copied
+            :param layout: The layout into which to insert the newly copied element
+            """
+            child = elem_factory(element_.tag, element_result)
+            for key in element_.properties:
+                child.properties[key].set_value(element_.properties[key].value)
+            element_result.add_child(child)
+            spacer = layout.takeAt(layout.count() - 1)
+            layout.addWidget(self._create_field(child, page))
+            layout.addSpacerItem(spacer)
+
+        element_result = deepcopy(self.element)
+
+        page = loadUi(join(cur_folder, "resources/templates/wizard_files_01.ui"))
+
+        file_list = [elem for elem in element_result if elem.tag == "file"]
+        for element in file_list:
+            add_elem(element, page.layout_file)
+            element_result.remove_child(element)
+
+        folder_list = [elem for elem in element_result if elem.tag == "folder"]
+        for element in folder_list:
+            add_elem(element, page.layout_folder)
+            element_result.remove_child(element)
+
+        # finish with connections
+        page.button_add_file.clicked.connect(lambda: add_elem(elem_factory("file", element_result), page.layout_file))
+        page.button_add_folder.clicked.connect(
+            lambda: add_elem(elem_factory("folder", element_result), page.layout_folder))
+        page.finish_button.clicked.connect(lambda: self._process_results(element_result))
+        page.cancel_button.clicked.connect(self.cancelled.emit)
+
+        return [page]
+
+    def _create_field(self, element, parent):
+        """
+        :param element: the element newly copied
+        :param parent: the parent widget (the QWidgets inside the scroll areas)
+        :return: base QWidget, with the source and destination fields built
+        """
+        def button_clicked():
+            open_dialog = QFileDialog()
+            if element.tag == "file":
+                file_path = open_dialog.getOpenFileName(self, "Select File:", self.main_window.package_path)
+                if file_path[0]:
+                    edit_source.setText(relpath(file_path[0], self.main_window.package_path))
+            elif element.tag == "folder":
+                folder_path = open_dialog.getExistingDirectory(self, "Select folder:", self.main_window.package_path)
+                if folder_path:
+                    edit_source.setText(relpath(folder_path, self.main_window.package_path))
+
+        # main widget
+        base = QWidget(parent)
+        layout_main = QHBoxLayout(base)
+        layout_main.setContentsMargins(0, 0, 0, 0)
+
+        # the entire source form, label + (edit + button)
+        layout_source = QHBoxLayout()
+        layout_source.setContentsMargins(0, 0, 0, 0)
+        label_source = QLabel("Source:", base)
+
+        # the source box (edit + button)
+        base_source = QWidget(base)
+        layout_source_field = QHBoxLayout(base_source)
+        layout_source_field.setContentsMargins(0, 0, 0, 0)
+        edit_source = QLineEdit(element.get("source"), base_source)
+        button_source = QPushButton("...", base_source)
+        layout_source_field.addWidget(edit_source)
+        layout_source_field.addWidget(button_source)
+
+        # finish the source form
+        layout_source.addWidget(label_source)
+        layout_source.addWidget(base_source)
+
+        # the entire destination form, label + (edit + button)
+        layout_dest = QHBoxLayout()
+        layout_dest.setContentsMargins(0, 0, 0, 0)
+        label_dest = QLabel("Destination:", base)
+        edit_dest = QLineEdit(element.get("destination"), base)
+        layout_dest.addWidget(label_dest)
+        layout_dest.addWidget(edit_dest)
+
+        # the delete self button
+        button_delete = QPushButton(QIcon(join(cur_folder, "resources/logos/logo_cross.png")), "", base)
+        button_delete.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        button_delete.setMaximumSize(30, 30)
+
+        # finish the main widget
+        layout_main.addLayout(layout_source)
+        layout_main.addLayout(layout_dest)
+        layout_main.addWidget(button_delete)
+
+        # connect the signals
+        edit_source.textChanged.connect(element.properties["source"].set_value)
+        edit_source.textChanged.connect(element.write_attribs)
+        edit_dest.textChanged.connect(element.properties["destination"].set_value)
+        edit_dest.textChanged.connect(element.write_attribs)
+        button_source.clicked.connect(button_clicked)
+        button_delete.clicked.connect(base.deleteLater)
+        button_delete.clicked.connect(lambda x: element.getparent().remove_child(element))
+
+        return base

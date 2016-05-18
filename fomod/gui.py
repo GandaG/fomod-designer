@@ -102,6 +102,8 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.object_tree_view.clicked.connect(self.selected_object_tree)
         self.object_box_list.activated.connect(self.selected_object_list)
 
+        self.wizard_button.clicked.connect(self.run_wizard)
+
         self.fomod_changed = False
         self.original_title = self.windowTitle()
         self.package_path = ""
@@ -213,7 +215,8 @@ class MainFrame(base_ui[0], base_ui[1]):
         except AttributeError:
             generic_errorbox("You can't do that...", "You can't delete root objects!")
 
-    def help(self):
+    @staticmethod
+    def help():
         not_implemented()
 
     def about(self):
@@ -290,12 +293,13 @@ class MainFrame(base_ui[0], base_ui[1]):
 
     def selected_object_tree(self, index):
         self.current_object = self.tree_model.itemFromIndex(index).xml_node
+        self.object_tree_view.setCurrentIndex(index)
         if self.settings_dict["General"]["code_refresh"] >= 2:
             self.update_gen_code()
 
         self.update_box_list()
         self.update_props_list()
-        self.update_wizards()
+        self.update_wizard_button()
 
     def update_box_list(self):
         self.list_model.clear()
@@ -454,12 +458,39 @@ class MainFrame(base_ui[0], base_ui[1]):
             prop_list[prop_index].setObjectName(str(prop_index))
             prop_index += 1
 
-    def update_wizards(self):
-        if self.current_object.wizards:
+    def update_wizard_button(self):
+        if self.current_object.wizard:
             self.wizard_button.show()
-            # do something here, build the wizard gui
         else:
             self.wizard_button.hide()
+
+    def run_wizard(self):
+        def close():
+            wizard.deleteLater()
+            self.action_Object_Tree.toggled.emit(enabled_tree)
+            self.actionObject_Box.toggled.emit(enabled_box)
+            self.action_Property_Editor.toggled.emit(enabled_list)
+            self.action_Object_Tree.setEnabled(True)
+            self.actionObject_Box.setEnabled(True)
+            self.action_Property_Editor.setEnabled(True)
+
+        current_index = self.tree_model.indexFromItem(self.current_object.model_item)
+        enabled_tree = self.action_Object_Tree.isChecked()
+        enabled_box = self.actionObject_Box.isChecked()
+        enabled_list = self.action_Property_Editor.isChecked()
+        self.action_Object_Tree.toggled.emit(False)
+        self.actionObject_Box.toggled.emit(False)
+        self.action_Property_Editor.toggled.emit(False)
+        self.action_Object_Tree.setEnabled(False)
+        self.actionObject_Box.setEnabled(False)
+        self.action_Property_Editor.setEnabled(False)
+
+        wizard = self.current_object.wizard(self, self.current_object, self)
+        self.central_widget_layout.insertWidget(0, wizard)
+
+        wizard.cancelled.connect(close)
+        wizard.finished.connect(close)
+        wizard.finished.connect(lambda: self.selected_object_tree(current_index))
 
     def selected_object_list(self, index):
         item = self.list_model.itemFromIndex(index)

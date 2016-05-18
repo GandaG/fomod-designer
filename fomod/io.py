@@ -22,12 +22,13 @@ from lxml.objectify import deannotate
 from pygments import highlight
 from pygments.formatters.html import HtmlFormatter
 from pygments.lexers.html import XmlLexer
-from . import nodes
 from .exceptions import MissingFileError, ParserError, TagNotFound
 
 
 class _NodeLookup(PythonElementClassLookup):
     def lookup(self, doc, element):
+        from . import nodes
+
         if element.tag == "fomod":
             return nodes.NodeInfoRoot
         elif element.tag == "Name":
@@ -200,6 +201,8 @@ def import_(package_path):
 
 
 def new():
+    from . import nodes
+
     info_root = module_parser.makeelement(nodes.NodeInfoRoot.tag)
     config_root = module_parser.makeelement(nodes.NodeConfigRoot.tag)
 

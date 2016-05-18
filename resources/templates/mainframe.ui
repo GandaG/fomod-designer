@@ -14,7 +14,7 @@
    <string>FOMOD Designer</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout_3">
+   <layout class="QHBoxLayout" name="central_widget_layout">
     <property name="spacing">
      <number>6</number>
     </property>
