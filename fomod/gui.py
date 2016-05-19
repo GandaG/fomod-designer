@@ -98,6 +98,14 @@ class MainFrame(base_ui[0], base_ui[1]):
 
     def open(self, path=""):
         try:
+            answer = self.check_fomod_state()
+            if answer == QMessageBox.Save:
+                self.save()
+            elif answer == QMessageBox.Cancel:
+                return
+            else:
+                pass
+
             if not path:
                 open_dialog = QFileDialog()
                 package_path = open_dialog.getExistingDirectory(self, "Select package root directory:", expanduser("~"))
@@ -137,6 +145,7 @@ class MainFrame(base_ui[0], base_ui[1]):
                 self.current_object = None
                 self.xml_code_changed.emit(self.current_object)
                 self.update_recent_files(self.package_path)
+                self.clear_prop_list()
         except (GenericError, ValidatorError) as p:
             generic_errorbox(p.title, str(p), p.detailed)
             return
@@ -283,13 +292,15 @@ class MainFrame(base_ui[0], base_ui[1]):
                 self.list_model.appendRow(new_object.model_item)
                 self.current_children_list.append(new_object)
 
-    # noinspection PyUnresolvedReferences
-    def update_props_list(self):
+    def clear_prop_list(self):
         self.current_prop_list.clear()
         for index in reversed(range(self.formLayout.count())):
             widget = self.formLayout.takeAt(index).widget()
             if widget is not None:
                 widget.deleteLater()
+
+    def update_props_list(self):
+        self.clear_prop_list()
 
         prop_index = 0
         prop_list = self.current_prop_list
@@ -517,7 +528,7 @@ class MainFrame(base_ui[0], base_ui[1]):
             self.fomod_changed = True
             self.setWindowTitle("*" + self.package_name + " - " + self.original_title)
 
-    def closeEvent(self, event):
+    def check_fomod_state(self):
         if self.fomod_changed:
             msg_box = QMessageBox()
             msg_box.setWindowTitle("The installer has been modified.")
@@ -526,7 +537,12 @@ class MainFrame(base_ui[0], base_ui[1]):
                                        QMessageBox.Discard |
                                        QMessageBox.Cancel)
             msg_box.setDefaultButton(QMessageBox.Save)
-            answer = msg_box.exec_()
+            return msg_box.exec_()
+        else:
+            return
+
+    def closeEvent(self, event):
+            answer = self.check_fomod_state()
             if answer == QMessageBox.Save:
                 self.save()
             elif answer == QMessageBox.Discard:
