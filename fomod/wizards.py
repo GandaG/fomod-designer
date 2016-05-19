@@ -17,8 +17,8 @@
 from abc import ABCMeta, abstractmethod
 from copy import deepcopy
 from os.path import join, relpath
-from PyQt5.QtWidgets import (QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QSizePolicy, QLayout,
-                             QStackedWidget, QLineEdit, QLabel, QFormLayout, QFileDialog)
+from PyQt5.QtWidgets import (QHBoxLayout, QWidget, QPushButton, QSizePolicy,
+                             QStackedWidget, QLineEdit, QLabel, QFileDialog)
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.uic import loadUi
@@ -71,12 +71,13 @@ class WizardFiles(_WizardBase):
             :param layout: The layout into which to insert the newly copied element
             """
             child = elem_factory(element_.tag, element_result)
-            for key in element_.properties:
-                child.properties[key].set_value(element_.properties[key].value)
+            for key in element_.attrib:
+                child.properties[key].set_value(element_.attrib[key])
             element_result.add_child(child)
             spacer = layout.takeAt(layout.count() - 1)
             layout.addWidget(self._create_field(child, page))
             layout.addSpacerItem(spacer)
+            self.main_window.xml_code_changed.emit(element_result)
 
         element_result = deepcopy(self.element)
 
@@ -101,10 +102,10 @@ class WizardFiles(_WizardBase):
 
         return [page]
 
-    def _create_field(self, element, parent):
+    def _create_field(self, element, parent_widget):
         """
         :param element: the element newly copied
-        :param parent: the parent widget (the QWidgets inside the scroll areas)
+        :param parent_widget: the parent widget (the QWidgets inside the scroll areas)
         :return: base QWidget, with the source and destination fields built
         """
         def button_clicked():
@@ -118,8 +119,10 @@ class WizardFiles(_WizardBase):
                 if folder_path:
                     edit_source.setText(relpath(folder_path, self.main_window.package_path))
 
+        parent_element = element.getparent()
+
         # main widget
-        base = QWidget(parent)
+        base = QWidget(parent_widget)
         layout_main = QHBoxLayout(base)
         layout_main.setContentsMargins(0, 0, 0, 0)
 
@@ -134,6 +137,7 @@ class WizardFiles(_WizardBase):
         layout_source_field.setContentsMargins(0, 0, 0, 0)
         edit_source = QLineEdit(element.get("source"), base_source)
         button_source = QPushButton("...", base_source)
+        button_source.setMaximumSize(50, 30)
         layout_source_field.addWidget(edit_source)
         layout_source_field.addWidget(button_source)
 
@@ -152,7 +156,7 @@ class WizardFiles(_WizardBase):
         # the delete self button
         button_delete = QPushButton(QIcon(join(cur_folder, "resources/logos/logo_cross.png")), "", base)
         button_delete.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        button_delete.setMaximumSize(30, 30)
+        button_delete.setMaximumSize(24, 24)
 
         # finish the main widget
         layout_main.addLayout(layout_source)
@@ -162,10 +166,13 @@ class WizardFiles(_WizardBase):
         # connect the signals
         edit_source.textChanged.connect(element.properties["source"].set_value)
         edit_source.textChanged.connect(element.write_attribs)
+        edit_source.textChanged.connect(lambda: self.main_window.xml_code_changed.emit(parent_element))
         edit_dest.textChanged.connect(element.properties["destination"].set_value)
         edit_dest.textChanged.connect(element.write_attribs)
+        edit_dest.textChanged.connect(lambda: self.main_window.xml_code_changed.emit(parent_element))
         button_source.clicked.connect(button_clicked)
         button_delete.clicked.connect(base.deleteLater)
-        button_delete.clicked.connect(lambda x: element.getparent().remove_child(element))
+        button_delete.clicked.connect(lambda x: parent_element.remove_child(element))
+        button_delete.clicked.connect(lambda: self.main_window.xml_code_changed.emit(parent_element))
 
         return base

@@ -22,7 +22,7 @@ from PyQt5.uic import loadUiType
 from PyQt5.QtWidgets import (QShortcut, QFileDialog, QColorDialog, QMessageBox, QLabel, QHBoxLayout,
                              QFormLayout, QLineEdit, QSpinBox, QComboBox, QWidget, QPushButton)
 from PyQt5.QtGui import QIcon, QPixmap, QStandardItemModel, QColor
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 from validator import validate_tree, check_warnings, ValidatorError, ValidationError, WarningError
 from . import cur_folder, __version__
 from .io import import_, new, export, sort_elements, elem_factory, highlight_fragment
@@ -36,50 +36,21 @@ about_ui = loadUiType(join(cur_folder, "resources/templates/about.ui"))
 
 
 class MainFrame(base_ui[0], base_ui[1]):
+    xml_code_changed = pyqtSignal([object])
+
     def __init__(self):
         super().__init__()
         self.setupUi(self)
 
         # setup the icons properly
-        window_icon = QIcon()
-        window_icon.addPixmap(QPixmap(join(cur_folder, "resources/window_icon.jpg")),
-                              QIcon.Normal, QIcon.Off)
-        self.setWindowIcon(window_icon)
-
-        icon_open = QIcon()
-        icon_open.addPixmap(QPixmap(join(cur_folder, "resources/logos/logo_open_file.png")),
-                            QIcon.Normal, QIcon.Off)
-        self.action_Open.setIcon(icon_open)
-
-        icon_save = QIcon()
-        icon_save.addPixmap(QPixmap(join(cur_folder, "resources/logos/logo_floppy_disk.png")),
-                            QIcon.Normal, QIcon.Off)
-        self.action_Save.setIcon(icon_save)
-
-        icon_options = QIcon()
-        icon_options.addPixmap(QPixmap(join(cur_folder, "resources/logos/logo_gear.png")),
-                               QIcon.Normal, QIcon.Off)
-        self.actionO_ptions.setIcon(icon_options)
-
-        icon_refresh = QIcon()
-        icon_refresh.addPixmap(QPixmap(join(cur_folder, "resources/logos/logo_refresh.png")),
-                               QIcon.Normal, QIcon.Off)
-        self.action_Refresh.setIcon(icon_refresh)
-
-        icon_delete = QIcon()
-        icon_delete.addPixmap(QPixmap(join(cur_folder, "resources/logos/logo_cross.png")),
-                              QIcon.Normal, QIcon.Off)
-        self.action_Delete.setIcon(icon_delete)
-
-        icon_about = QIcon()
-        icon_about.addPixmap(QPixmap(join(cur_folder, "resources/logos/logo_notepad.png")),
-                             QIcon.Normal, QIcon.Off)
-        self.action_About.setIcon(icon_about)
-
-        icon_help = QIcon()
-        icon_help.addPixmap(QPixmap(join(cur_folder, "resources/logos/logo_info.png")),
-                            QIcon.Normal, QIcon.Off)
-        self.actionHe_lp.setIcon(icon_help)
+        self.setWindowIcon(QIcon(join(cur_folder, "resources/window_icon.jpg")))
+        self.action_Open.setIcon(QIcon(join(cur_folder, "resources/logos/logo_open_file.png")))
+        self.action_Save.setIcon(QIcon(join(cur_folder, "resources/logos/logo_floppy_disk.png")))
+        self.actionO_ptions.setIcon(QIcon(join(cur_folder, "resources/logos/logo_gear.png")))
+        self.action_Refresh.setIcon(QIcon(join(cur_folder, "resources/logos/logo_refresh.png")))
+        self.action_Delete.setIcon(QIcon(join(cur_folder, "resources/logos/logo_cross.png")))
+        self.action_About.setIcon(QIcon(join(cur_folder, "resources/logos/logo_notepad.png")))
+        self.actionHe_lp.setIcon(QIcon(join(cur_folder, "resources/logos/logo_info.png")))
 
         # setup any additional info left from designer
         self.delete_sec_shortcut = QShortcut(self)
@@ -90,7 +61,6 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.actionO_ptions.triggered.connect(self.options)
         self.action_Refresh.triggered.connect(self.refresh)
         self.action_Delete.triggered.connect(self.delete)
-        # noinspection PyUnresolvedReferences
         self.delete_sec_shortcut.activated.connect(self.delete)
         self.actionHe_lp.triggered.connect(self.help)
         self.action_About.triggered.connect(self.about)
@@ -103,6 +73,7 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.object_box_list.activated.connect(self.selected_object_list)
 
         self.wizard_button.clicked.connect(self.run_wizard)
+        self.xml_code_changed.connect(self.update_gen_code)
 
         self.fomod_changed = False
         self.original_title = self.windowTitle()
@@ -164,6 +135,7 @@ class MainFrame(base_ui[0], base_ui[1]):
                 self.package_name = basename(normpath(self.package_path))
                 self.fomod_modified(False)
                 self.current_object = None
+                self.xml_code_changed.emit(self.current_object)
                 self.update_recent_files(self.package_path)
         except (GenericError, ValidatorError) as p:
             generic_errorbox(p.title, str(p), p.detailed)
@@ -202,7 +174,7 @@ class MainFrame(base_ui[0], base_ui[1]):
 
     def refresh(self):
         if self.settings_dict["General"]["code_refresh"] >= 1:
-            self.update_gen_code()
+            self.xml_code_changed.emit(self.current_object)
 
     def delete(self):
         try:
@@ -295,7 +267,7 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.current_object = self.tree_model.itemFromIndex(index).xml_node
         self.object_tree_view.setCurrentIndex(index)
         if self.settings_dict["General"]["code_refresh"] >= 2:
-            self.update_gen_code()
+            self.xml_code_changed.emit(self.current_object)
 
         self.update_box_list()
         self.update_props_list()
@@ -334,6 +306,9 @@ class MainFrame(base_ui[0], base_ui[1]):
             prop_list[prop_index].textEdited[str].connect(self.current_object.set_text)
             prop_list[prop_index].textEdited[str].connect(self.current_object.write_attribs)
             prop_list[prop_index].textEdited[str].connect(self.fomod_modified)
+            prop_list[prop_index].textEdited[str].connect(lambda: self.xml_code_changed.emit(self.current_object)
+                                                          if self.settings_dict["General"]["code_refresh"] >= 3
+                                                          else None)
             self.formLayout.setWidget(prop_index, QFormLayout.FieldRole,
                                       prop_list[prop_index])
 
@@ -355,6 +330,9 @@ class MainFrame(base_ui[0], base_ui[1]):
                 prop_list[prop_index].textEdited[str].connect(self.current_object.write_attribs)
                 prop_list[prop_index].textEdited[str].connect(self.current_object.update_item_name)
                 prop_list[prop_index].textEdited[str].connect(self.fomod_modified)
+                prop_list[prop_index].textEdited[str].connect(lambda: self.xml_code_changed.emit(self.current_object)
+                                                              if self.settings_dict["General"]["code_refresh"] >= 3
+                                                              else None)
 
             elif isinstance(props[key], PropertyInt):
                 prop_list.append(QSpinBox(self.dockWidgetContents))
@@ -364,6 +342,9 @@ class MainFrame(base_ui[0], base_ui[1]):
                 prop_list[prop_index].valueChanged.connect(props[key].set_value)
                 prop_list[prop_index].valueChanged.connect(self.current_object.write_attribs)
                 prop_list[prop_index].valueChanged.connect(self.fomod_modified)
+                prop_list[prop_index].valueChanged.connect(lambda: self.xml_code_changed.emit(self.current_object)
+                                                           if self.settings_dict["General"]["code_refresh"] >= 3
+                                                           else None)
 
             elif isinstance(props[key], PropertyCombo):
                 prop_list.append(QComboBox(self.dockWidgetContents))
@@ -373,6 +354,9 @@ class MainFrame(base_ui[0], base_ui[1]):
                 prop_list[prop_index].activated[str].connect(self.current_object.write_attribs)
                 prop_list[prop_index].activated[str].connect(self.current_object.update_item_name)
                 prop_list[prop_index].activated[str].connect(self.fomod_modified)
+                prop_list[prop_index].activated[str].connect(lambda: self.xml_code_changed.emit(self.current_object)
+                                                             if self.settings_dict["General"]["code_refresh"] >= 3
+                                                             else None)
 
             elif isinstance(props[key], PropertyFile):
                 def button_clicked():
@@ -394,6 +378,8 @@ class MainFrame(base_ui[0], base_ui[1]):
                 line_edit.textChanged[str].connect(self.current_object.write_attribs)
                 line_edit.textChanged[str].connect(self.current_object.update_item_name)
                 line_edit.textChanged[str].connect(self.fomod_modified)
+                line_edit.textChanged[str].connect(lambda: self.xml_code_changed.emit(self.current_object)
+                                                   if self.settings_dict["General"]["code_refresh"] >= 3 else None)
                 path_button.clicked.connect(button_clicked)
 
             elif isinstance(props[key], PropertyFolder):
@@ -416,6 +402,8 @@ class MainFrame(base_ui[0], base_ui[1]):
                 line_edit.textChanged.connect(self.current_object.write_attribs)
                 line_edit.textChanged.connect(self.current_object.update_item_name)
                 line_edit.textChanged.connect(self.fomod_modified)
+                line_edit.textChanged.connect(lambda: self.xml_code_changed.emit(self.current_object)
+                                              if self.settings_dict["General"]["code_refresh"] >= 3 else None)
                 path_button.clicked.connect(button_clicked)
 
             elif isinstance(props[key], PropertyColour):
@@ -452,6 +440,8 @@ class MainFrame(base_ui[0], base_ui[1]):
                 line_edit.textChanged.connect(update_button_colour)
                 line_edit.textChanged.connect(self.current_object.write_attribs)
                 line_edit.textChanged.connect(self.fomod_modified)
+                line_edit.textChanged.connect(lambda: self.xml_code_changed.emit(self.current_object)
+                                              if self.settings_dict["General"]["code_refresh"] >= 3 else None)
                 path_button.clicked.connect(button_clicked)
 
             self.formLayout.setWidget(prop_index, QFormLayout.FieldRole, prop_list[prop_index])
@@ -470,9 +460,9 @@ class MainFrame(base_ui[0], base_ui[1]):
             self.action_Object_Tree.toggled.emit(enabled_tree)
             self.actionObject_Box.toggled.emit(enabled_box)
             self.action_Property_Editor.toggled.emit(enabled_list)
-            self.action_Object_Tree.setEnabled(True)
-            self.actionObject_Box.setEnabled(True)
-            self.action_Property_Editor.setEnabled(True)
+            self.menu_File.setEnabled(True)
+            self.menu_Tools.setEnabled(True)
+            self.menu_View.setEnabled(True)
 
         current_index = self.tree_model.indexFromItem(self.current_object.model_item)
         enabled_tree = self.action_Object_Tree.isChecked()
@@ -481,16 +471,17 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.action_Object_Tree.toggled.emit(False)
         self.actionObject_Box.toggled.emit(False)
         self.action_Property_Editor.toggled.emit(False)
-        self.action_Object_Tree.setEnabled(False)
-        self.actionObject_Box.setEnabled(False)
-        self.action_Property_Editor.setEnabled(False)
+        self.menu_File.setEnabled(False)
+        self.menu_Tools.setEnabled(False)
+        self.menu_View.setEnabled(False)
 
         wizard = self.current_object.wizard(self, self.current_object, self)
-        self.central_widget_layout.insertWidget(0, wizard)
+        self.splitter.insertWidget(0, wizard)
 
         wizard.cancelled.connect(close)
         wizard.finished.connect(close)
         wizard.finished.connect(lambda: self.selected_object_tree(current_index))
+        wizard.finished.connect(lambda: self.fomod_modified(True))
 
     def selected_object_list(self, index):
         item = self.list_model.itemFromIndex(index)
@@ -512,15 +503,13 @@ class MainFrame(base_ui[0], base_ui[1]):
         # set the installer as changed
         self.fomod_modified(True)
 
-    def update_gen_code(self):
-        if self.current_object is not None:
-            self.xml_code_browser.setHtml(highlight_fragment(self.current_object))
+    def update_gen_code(self, element):
+        if element is not None:
+            self.xml_code_browser.setHtml(highlight_fragment(element))
         else:
             self.xml_code_browser.setText("")
 
     def fomod_modified(self, changed):
-        if self.settings_dict["General"]["code_refresh"] >= 3:
-            self.update_gen_code()
         if changed is False:
             self.fomod_changed = False
             self.setWindowTitle(self.package_name + " - " + self.original_title)

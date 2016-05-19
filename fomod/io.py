@@ -192,6 +192,8 @@ def import_(package_path):
                     if not _validate_child(elem):
                         element.remove_child(elem)
 
+                element.write_attribs()
+
     except ParseError as e:
         raise ParserError(str(e))
     except MissingFileError:
