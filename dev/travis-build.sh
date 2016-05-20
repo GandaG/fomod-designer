@@ -19,6 +19,6 @@ export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"
 
-pyenv shell miniconda3-3.19.0/envs/fomod-editor
+pyenv shell miniconda3-3.19.0/envs/fomod-designer
 
 invoke build

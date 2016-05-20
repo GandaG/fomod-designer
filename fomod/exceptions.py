@@ -32,7 +32,7 @@ def excepthook(exc_type, exc_value, tracebackobj):
 
     notice = (
         "An unhandled exception occurred. Please report the problem"
-        " at <a href = https://github.com/GandaG/fomod-editor/issues>Github</a>,"
+        " at <a href = https://github.com/GandaG/fomod-designer/issues>Github</a>,"
         " <a href = http://www.nexusmods.com/skyrim/?>Nexus</a> or"
         " <a href = http://forum.step-project.com/index.php>STEP</a>.")
     version_info = __version__

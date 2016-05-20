@@ -15,7 +15,7 @@ deploy:
     auth_token:
       secure: iMaZrvVT+OI/9jRs8LyOvmzVqIBa0/jpiK96wNzZww/KqKsMcferhIeSK7faNzOo
     artifact: windows_build
-    description: '[Changelog.](https://github.com/GandaG/fomod-editor/blob/master/CHANGELOG.md)'
+    description: '[Changelog.](https://github.com/GandaG/fomod-designer/blob/master/CHANGELOG.md)'
     force_update: true
     on:
       appveyor_repo_tag: true
