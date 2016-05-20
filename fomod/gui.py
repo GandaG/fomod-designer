@@ -65,9 +65,13 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.actionHe_lp.triggered.connect(self.help)
         self.action_About.triggered.connect(self.about)
         self.actionClear.triggered.connect(self.clear_recent_files)
-        self.action_Object_Tree.toggled.connect(self.toggle_tree)
-        self.actionObject_Box.toggled.connect(self.toggle_list)
-        self.action_Property_Editor.toggled.connect(self.toggle_editor)
+        self.action_Object_Tree.toggled.connect(self.object_tree.setVisible)
+        self.actionObject_Box.toggled.connect(self.object_box.setVisible)
+        self.action_Property_Editor.toggled.connect(self.property_editor.setVisible)
+
+        self.object_tree.visibilityChanged.connect(self.action_Object_Tree.setChecked)
+        self.object_box.visibilityChanged.connect(self.actionObject_Box.setChecked)
+        self.property_editor.visibilityChanged.connect(self.action_Property_Editor.setChecked)
 
         self.object_tree_view.clicked.connect(self.selected_object_tree)
         self.object_box_list.activated.connect(self.selected_object_list)
@@ -204,24 +208,6 @@ class MainFrame(base_ui[0], base_ui[1]):
         # noinspection PyTypeChecker
         about_dialog = About(self)
         about_dialog.exec_()
-
-    def toggle_tree(self, visible):
-        if visible:
-            self.object_tree.show()
-        else:
-            self.object_tree.hide()
-
-    def toggle_list(self, visible):
-        if visible:
-            self.object_box.show()
-        else:
-            self.object_box.hide()
-
-    def toggle_editor(self, visible):
-        if visible:
-            self.property_editor.show()
-        else:
-            self.property_editor.hide()
 
     def clear_recent_files(self):
         config = ConfigParser()
