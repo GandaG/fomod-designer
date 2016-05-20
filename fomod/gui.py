@@ -15,7 +15,7 @@
 # limitations under the License.
 
 from os import makedirs
-from os.path import expanduser, normpath, basename, join, relpath
+from os.path import expanduser, normpath, basename, join, relpath, isdir
 from datetime import datetime
 from configparser import ConfigParser
 from PyQt5.uic import loadUiType
@@ -238,16 +238,31 @@ class MainFrame(base_ui[0], base_ui[1]):
                 del child
 
     def update_recent_files(self, add_new=None):
-        def open_path(instance, package):
-            def open_():
-                instance.open(package)
-            return open_
+        def invalid_path(path_):
+            msg_box = QMessageBox()
+            msg_box.setWindowTitle("This path no longer exists.")
+            msg_box.setText("Remove it from the Recent Files list?")
+            msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+            msg_box.setDefaultButton(QMessageBox.Yes)
+            answer = msg_box.exec_()
+            config_ = ConfigParser()
+            config_.read_dict(read_settings())
+            if answer == QMessageBox.Yes:
+                for key in config_["Recent Files"]:
+                    if config_["Recent Files"][key] == path_:
+                        config_["Recent Files"][key] = ""
+                        with open(join(expanduser("~"), ".fomod", ".designer"), "w") as configfile_:
+                            config_.write(configfile_)
+                        self.update_recent_files()
+            elif answer == QMessageBox.No:
+                pass
 
         file_list = []
         settings = read_settings()
         for index in range(1, 5):
             if settings["Recent Files"]["file" + str(index)]:
                 file_list.append(settings["Recent Files"]["file" + str(index)])
+        file_list = sorted(set(file_list))  # remove all duplicates there was an issue with duplicate after invalid path
         self.clear_recent_files()
 
         if add_new:
@@ -268,7 +283,7 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.menu_Recent_Files.removeAction(self.actionClear)
         for path in file_list:
             action = self.menu_Recent_Files.addAction(path)
-            action.triggered.connect(open_path(self, path))
+            action.triggered.connect(lambda x, path_=path: self.open(path_) if isdir(path_) else invalid_path(path_))
         self.menu_Recent_Files.addSeparator()
         self.menu_Recent_Files.addAction(self.actionClear)
 
