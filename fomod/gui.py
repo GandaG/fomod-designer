@@ -43,7 +43,7 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.setupUi(self)
 
         # setup the icons properly
-        self.setWindowIcon(QIcon(join(cur_folder, "resources/window_icon.jpg")))
+        self.setWindowIcon(QIcon(join(cur_folder, "resources/window_icon.svg")))
         self.action_Open.setIcon(QIcon(join(cur_folder, "resources/logos/logo_open_file.png")))
         self.action_Save.setIcon(QIcon(join(cur_folder, "resources/logos/logo_floppy_disk.png")))
         self.actionO_ptions.setIcon(QIcon(join(cur_folder, "resources/logos/logo_gear.png")))
@@ -156,7 +156,7 @@ class MainFrame(base_ui[0], base_ui[1]):
 
     def save(self):
         try:
-            if not self.info_root and not self.config_root:
+            if self.info_root is not None and self.config_root is not None:
                 return
             elif self.fomod_changed:
                 sort_elements(self.info_root, self.config_root)
@@ -491,6 +491,7 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.splitter.insertWidget(0, wizard)
 
         wizard.cancelled.connect(close)
+        wizard.cancelled.connect(lambda: self.selected_object_tree(current_index))
         wizard.finished.connect(close)
         wizard.finished.connect(lambda: self.selected_object_tree(current_index))
         wizard.finished.connect(lambda: self.fomod_modified(True))
