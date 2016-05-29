@@ -174,7 +174,7 @@ class NodeInfoGroup(_NodeBase):
 
     def _init(self):
         allowed_child = (NodeInfoElement,)
-        self.init("Group", type(self).tag, 1, allowed_children=allowed_child)
+        self.init("Categories Group", type(self).tag, 1, allowed_children=allowed_child)
         super()._init()
 
 
@@ -182,7 +182,7 @@ class NodeInfoElement(_NodeBase):
     tag = "element"
 
     def _init(self):
-        self.init("Element", type(self).tag, 0, allow_text=True)
+        self.init("Category", type(self).tag, 0, allow_text=True)
         super()._init()
 
 

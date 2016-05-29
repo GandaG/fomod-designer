@@ -60,6 +60,7 @@ class IntroWindow(intro_ui[0], intro_ui[1]):
             self.show()
 
         self.new_button.clicked.connect(lambda: self.open_path(""))
+        self.button_about.clicked.connect(lambda _, self_=self: MainFrame.about(self_))
 
     def open_path(self, path):
         config = ConfigParser()
@@ -105,7 +106,7 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.action_Delete.triggered.connect(self.delete)
         self.delete_sec_shortcut.activated.connect(self.delete)
         self.actionHe_lp.triggered.connect(self.help)
-        self.action_About.triggered.connect(self.about)
+        self.action_About.triggered.connect(lambda _, self_=self: self.about(self_))
         self.actionClear.triggered.connect(self.clear_recent_files)
         self.action_Object_Tree.toggled.connect(self.object_tree.setVisible)
         self.actionObject_Box.toggled.connect(self.object_box.setVisible)
@@ -246,9 +247,9 @@ class MainFrame(base_ui[0], base_ui[1]):
     def help():
         not_implemented()
 
-    def about(self):
-        # noinspection PyTypeChecker
-        about_dialog = About(self)
+    @staticmethod
+    def about(parent):
+        about_dialog = About(parent)
         about_dialog.exec_()
 
     def clear_recent_files(self):

@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>287</width>
-    <height>351</height>
+    <width>334</width>
+    <height>355</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -21,14 +21,14 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>287</width>
-    <height>351</height>
+    <width>334</width>
+    <height>355</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>287</width>
-    <height>351</height>
+    <width>334</width>
+    <height>355</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -99,6 +99,16 @@
     </widget>
    </item>
    <item>
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>Special Thanks to Hishutup.</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QLabel" name="label_4">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -116,7 +126,7 @@
       <bool>false</bool>
      </property>
      <property name="alignment">
-      <set>Qt::AlignCenter</set>
+      <set>Qt::AlignJustify|Qt::AlignVCenter</set>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
