@@ -19,7 +19,7 @@ from os.path import expanduser, normpath, basename, join, relpath, isdir
 from datetime import datetime
 from configparser import ConfigParser
 from PyQt5.uic import loadUiType
-from PyQt5.QtWidgets import (QShortcut, QFileDialog, QColorDialog, QMessageBox, QLabel, QHBoxLayout,
+from PyQt5.QtWidgets import (QShortcut, QFileDialog, QColorDialog, QMessageBox, QLabel, QHBoxLayout, QCommandLinkButton,
                              QFormLayout, QLineEdit, QSpinBox, QComboBox, QWidget, QPushButton)
 from PyQt5.QtGui import QIcon, QPixmap, QStandardItemModel, QColor
 from PyQt5.QtCore import Qt, pyqtSignal
@@ -30,9 +30,51 @@ from .props import PropertyFile, PropertyColour, PropertyFolder, PropertyCombo, 
 from .exceptions import GenericError
 
 
+intro_ui = loadUiType(join(cur_folder, "resources/templates/intro.ui"))
 base_ui = loadUiType(join(cur_folder, "resources/templates/mainframe.ui"))
 settings_ui = loadUiType(join(cur_folder, "resources/templates/settings.ui"))
 about_ui = loadUiType(join(cur_folder, "resources/templates/about.ui"))
+
+
+class IntroWindow(intro_ui[0], intro_ui[1]):
+    def __init__(self):
+        super().__init__()
+        self.setupUi(self)
+        self.setWindowIcon(QIcon(join(cur_folder, "resources/window_icon.svg")))
+        self.setWindowTitle("FOMOD Designer")
+        self.version.setText("Version " + __version__)
+
+        settings = read_settings()
+        for key in sorted(settings["Recent Files"]):
+            if settings["Recent Files"][key]:
+                butto = QCommandLinkButton(basename(settings["Recent Files"][key]), settings["Recent Files"][key], self)
+                butto.clicked.connect(lambda _, path=settings["Recent Files"][key]: self.open_path(path))
+                self.scroll_layout.addWidget(butto)
+
+        if not settings["General"]["show_intro"]:
+            main_window = MainFrame()
+            main_window.move(self.pos())
+            main_window.show()
+            self.close()
+        else:
+            self.show()
+
+        self.new_button.clicked.connect(lambda: self.open_path(""))
+
+    def open_path(self, path):
+        config = ConfigParser()
+        config.read_dict(read_settings())
+        config["General"]["show_intro"] = str(not self.check_intro.isChecked()).lower()
+        config["General"]["show_advanced"] = str(self.check_advanced.isChecked()).lower()
+        makedirs(join(expanduser("~"), ".fomod"), exist_ok=True)
+        with open(join(expanduser("~"), ".fomod", ".designer"), "w") as configfile:
+            config.write(configfile)
+
+        main_window = MainFrame()
+        main_window.move(self.pos())
+        main_window.open(path)
+        main_window.show()
+        self.close()
 
 
 class MainFrame(base_ui[0], base_ui[1]):
@@ -181,7 +223,7 @@ class MainFrame(base_ui[0], base_ui[1]):
             return
 
     def options(self):
-        config = SettingsDialog()
+        config = SettingsDialog(self)
         config.exec_()
         self.settings_dict = read_settings()
 
@@ -554,11 +596,11 @@ class MainFrame(base_ui[0], base_ui[1]):
 
 
 class SettingsDialog(settings_ui[0], settings_ui[1]):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent):
+        super().__init__(parent=parent)
         self.setupUi(self)
 
-        self.setWindowFlags(Qt.WindowSystemMenuHint | Qt.WindowTitleHint)
+        self.setWindowFlags(Qt.WindowSystemMenuHint | Qt.WindowTitleHint | Qt.Dialog)
 
         self.buttonBox.accepted.connect(self.accepted)
         self.buttonBox.rejected.connect(self.rejected)
@@ -569,6 +611,8 @@ class SettingsDialog(settings_ui[0], settings_ui[1]):
 
         config = read_settings()
         self.combo_code_refresh.setCurrentIndex(config["General"]["code_refresh"])
+        self.check_intro.setChecked(config["General"]["show_intro"])
+        self.check_advanced.setChecked(config["General"]["show_advanced"])
         self.check_valid_load.setChecked(config["Load"]["validate"])
         self.check_valid_load_ignore.setChecked(config["Load"]["validate_ignore"])
         self.check_warn_load.setChecked(config["Load"]["warnings"])
@@ -587,6 +631,8 @@ class SettingsDialog(settings_ui[0], settings_ui[1]):
         config = ConfigParser()
         config.read_dict(read_settings())
         config["General"]["code_refresh"] = str(self.combo_code_refresh.currentIndex())
+        config["General"]["show_intro"] = str(self.check_intro.isChecked()).lower()
+        config["General"]["show_advanced"] = str(self.check_advanced.isChecked()).lower()
         config["Load"]["validate"] = str(self.check_valid_load.isChecked()).lower()
         config["Load"]["validate_ignore"] = str(self.check_valid_load_ignore.isChecked()).lower()
         config["Load"]["warnings"] = str(self.check_warn_load.isChecked()).lower()
@@ -632,12 +678,12 @@ class SettingsDialog(settings_ui[0], settings_ui[1]):
 
 class About(about_ui[0], about_ui[1]):
     def __init__(self, parent):
-        super().__init__()
+        super().__init__(parent=parent)
         self.setupUi(self)
 
         self.move(parent.window().frameGeometry().topLeft() + parent.window().rect().center() - self.rect().center())
 
-        self.setWindowFlags(Qt.WindowTitleHint)
+        self.setWindowFlags(Qt.WindowTitleHint | Qt.Dialog)
 
         self.version.setText("Version: " + __version__)
 
@@ -663,7 +709,9 @@ def generic_errorbox(title, text, detail=""):
 
 
 def read_settings():
-    default_settings = {"General": {"code_refresh": 3},
+    default_settings = {"General": {"code_refresh": 3,
+                                    "show_intro": True,
+                                    "show_advanced": False},
                         "Load": {"validate": True,
                                  "validate_ignore": False,
                                  "warnings": True,
