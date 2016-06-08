@@ -38,21 +38,18 @@ class _WizardBase(QStackedWidget):
         if type(self) is _WizardBase:
             raise BaseInstanceException(self)
 
-        self.return_data = None
         self.element = element
         self.parent = parent
         self.main_window = main_window
-        self.pages = self._add_pages()
-        for page in self.pages:
-            self.addWidget(page)
+        self._setup_pages()
 
     @abstractmethod
     def _process_results(self, result):
         pass
 
     @abstractmethod
-    def _add_pages(self):
-        return []
+    def _setup_pages(self):
+        pass
 
 
 class WizardFiles(_WizardBase):
@@ -64,7 +61,7 @@ class WizardFiles(_WizardBase):
         item_parent.insertRow(row, result.model_item)
         self.finished.emit()
 
-    def _add_pages(self):
+    def _setup_pages(self):
         def add_elem(element_, layout):
             """
             :param element_: The element to be copied
@@ -100,7 +97,7 @@ class WizardFiles(_WizardBase):
         page.finish_button.clicked.connect(lambda: self._process_results(element_result))
         page.cancel_button.clicked.connect(self.cancelled.emit)
 
-        return [page]
+        self.addWidget(page)
 
     def _create_field(self, element, parent_widget):
         """
@@ -113,66 +110,29 @@ class WizardFiles(_WizardBase):
             if element.tag == "file":
                 file_path = open_dialog.getOpenFileName(self, "Select File:", self.main_window.package_path)
                 if file_path[0]:
-                    edit_source.setText(relpath(file_path[0], self.main_window.package_path))
+                    item.edit_source.setText(relpath(file_path[0], self.main_window.package_path))
             elif element.tag == "folder":
                 folder_path = open_dialog.getExistingDirectory(self, "Select folder:", self.main_window.package_path)
                 if folder_path:
-                    edit_source.setText(relpath(folder_path, self.main_window.package_path))
+                    item.edit_source.setText(relpath(folder_path, self.main_window.package_path))
 
         parent_element = element.getparent()
 
-        # main widget
-        base = QWidget(parent_widget)
-        layout_main = QHBoxLayout(base)
-        layout_main.setContentsMargins(0, 0, 0, 0)
-
-        # the entire source form, label + (edit + button)
-        layout_source = QHBoxLayout()
-        layout_source.setContentsMargins(0, 0, 0, 0)
-        label_source = QLabel("Source:", base)
-
-        # the source box (edit + button)
-        base_source = QWidget(base)
-        layout_source_field = QHBoxLayout(base_source)
-        layout_source_field.setContentsMargins(0, 0, 0, 0)
-        edit_source = QLineEdit(element.get("source"), base_source)
-        button_source = QPushButton("...", base_source)
-        button_source.setMaximumSize(50, 30)
-        layout_source_field.addWidget(edit_source)
-        layout_source_field.addWidget(button_source)
-
-        # finish the source form
-        layout_source.addWidget(label_source)
-        layout_source.addWidget(base_source)
-
-        # the entire destination form, label + (edit + button)
-        layout_dest = QHBoxLayout()
-        layout_dest.setContentsMargins(0, 0, 0, 0)
-        label_dest = QLabel("Destination:", base)
-        edit_dest = QLineEdit(element.get("destination"), base)
-        layout_dest.addWidget(label_dest)
-        layout_dest.addWidget(edit_dest)
+        item = loadUi(join(cur_folder, "resources/templates/wizard_files_item.ui"))
 
         # the delete self button
-        button_delete = QPushButton(QIcon(join(cur_folder, "resources/logos/logo_cross.png")), "", base)
-        button_delete.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        button_delete.setMaximumSize(24, 24)
-
-        # finish the main widget
-        layout_main.addLayout(layout_source)
-        layout_main.addLayout(layout_dest)
-        layout_main.addWidget(button_delete)
+        item.button_delete.setIcon(QIcon(join(cur_folder, "resources/logos/logo_cross.png")))
 
         # connect the signals
-        edit_source.textChanged.connect(element.properties["source"].set_value)
-        edit_source.textChanged.connect(element.write_attribs)
-        edit_source.textChanged.connect(lambda: self.main_window.xml_code_changed.emit(parent_element))
-        edit_dest.textChanged.connect(element.properties["destination"].set_value)
-        edit_dest.textChanged.connect(element.write_attribs)
-        edit_dest.textChanged.connect(lambda: self.main_window.xml_code_changed.emit(parent_element))
-        button_source.clicked.connect(button_clicked)
-        button_delete.clicked.connect(base.deleteLater)
-        button_delete.clicked.connect(lambda x: parent_element.remove_child(element))
-        button_delete.clicked.connect(lambda: self.main_window.xml_code_changed.emit(parent_element))
+        item.edit_source.textChanged.connect(element.properties["source"].set_value)
+        item.edit_source.textChanged.connect(element.write_attribs)
+        item.edit_source.textChanged.connect(lambda: self.main_window.xml_code_changed.emit(parent_element))
+        item.edit_dest.textChanged.connect(element.properties["destination"].set_value)
+        item.edit_dest.textChanged.connect(element.write_attribs)
+        item.edit_dest.textChanged.connect(lambda: self.main_window.xml_code_changed.emit(parent_element))
+        item.button_source.clicked.connect(button_clicked)
+        item.button_delete.clicked.connect(item.deleteLater)
+        item.button_delete.clicked.connect(lambda x: parent_element.remove_child(element))
+        item.button_delete.clicked.connect(lambda: self.main_window.xml_code_changed.emit(parent_element))
 
-        return base
+        return item

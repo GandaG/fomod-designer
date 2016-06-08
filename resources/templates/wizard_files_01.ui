@@ -48,7 +48,7 @@
      <item>
       <widget class="QLabel" name="label">
        <property name="text">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;justify&quot;&gt;Select the files and folders to be installed. The &amp;quot;&lt;span style=&quot; font-style:italic;&quot;&gt;Source&amp;quot;&lt;/span&gt; fields are used to select the file/folder to be installed. The &lt;span style=&quot; font-style:italic;&quot;&gt;&amp;quot;Destination&amp;quot;&lt;/span&gt; fields are used to select where the item will be installed to - a blank fields corresponds to the &lt;span style=&quot; font-style:italic;&quot;&gt;Data&lt;/span&gt; folder itself.&lt;/p&gt;&lt;p align=&quot;justify&quot;&gt;See the &lt;span style=&quot; text-decoration: underline;&quot;&gt;Help&lt;/span&gt; for more information.&lt;/p&gt;&lt;p align=&quot;justify&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Note:&lt;/span&gt; When a folder is selected, it will be recursively installed - all the files and folders under it, and so on.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;justify&quot;&gt;Select the files and folders to be installed. The &amp;quot;&lt;span style=&quot; font-style:italic;&quot;&gt;Source&amp;quot;&lt;/span&gt; fields are used to select the file/folder to be installed. The &lt;span style=&quot; font-style:italic;&quot;&gt;&amp;quot;Destination&amp;quot;&lt;/span&gt; fields are used to select where the item will be installed to - a blank fields corresponds to the &lt;span style=&quot; font-style:italic;&quot;&gt;Data&lt;/span&gt; folder itself.&lt;/p&gt;&lt;p align=&quot;justify&quot;&gt;See the &lt;span style=&quot; text-decoration: underline;&quot;&gt;Help&lt;/span&gt; for more information.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="textFormat">
         <enum>Qt::AutoText</enum>
@@ -105,18 +105,18 @@
           <x>0</x>
           <y>0</y>
           <width>431</width>
-          <height>106</height>
+          <height>125</height>
          </rect>
         </property>
         <layout class="QVBoxLayout" name="layout_file">
          <property name="leftMargin">
-          <number>0</number>
+          <number>3</number>
          </property>
          <property name="topMargin">
           <number>0</number>
          </property>
          <property name="rightMargin">
-          <number>0</number>
+          <number>3</number>
          </property>
          <property name="bottomMargin">
           <number>0</number>
@@ -176,18 +176,18 @@
           <x>0</x>
           <y>0</y>
           <width>431</width>
-          <height>106</height>
+          <height>125</height>
          </rect>
         </property>
         <layout class="QVBoxLayout" name="layout_folder">
          <property name="leftMargin">
-          <number>0</number>
+          <number>3</number>
          </property>
          <property name="topMargin">
           <number>0</number>
          </property>
          <property name="rightMargin">
-          <number>0</number>
+          <number>3</number>
          </property>
          <property name="bottomMargin">
           <number>0</number>
