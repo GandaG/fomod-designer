@@ -32,6 +32,9 @@
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
+      <property name="opaqueResize">
+       <bool>true</bool>
+      </property>
       <widget class="QTabWidget" name="tabWidget">
        <property name="currentIndex">
         <number>0</number>
@@ -96,6 +99,9 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QDockWidget" name="property_editor">
+   <property name="statusTip">
+    <string>A list of all the properties and the means to edit them.</string>
+   </property>
    <property name="allowedAreas">
     <set>Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
    </property>
@@ -144,10 +150,29 @@
        </property>
       </widget>
      </item>
+     <item>
+      <spacer name="verticalSpacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
     </layout>
    </widget>
   </widget>
   <widget class="QDockWidget" name="object_tree">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="statusTip">
+    <string>The tree containing all the existing nodes.</string>
+   </property>
    <property name="floating">
     <bool>false</bool>
    </property>
@@ -200,6 +225,9 @@
    </widget>
   </widget>
   <widget class="QDockWidget" name="object_box">
+   <property name="statusTip">
+    <string>A list with the possible nodes to add.</string>
+   </property>
    <property name="allowedAreas">
     <set>Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
    </property>
@@ -243,6 +271,9 @@
      <string>&amp;File</string>
     </property>
     <widget class="QMenu" name="menu_Recent_Files">
+     <property name="statusTip">
+      <string>Your recent files in an easy-to-open list.</string>
+     </property>
      <property name="title">
       <string>&amp;Recent Files</string>
      </property>
@@ -295,6 +326,9 @@
    <property name="toolTip">
     <string>New/Open</string>
    </property>
+   <property name="statusTip">
+    <string>Select a folder to open or create an installer there.</string>
+   </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
    </property>
@@ -313,6 +347,9 @@
    <property name="text">
     <string>&amp;Save</string>
    </property>
+   <property name="statusTip">
+    <string>Save the current installer.</string>
+   </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
    </property>
@@ -327,6 +364,15 @@
    </property>
    <property name="text">
     <string>O&amp;ptions</string>
+   </property>
+   <property name="iconText">
+    <string>Settings</string>
+   </property>
+   <property name="toolTip">
+    <string>Settings</string>
+   </property>
+   <property name="statusTip">
+    <string>Open up the settings menu</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+P</string>
@@ -343,6 +389,9 @@
    <property name="text">
     <string>&amp;Refresh</string>
    </property>
+   <property name="statusTip">
+    <string>Refresh the previews.</string>
+   </property>
    <property name="shortcut">
     <string>Ctrl+R</string>
    </property>
@@ -357,6 +406,9 @@
    </property>
    <property name="text">
     <string>&amp;Delete</string>
+   </property>
+   <property name="statusTip">
+    <string>Delete the currently selected node.</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+D</string>
@@ -382,6 +434,9 @@
    <property name="toolTip">
     <string>About</string>
    </property>
+   <property name="statusTip">
+    <string>Who made this and license details.</string>
+   </property>
    <property name="shortcut">
     <string>Ctrl+A</string>
    </property>
@@ -396,6 +451,9 @@
    </property>
    <property name="text">
     <string>He&amp;lp</string>
+   </property>
+   <property name="statusTip">
+    <string>Haaaaaalp!</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+H</string>
@@ -414,6 +472,9 @@
    <property name="text">
     <string>Object &amp;Tree</string>
    </property>
+   <property name="statusTip">
+    <string>Toggle the visibility of the Object Tree.</string>
+   </property>
   </action>
   <action name="action_Property_Editor">
    <property name="checkable">
@@ -424,6 +485,9 @@
    </property>
    <property name="text">
     <string>&amp;Property Editor</string>
+   </property>
+   <property name="statusTip">
+    <string>Toggle the visibility of the Property Editor.</string>
    </property>
   </action>
   <action name="actionObject_Box">
@@ -436,6 +500,9 @@
    <property name="text">
     <string>Object &amp;Box</string>
    </property>
+   <property name="statusTip">
+    <string>Toggle the visibility of the Object Box.</string>
+   </property>
   </action>
   <action name="action">
    <property name="text">
@@ -445,6 +512,9 @@
   <action name="actionClear">
    <property name="text">
     <string>Clear</string>
+   </property>
+   <property name="statusTip">
+    <string>Clear all the recent files.</string>
    </property>
   </action>
  </widget>
