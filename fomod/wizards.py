@@ -72,7 +72,10 @@ class WizardFiles(_WizardBase):
                 child.properties[key].set_value(element_.attrib[key])
             element_result.add_child(child)
             spacer = layout.takeAt(layout.count() - 1)
-            layout.addWidget(self._create_field(child, page))
+            item = self._create_field(child)
+            item.edit_source.setText(child.properties["source"].value)
+            item.edit_dest.setText(child.properties["destination"].value)
+            layout.addWidget(item)
             layout.addSpacerItem(spacer)
             self.main_window.xml_code_changed.emit(element_result)
 
@@ -82,13 +85,13 @@ class WizardFiles(_WizardBase):
 
         file_list = [elem for elem in element_result if elem.tag == "file"]
         for element in file_list:
-            add_elem(element, page.layout_file)
             element_result.remove_child(element)
+            add_elem(element, page.layout_file)
 
         folder_list = [elem for elem in element_result if elem.tag == "folder"]
         for element in folder_list:
-            add_elem(element, page.layout_folder)
             element_result.remove_child(element)
+            add_elem(element, page.layout_folder)
 
         # finish with connections
         page.button_add_file.clicked.connect(lambda: add_elem(elem_factory("file", element_result), page.layout_file))
@@ -99,10 +102,9 @@ class WizardFiles(_WizardBase):
 
         self.addWidget(page)
 
-    def _create_field(self, element, parent_widget):
+    def _create_field(self, element):
         """
         :param element: the element newly copied
-        :param parent_widget: the parent widget (the QWidgets inside the scroll areas)
         :return: base QWidget, with the source and destination fields built
         """
         def button_clicked():
