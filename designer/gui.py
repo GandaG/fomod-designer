@@ -25,7 +25,8 @@ from PyQt5.QtGui import QIcon, QPixmap, QStandardItemModel, QColor
 from PyQt5.QtCore import Qt, pyqtSignal
 from validator import validate_tree, check_warnings, ValidatorError, ValidationError, WarningError
 from . import cur_folder, __version__
-from .io import import_, new, export, sort_elements, elem_factory, highlight_fragment
+from .io import import_, new, export, sort_elements, elem_factory
+from .previews import highlight_fragment
 from .props import PropertyFile, PropertyColour, PropertyFolder, PropertyCombo, PropertyInt, PropertyText
 from .exceptions import GenericError
 

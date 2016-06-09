@@ -17,11 +17,7 @@
 from os import listdir, makedirs
 from os.path import join
 from lxml.etree import (PythonElementClassLookup, XMLParser, tostring, fromstring,
-                        Element, SubElement, parse, ParseError, ElementTree, XML)
-from lxml.objectify import deannotate
-from pygments import highlight
-from pygments.formatters.html import HtmlFormatter
-from pygments.lexers.html import XmlLexer
+                        Element, SubElement, parse, ParseError, ElementTree)
 from .exceptions import MissingFileError, ParserError, TagNotFound
 
 
@@ -240,14 +236,6 @@ def export(info_root, config_root, package_path):
     with open(config_path, "wb") as configfile:
         config_tree = ElementTree(config_root)
         config_tree.write(configfile, pretty_print=True)
-
-
-def highlight_fragment(element):
-    element.write_attribs()
-    new_elem = XML(tostring(element))
-    deannotate(new_elem, cleanup_namespaces=True)
-    code = tostring(new_elem, encoding="Unicode", pretty_print=True, xml_declaration=False)
-    return highlight(code, XmlLexer(), HtmlFormatter(noclasses=True, style="autumn"))
 
 
 def sort_elements(info_root, config_root):

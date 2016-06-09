@@ -14,10 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from lxml.etree import XML, tostring
+from lxml.objectify import deannotate
+from pygments import highlight
+from pygments.formatters.html import HtmlFormatter
+from pygments.lexers.html import XmlLexer
 
-if __name__ == '__main__':
-    from designer.__main__ import main  # placed here so pycharm doesn't complain about import location
-    main()
+
+def highlight_fragment(element):
+    element.write_attribs()
+    new_elem = XML(tostring(element))
+    deannotate(new_elem, cleanup_namespaces=True)
+    code = tostring(new_elem, encoding="Unicode", pretty_print=True, xml_declaration=False)
+    return highlight(code, XmlLexer(), HtmlFormatter(noclasses=True, style="autumn"))
