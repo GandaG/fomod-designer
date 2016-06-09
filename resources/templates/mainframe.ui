@@ -99,6 +99,12 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QDockWidget" name="property_editor">
+   <property name="minimumSize">
+    <size>
+     <width>250</width>
+     <height>59</height>
+    </size>
+   </property>
    <property name="statusTip">
     <string>A list of all the properties and the means to edit them.</string>
    </property>
@@ -139,6 +145,11 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <property name="font">
+        <font>
+         <pointsize>8</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string>Start Wizard</string>
        </property>
@@ -169,6 +180,12 @@
   <widget class="QDockWidget" name="object_tree">
    <property name="enabled">
     <bool>true</bool>
+   </property>
+   <property name="minimumSize">
+    <size>
+     <width>250</width>
+     <height>93</height>
+    </size>
    </property>
    <property name="statusTip">
     <string>The tree containing all the existing nodes.</string>
@@ -225,6 +242,12 @@
    </widget>
   </widget>
   <widget class="QDockWidget" name="object_box">
+   <property name="minimumSize">
+    <size>
+     <width>250</width>
+     <height>83</height>
+    </size>
+   </property>
    <property name="statusTip">
     <string>A list with the possible nodes to add.</string>
    </property>
@@ -238,22 +261,22 @@
     <number>2</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_3">
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <layout class="QVBoxLayout" name="layout_box">
+     <property name="spacing">
+      <number>3</number>
+     </property>
      <property name="leftMargin">
-      <number>5</number>
+      <number>3</number>
      </property>
      <property name="topMargin">
-      <number>0</number>
+      <number>3</number>
      </property>
      <property name="rightMargin">
-      <number>5</number>
+      <number>3</number>
      </property>
      <property name="bottomMargin">
-      <number>0</number>
+      <number>3</number>
      </property>
-     <item>
-      <widget class="QListView" name="object_box_list"/>
-     </item>
     </layout>
    </widget>
   </widget>

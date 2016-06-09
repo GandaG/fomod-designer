@@ -20,8 +20,8 @@ from datetime import datetime
 from configparser import ConfigParser
 from PyQt5.uic import loadUiType
 from PyQt5.QtWidgets import (QShortcut, QFileDialog, QColorDialog, QMessageBox, QLabel, QHBoxLayout, QCommandLinkButton,
-                             QFormLayout, QLineEdit, QSpinBox, QComboBox, QWidget, QPushButton)
-from PyQt5.QtGui import QIcon, QPixmap, QStandardItemModel, QColor
+                             QFormLayout, QLineEdit, QSpinBox, QComboBox, QWidget, QPushButton, QFrame, QSizePolicy)
+from PyQt5.QtGui import QIcon, QPixmap, QStandardItemModel, QColor, QFont
 from PyQt5.QtCore import Qt, pyqtSignal
 from validator import validate_tree, check_warnings, ValidatorError, ValidationError, WarningError
 from . import cur_folder, __version__
@@ -118,7 +118,6 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.property_editor.visibilityChanged.connect(self.action_Property_Editor.setChecked)
 
         self.object_tree_view.clicked.connect(self.selected_object_tree)
-        self.object_box_list.activated.connect(self.selected_object_list)
 
         self.wizard_button.clicked.connect(self.run_wizard)
         self.xml_code_changed.connect(self.update_gen_code)
@@ -132,15 +131,12 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.config_root = None
         self.current_object = None
         self.current_prop_list = []
-        self.current_children_list = []
         self.tree_model = QStandardItemModel()
-        self.list_model = QStandardItemModel()
 
         self.wizard_button.hide()
 
         self.object_tree_view.setModel(self.tree_model)
         self.object_tree_view.header().hide()
-        self.object_box_list.setModel(self.list_model)
 
         self.update_recent_files()
 
@@ -328,14 +324,44 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.update_wizard_button()
 
     def update_box_list(self):
-        self.list_model.clear()
-        self.current_children_list.clear()
+        for index in reversed(range(self.layout_box.count())):
+            widget = self.layout_box.takeAt(index).widget()
+            if widget is not None:
+                widget.deleteLater()
 
         for child in self.current_object.allowed_children:
             new_object = child()
             if self.current_object.can_add_child(new_object):
-                self.list_model.appendRow(new_object.model_item)
-                self.current_children_list.append(new_object)
+                child_button = QPushButton(new_object.name)
+                child_button.setFlat(True)
+                font_button = QFont()
+                font_button.setPointSize(8)
+                child_button.setFont(font_button)
+                child_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+                child_button.clicked.connect(lambda _, tag_=new_object.tag: self.selected_object_list(tag_))
+                self.layout_box.addWidget(child_button)
+                if self.current_object.allowed_children.index(child) != len(self.current_object.allowed_children) - 1:
+                    line = QFrame()
+                    line.setFrameShape(4)
+                    self.layout_box.addWidget(line)
+
+    def selected_object_list(self, tag):
+        new_child = elem_factory(tag, self.current_object)
+        self.current_object.add_child(new_child)
+
+        # expand the parent
+        current_index = self.tree_model.indexFromItem(self.current_object.model_item)
+        self.object_tree_view.expand(current_index)
+
+        # select the new item
+        self.object_tree_view.setCurrentIndex(self.tree_model.indexFromItem(new_child.model_item))
+        self.selected_object_tree(self.tree_model.indexFromItem(new_child.model_item))
+
+        # reload the object box
+        self.update_box_list()
+
+        # set the installer as changed
+        self.fomod_modified(True)
 
     def clear_prop_list(self):
         self.current_prop_list.clear()
@@ -539,26 +565,6 @@ class MainFrame(base_ui[0], base_ui[1]):
         wizard.finished.connect(close)
         wizard.finished.connect(lambda: self.selected_object_tree(current_index))
         wizard.finished.connect(lambda: self.fomod_modified(True))
-
-    def selected_object_list(self, index):
-        item = self.list_model.itemFromIndex(index)
-
-        new_child = elem_factory(item.xml_node.tag, self.current_object)
-        self.current_object.add_child(new_child)
-
-        # expand the parent
-        current_index = self.tree_model.indexFromItem(self.current_object.model_item)
-        self.object_tree_view.expand(current_index)
-
-        # select the new item
-        self.object_tree_view.setCurrentIndex(self.tree_model.indexFromItem(new_child.model_item))
-        self.selected_object_tree(self.tree_model.indexFromItem(new_child.model_item))
-
-        # reload the object box
-        self.update_box_list()
-
-        # set the installer as changed
-        self.fomod_modified(True)
 
     def update_gen_code(self, element):
         if element is not None:
