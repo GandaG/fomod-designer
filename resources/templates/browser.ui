@@ -52,6 +52,9 @@
        <property name="text">
         <string/>
        </property>
+       <property name="shortcut">
+        <string>Home</string>
+       </property>
       </widget>
      </item>
      <item>
