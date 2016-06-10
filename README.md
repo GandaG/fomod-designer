@@ -1,5 +1,5 @@
 # FOMOD Designer
-[![Build status](https://ci.appveyor.com/api/projects/status/nep4id3ammekof68?svg=true)](https://ci.appveyor.com/project/GandaG/fomod-editor) [![Build Status](https://travis-ci.org/GandaG/fomod-designer.svg?branch=develop)](https://travis-ci.org/GandaG/fomod-designer)
+[![Build status](https://ci.appveyor.com/api/projects/status/nep4id3ammekof68?svg=true)](https://ci.appveyor.com/project/GandaG/fomod-editor) [![Build Status](https://travis-ci.org/GandaG/fomod-designer.svg?branch=develop)](https://travis-ci.org/GandaG/fomod-designer) [![Documentation Status](https://readthedocs.org/projects/fomod-designer/badge/?version=stable)](http://fomod-designer.readthedocs.io/en/stable/?badge=stable)
 
 *A visual editor to quickly create FOMOD installers for Nexus based mods.*
 
