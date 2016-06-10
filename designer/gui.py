@@ -23,7 +23,7 @@ from PyQt5.QtWidgets import (QShortcut, QFileDialog, QColorDialog, QMessageBox, 
                              QFormLayout, QLineEdit, QSpinBox, QComboBox, QWidget, QPushButton, QFrame, QSizePolicy)
 from PyQt5.QtGui import QIcon, QPixmap, QStandardItemModel, QColor, QFont
 from PyQt5.QtCore import Qt, pyqtSignal
-from validator import validate_tree, check_warnings, ValidatorError, ValidationError, WarningError
+from validator import validate_tree, check_warnings, ValidatorError
 from . import cur_folder, __version__
 from .io import import_, new, export, sort_elements, elem_factory
 from .previews import highlight_fragment
@@ -159,20 +159,11 @@ class MainFrame(base_ui[0], base_ui[1]):
             if package_path:
                 info_root, config_root = import_(normpath(package_path))
                 if info_root is not None and config_root is not None:
-                    try:
-                        if self.settings_dict["Load"]["validate"]:
-                            validate_tree(config_root, join(cur_folder, "resources", "mod_schema.xsd"))
-                    except ValidationError as e:
-                        generic_errorbox(e.title, str(e))
-                        if not self.settings_dict["Load"]["validate_ignore"]:
-                            return
-                    try:
-                        if self.settings_dict["Load"]["warnings"]:
-                            check_warnings(package_path, config_root)
-                    except WarningError as e:
-                        generic_errorbox(e.title, str(e))
-                        if not self.settings_dict["Load"]["warn_ignore"]:
-                            return
+                    if self.settings_dict["Load"]["validate"]:
+                        validate_tree(config_root, join(cur_folder, "resources", "mod_schema.xsd"),
+                                      self.settings_dict["Load"]["validate_ignore"])
+                    if self.settings_dict["Load"]["warnings"]:
+                        check_warnings(package_path, config_root, self.settings_dict["Save"]["warn_ignore"])
                 else:
                     info_root, config_root = new()
 
@@ -200,20 +191,11 @@ class MainFrame(base_ui[0], base_ui[1]):
                 return
             elif self.fomod_changed:
                 sort_elements(self.info_root, self.config_root)
-                try:
-                    if self.settings_dict["Save"]["validate"]:
-                        validate_tree(self.config_root, join(cur_folder, "resources", "mod_schema.xsd"))
-                except ValidationError as e:
-                    generic_errorbox(e.title, str(e))
-                    if not self.settings_dict["Save"]["validate_ignore"]:
-                        return
-                try:
-                    if self.settings_dict["Save"]["warnings"]:
-                        check_warnings(self.package_path, self.config_root)
-                except WarningError as e:
-                    generic_errorbox(e.title, str(e))
-                    if not self.settings_dict["Save"]["warn_ignore"]:
-                        return
+                if self.settings_dict["Save"]["validate"]:
+                    validate_tree(self.config_root, join(cur_folder, "resources", "mod_schema.xsd"),
+                                  self.settings_dict["Save"]["validate_ignore"])
+                if self.settings_dict["Save"]["warnings"]:
+                    check_warnings(self.package_path, self.config_root, self.settings_dict["Save"]["warn_ignore"])
                 export(self.info_root, self.config_root, self.package_path)
                 self.fomod_modified(False)
         except ValidatorError as e:
@@ -285,12 +267,20 @@ class MainFrame(base_ui[0], base_ui[1]):
 
         file_list = []
         settings = read_settings()
-        for index in range(1, 5):
+
+        # Populate the file_list with the existing recent files
+        for index in range(1, len(settings["Recent Files"])):
             if settings["Recent Files"]["file" + str(index)]:
                 file_list.append(settings["Recent Files"]["file" + str(index)])
-        file_list = sorted(set(file_list))  # remove all duplicates there was an issue with duplicate after invalid path
+
+        # remove all duplicates there was an issue with duplicate after invalid path
+        seen = set()
+        seen_add = seen.add
+        file_list = [x for x in file_list if not (x in seen or seen_add(x))]
+
         self.clear_recent_files()
 
+        # check if the path is new or if it already exists - delete the last one or reorder respectively
         if add_new:
             if add_new in file_list:
                 file_list.remove(add_new)
@@ -298,6 +288,7 @@ class MainFrame(base_ui[0], base_ui[1]):
                 file_list.pop()
             file_list.insert(0, add_new)
 
+        # write the new list to the settings file
         config = ConfigParser()
         config.read_dict(settings)
         for path in file_list:
@@ -306,6 +297,7 @@ class MainFrame(base_ui[0], base_ui[1]):
         with open(join(expanduser("~"), ".fomod", ".designer"), "w") as configfile:
             config.write(configfile)
 
+        # populate the gui menu with the new files list
         self.menu_Recent_Files.removeAction(self.actionClear)
         for path in file_list:
             action = self.menu_Recent_Files.addAction(path)
@@ -738,9 +730,9 @@ def read_settings():
     config.read(join(expanduser("~"), ".fomod", ".designer"))
 
     settings = {}
-    for section in config:
+    for section in default_settings:
         settings[section] = {}
-        for key in config[section]:
+        for key in default_settings[section]:
             if isinstance(default_settings[section][key], bool):
                 settings[section][key] = config.getboolean(section, key)
             elif isinstance(default_settings[section][key], int):
