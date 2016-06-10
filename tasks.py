@@ -58,7 +58,7 @@ def clean_docs():
     from os.path import join
 
     rmtree(join("docs", "build"), ignore_errors=True)
-    rmtree(join("resources", "docs"))
+    rmtree(join("resources", "docs"), ignore_errors=True)
     rmtree(join("docs", "source", "api"), ignore_errors=True)
     print("Documentation caches cleaned.")
 
@@ -74,9 +74,10 @@ def clean():
 
 @task(clean_docs)
 def docs():
-    from os import system
+    from os import system, makedirs
     from os.path import join
 
+    makedirs(join("resources", "docs"), exist_ok=True)
     system("sphinx-apidoc -To {} {}".format(join("docs", "source", "api"), "fomod"))
     system("sphinx-build -b html -d {} {} {}".format(join("docs", "build", "doctrees"),
                                                      join("docs", "source"),
