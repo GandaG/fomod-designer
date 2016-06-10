@@ -38,6 +38,9 @@ about_ui = loadUiType(join(cur_folder, "resources/templates/about.ui"))
 
 
 class IntroWindow(intro_ui[0], intro_ui[1]):
+    """
+    The class for the intro window. Subclassed from QDialog and created in Qt Designer.
+    """
     def __init__(self):
         super().__init__()
         self.setupUi(self)
@@ -64,6 +67,11 @@ class IntroWindow(intro_ui[0], intro_ui[1]):
         self.button_about.clicked.connect(lambda _, self_=self: MainFrame.about(self_))
 
     def open_path(self, path):
+        """
+        Method used to open a path in the main window - closes the intro window and show the main.
+
+        :param path: The path to open.
+        """
         config = ConfigParser()
         config.read_dict(read_settings())
         config["General"]["show_intro"] = str(not self.check_intro.isChecked()).lower()
@@ -80,6 +88,11 @@ class IntroWindow(intro_ui[0], intro_ui[1]):
 
 
 class MainFrame(base_ui[0], base_ui[1]):
+    """
+    The class for the main window. Subclassed from QMainWindow and created in Qt Designer.
+    """
+
+    # The signal to update the previews.
     xml_code_changed = pyqtSignal([object])
 
     def __init__(self):
@@ -141,6 +154,14 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.update_recent_files()
 
     def open(self, path=""):
+        """
+        Open a new installer if one exists at path (if no path is given a dialog pops up asking the user to choose one)
+        or create a new one.
+
+        If enabled in the Settings the installer is also validated and checked for common errors.
+
+        :param path: Optional. The path to open/create an installer at.
+        """
         try:
             answer = self.check_fomod_state()
             if answer == QMessageBox.Save:
@@ -186,6 +207,11 @@ class MainFrame(base_ui[0], base_ui[1]):
             return
 
     def save(self):
+        """
+        Saves the current installer at the current path.
+
+        If enabled in the Settings the installer is also validated and checked for common errors.
+        """
         try:
             if self.info_root is not None and self.config_root is not None:
                 return
@@ -203,15 +229,24 @@ class MainFrame(base_ui[0], base_ui[1]):
             return
 
     def options(self):
+        """
+        Opens the Settings dialog.
+        """
         config = SettingsDialog(self)
         config.exec_()
         self.settings_dict = read_settings()
 
     def refresh(self):
+        """
+        Refreshes all the previews if the refresh rate in Settings is high enough.
+        """
         if self.settings_dict["General"]["code_refresh"] >= 1:
             self.xml_code_changed.emit(self.current_object)
 
     def delete(self):
+        """
+        Deletes the current node in the tree. No effect when using the Basic View.
+        """
         try:
             if self.current_object is not None:
                 object_to_delete = self.current_object
@@ -228,10 +263,18 @@ class MainFrame(base_ui[0], base_ui[1]):
 
     @staticmethod
     def about(parent):
+        """
+        Opens the About dialog. This method is static to be able to be called from the Intro window.
+
+        :param parent: The parent of the dialog.
+        """
         about_dialog = About(parent)
         about_dialog.exec_()
 
     def clear_recent_files(self):
+        """
+        Clears the Recent Files gui menu and settings.
+        """
         config = ConfigParser()
         config.read_dict(read_settings())
         for key in config["Recent Files"]:
@@ -246,7 +289,19 @@ class MainFrame(base_ui[0], base_ui[1]):
                 del child
 
     def update_recent_files(self, add_new=None):
+        """
+        Updates the Recent Files gui menu and settings. If called when opening an installer, pass that installer as
+        add_new so it can be added to list or placed at the top.
+
+        :param add_new: If a new installer is being opened, add it to the list or move it to the top.
+        """
         def invalid_path(path_):
+            """
+            Called when a Recent Files path in invalid. Requests user decision on wether to delete the item or to leave
+            it.
+
+            :param path_: The invalid path.
+            """
             msg_box = QMessageBox()
             msg_box.setWindowTitle("This path no longer exists.")
             msg_box.setText("Remove it from the Recent Files list?")
@@ -306,6 +361,14 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.menu_Recent_Files.addAction(self.actionClear)
 
     def selected_object_tree(self, index):
+        """
+        Called when the user selects a node in the Object Tree.
+
+        Updates the current object, emits the preview update signal if Settings allows it,
+        updates the possible children list, the properties list and wizard buttons.
+
+        :param index: The selected node's index.
+        """
         self.current_object = self.tree_model.itemFromIndex(index).xml_node
         self.object_tree_view.setCurrentIndex(index)
         if self.settings_dict["General"]["code_refresh"] >= 2:
@@ -316,6 +379,9 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.update_wizard_button()
 
     def update_box_list(self):
+        """
+        Updates the possible children to add in Object Box.
+        """
         for index in reversed(range(self.layout_box.count())):
             widget = self.layout_box.takeAt(index).widget()
             if widget is not None:
@@ -338,6 +404,13 @@ class MainFrame(base_ui[0], base_ui[1]):
                     self.layout_box.addWidget(line)
 
     def selected_object_list(self, tag):
+        """
+        Called when the user selects a possible child in the Object Box.
+
+        Adds the child corresponding to the tag and updates the possible children list.
+
+        :param tag: The tag of the child to add.
+        """
         new_child = elem_factory(tag, self.current_object)
         self.current_object.add_child(new_child)
 
@@ -356,6 +429,9 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.fomod_modified(True)
 
     def clear_prop_list(self):
+        """
+        Deletes all the properties from the Property Editor
+        """
         self.current_prop_list.clear()
         for index in reversed(range(self.formLayout.count())):
             widget = self.formLayout.takeAt(index).widget()
@@ -363,6 +439,9 @@ class MainFrame(base_ui[0], base_ui[1]):
                 widget.deleteLater()
 
     def update_props_list(self):
+        """
+        Updates the Property Editor's prop list. Deletes everything and then creates the list from the node's properties.
+        """
         self.clear_prop_list()
 
         prop_index = 0
@@ -523,12 +602,20 @@ class MainFrame(base_ui[0], base_ui[1]):
             prop_index += 1
 
     def update_wizard_button(self):
+        """
+        Updates the wizard button, hides or shows it.
+        """
         if self.current_object.wizard:
             self.wizard_button.show()
         else:
             self.wizard_button.hide()
 
     def run_wizard(self):
+        """
+        Called when the wizard button is clicked.
+
+        Sets up the main window and runs the wizard.
+        """
         def close():
             wizard.deleteLater()
             self.action_Object_Tree.toggled.emit(enabled_tree)
@@ -559,12 +646,20 @@ class MainFrame(base_ui[0], base_ui[1]):
         wizard.finished.connect(lambda: self.fomod_modified(True))
 
     def update_gen_code(self, element):
+        """
+        Updates the previews.
+
+        :param element: The element to preview.
+        """
         if element is not None:
             self.xml_code_browser.setHtml(highlight_fragment(element))
         else:
             self.xml_code_browser.setText("")
 
     def fomod_modified(self, changed):
+        """
+        Changes the modified state of the installer, according to the parameter.
+        """
         if changed is False:
             self.fomod_changed = False
             self.setWindowTitle(self.package_name + " - " + self.original_title)
@@ -573,6 +668,9 @@ class MainFrame(base_ui[0], base_ui[1]):
             self.setWindowTitle("*" + self.package_name + " - " + self.original_title)
 
     def check_fomod_state(self):
+        """
+        Checks whether the installer has unsaved changes.
+        """
         if self.fomod_changed:
             msg_box = QMessageBox()
             msg_box.setWindowTitle("The installer has been modified.")
@@ -586,16 +684,23 @@ class MainFrame(base_ui[0], base_ui[1]):
             return
 
     def closeEvent(self, event):
-            answer = self.check_fomod_state()
-            if answer == QMessageBox.Save:
-                self.save()
-            elif answer == QMessageBox.Discard:
-                pass
-            elif answer == QMessageBox.Cancel:
-                event.ignore()
+        """
+        Override the Qt close event to account for unsaved changes.
+        :param event:
+        """
+        answer = self.check_fomod_state()
+        if answer == QMessageBox.Save:
+            self.save()
+        elif answer == QMessageBox.Discard:
+            pass
+        elif answer == QMessageBox.Cancel:
+            event.ignore()
 
 
 class SettingsDialog(settings_ui[0], settings_ui[1]):
+    """
+    The class for the settings window. Subclassed from QDialog and created in Qt Designer.
+    """
     def __init__(self, parent):
         super().__init__(parent=parent)
         self.setupUi(self)
@@ -677,6 +782,9 @@ class SettingsDialog(settings_ui[0], settings_ui[1]):
 
 
 class About(about_ui[0], about_ui[1]):
+    """
+    The class for the about window. Subclassed from QDialog and created in Qt Designer.
+    """
     def __init__(self, parent):
         super().__init__(parent=parent)
         self.setupUi(self)
@@ -696,10 +804,20 @@ class About(about_ui[0], about_ui[1]):
 
 
 def not_implemented():
+    """
+    A convenience function for something that has not yet been implemented.
+    """
     generic_errorbox("Nope", "Sorry, this part hasn't been implemented yet!")
 
 
 def generic_errorbox(title, text, detail=""):
+    """
+    A function that creates a generic errorbox with the logo_admin.png logo.
+
+    :param title: A string containing the title of the errorbox.
+    :param text: A string containing the text of the errorbox.
+    :param detail: Optional. A string containing the detail text of the errorbox.
+    """
     errorbox = QMessageBox()
     errorbox.setText(text)
     errorbox.setWindowTitle(title)
@@ -709,6 +827,12 @@ def generic_errorbox(title, text, detail=""):
 
 
 def read_settings():
+    """
+    Reads the settings from the ~/.fomod/.designer file. If such a file does not exist it uses the default settings.
+    The settings are processed to be ready to be used in Python code (p.e. "option=1" translates to True).
+
+    :return: The processed settings.
+    """
     default_settings = {"General": {"code_refresh": 3,
                                     "show_intro": True,
                                     "show_advanced": False},
