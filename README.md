@@ -3,25 +3,13 @@
 
 *A visual editor to quickly create FOMOD installers for Nexus based mods.*
 
-## Overview
+## Documentation
 
-*TODO*
-
-## Installation
-
-* Download the zip file corresponding to your OS from the [latest release](https://github.com/GandaG/fomod-editor/releases/latest);
-* Extract the folder within to a location of your choice;
-* Run the "designer" executable within the folder.
-
-## Usage
-
-* Open the application;
-* Click on the **New/Open** button;
-* Select the root folder of your package (where the files you'll install are);
-* Create/modify your installer;
-* Once you're ready, click on the **Save** button to save your installer.
+You can get more information in the official documentation hosted at [Read The Docs](http://fomod-designer.readthedocs.io/en/stable/).
 
 ## Contributing
+
+You can check the Code Documentation hosted at [Read The Docs](http://fomod-designer.readthedocs.io/en/stable/api.html).
 
 This repo uses a ***.settings*** file to define all the necessary settings. This file follows this syntax:
 

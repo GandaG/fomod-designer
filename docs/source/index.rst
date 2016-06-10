@@ -7,6 +7,16 @@ FOMOD Designer
 *A visual editor to quickly create FOMOD installers for Nexus based mods.*
 
 
+Installation
+++++++++++++
+
+1. Download the zip file corresponding to your OS from the `latest release <https://github.com/GandaG/fomod-editor/releases/latest>`_;
+
+2. Extract the files within to a location of your choice;
+
+3. Run the executable.
+
+
 Basic Usage
 +++++++++++
 
@@ -46,4 +56,4 @@ Dive into the :doc:`Code Documentation <api>` to continue.
 
    Basic Usage <basic>
    Advanced Usage <advanced>
-   API Documentation <api>
+   Code Documentation <api>
