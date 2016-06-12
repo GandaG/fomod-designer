@@ -287,7 +287,7 @@ def export(info_root, config_root, package_path):
 def sort_elements(info_root, config_root):
     """
     Sorts the xml elements according to their sort_order member.
-    
+
     :param info_root: The root element of the info.xml file.
     :param config_root: The root element of the moduleconfig.xml file.
     """

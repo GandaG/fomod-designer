@@ -22,6 +22,12 @@ from pygments.lexers.html import XmlLexer
 
 
 def highlight_fragment(element):
+    """
+    Takes a xml element, writes the code, highlights it with inline css and returns the html code.
+
+    :param element: The elements to highlight. Includes the element's children.
+    :return: The highlighted element code.
+    """
     element.write_attribs()
     new_elem = XML(tostring(element))
     deannotate(new_elem, cleanup_namespaces=True)
