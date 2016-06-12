@@ -39,11 +39,11 @@ env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install miniconda3-3.19.0
 # make the virtualenv
 
 pyenv shell miniconda3-3.19.0
-conda create -y -n fomod-editor \
+conda create -y -n fomod-designer \
  -c https://conda.anaconda.org/mmcauliffe \
  -c https://conda.anaconda.org/anaconda \
  python=3.5.1 pyqt5=5.5.1 lxml=3.5.0
-pyenv shell miniconda3-3.19.0/envs/fomod-editor
+pyenv shell miniconda3-3.19.0/envs/fomod-designer
 
 
 # install the pip reqs

@@ -54,19 +54,25 @@ export PS1="\[\033[38;5;10m\]\u@ \$(parse_git_branch)\w\\$ \[$(tput sgr0)\]"
 
 python3 - <<END
 #!/usr/bin/env python
-from configparser import ConfigParser, NoSectionError
+from configparser import ConfigParser
 from os import system
+
+default_settings = {"git": {"user": "",
+                            "email": ""}}
 config = ConfigParser()
+config.read_dict(default_settings)
 config.read("/vagrant/.settings")
-try:
-    user = config.get("git", "user")
-    email = config.get("git", "email")
-    print("git user defined as " + user)
-    print("git email defined as " + email)
-    system("git config --global user.name \"{}\"".format(user))
-    system("git config --global user.email \"{}\"".format(email))
-except NoSectionError:
-    print("No .settings file - check readme for further details.")
+if config["git"]["user"]:
+    print("Git user defined as " + config["git"]["user"])
+else:
+    print("No git user defined. Please check the readme.")
+if config["git"]["email"]:
+    print("Git email defined as " + config["git"]["email"])
+else:
+    print("No git email defined. Please check the readme.")
+
+system("git config --global user.name \"{}\"".format(config["git"]["user"]))
+system("git config --global user.email \"{}\"".format(config["git"]["email"]))
 END
 git config --global core.editor nano
 git config --global push.default simple
@@ -103,11 +109,11 @@ env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install miniconda3-3.19.0
 # make the virtualenv
 
 pyenv shell miniconda3-3.19.0
-conda create -y -n fomod-editor \
+conda create -y -n fomod-designer \
  -c https://conda.anaconda.org/mmcauliffe \
  -c https://conda.anaconda.org/anaconda \
  python=3.5.1 pyqt5=5.5.1 lxml=3.5.0
-pyenv shell miniconda3-3.19.0/envs/fomod-editor
+pyenv shell miniconda3-3.19.0/envs/fomod-designer
 
 
 # move to the project folder and install the pip reqs

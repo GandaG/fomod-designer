@@ -17,25 +17,27 @@
 from os import sep
 from PyQt5.QtGui import QStandardItem
 from lxml import etree
-from .exceptions import BaseInstanceException
+from .wizards import WizardFiles
 from .props import PropertyCombo, PropertyInt, PropertyText, PropertyFile, PropertyFolder, PropertyColour
+from .exceptions import BaseInstanceException
 
 
 class _NodeBase(etree.ElementBase):
+    """
+    The base class for all nodes. Should never be instantiated directly.
+    """
     def _init(self):
         if type(self) is _NodeBase:
             raise BaseInstanceException(self)
         super()._init()
 
     def init(self, name, tag, allowed_instances, sort_order=0, allow_text=False, allowed_children=None, properties=None,
-             wizards=None):
+             wizard=None):
 
         if not properties:
             properties = {}
         if not allowed_children:
             allowed_children = ()
-        if not wizards:
-            wizards = []
 
         self.name = name
         self.tag = tag
@@ -44,13 +46,19 @@ class _NodeBase(etree.ElementBase):
         self.allowed_children = allowed_children
         self.allow_text = allow_text
         self.allowed_instances = allowed_instances
-        self.wizards = wizards
+        self.wizard = wizard
 
         self.model_item = NodeStandardItem(self)
         self.model_item.setText(self.name)
         self.model_item.setEditable(False)
 
     def can_add_child(self, child):
+        """
+        Checks if the given child can be added to this node.
+
+        :param child: The child to check.
+        :return: True if possible, False if not.
+        """
         if child.allowed_instances:
             instances = 0
             for item in self:
@@ -63,16 +71,30 @@ class _NodeBase(etree.ElementBase):
         return False
 
     def add_child(self, child):
+        """
+        Adds the given child to this node. Includes a check with can_add_child at the start.
+
+        :param child: The child to add.
+        """
         if self.can_add_child(child):
             self.append(child)
             self.model_item.appendRow(child.model_item)
+            child.write_attribs()
 
     def remove_child(self, child):
+        """
+        Removes the given child from this node.
+
+        :param child: The child to remove.
+        """
         if child in self:
             self.model_item.takeRow(child.model_item.row())
             self.remove(child)
 
     def parse_attribs(self):
+        """
+        Reads the values from the BaseElement's attrib dictionary into the node's properties.
+        """
         for key in self.properties:
             if key not in self.attrib.keys():
                 continue
@@ -80,11 +102,20 @@ class _NodeBase(etree.ElementBase):
         self.update_item_name()
 
     def write_attribs(self):
+        """
+        Writes the values from the node's properties into the BaseElement's attrib dictionary.
+        """
         self.attrib.clear()
         for key in self.properties:
             self.set(key, str(self.properties[key].value))
 
     def update_item_name(self):
+        """
+        Updates this node's item's display name.
+
+        If the node contains a property called "name" then it uses its value for the display.
+        If it contains a property called "source" then it expects a path and uses the last part of the path.
+        """
         if "name" in self.properties:
             if not self.properties["name"].value:
                 self.model_item.setText(self.name)
@@ -100,6 +131,11 @@ class _NodeBase(etree.ElementBase):
             self.model_item.setText(self.name)
 
     def set_text(self, text):
+        """
+        Method used to set the node's text, if allowed.
+
+        :param text: The text to set.
+        """
         if self.allow_text:
             self.text = text
 
@@ -112,6 +148,9 @@ class NodeStandardItem(QStandardItem):
 
 
 class NodeInfoRoot(_NodeBase):
+    """
+    A node for the tag fomod
+    """
     tag = "fomod"
 
     def _init(self):
@@ -122,6 +161,9 @@ class NodeInfoRoot(_NodeBase):
 
 
 class NodeInfoName(_NodeBase):
+    """
+    A node for the tag Name
+    """
     tag = "Name"
 
     def _init(self):
@@ -130,6 +172,9 @@ class NodeInfoName(_NodeBase):
 
 
 class NodeInfoAuthor(_NodeBase):
+    """
+    A node for the tag Author
+    """
     tag = "Author"
 
     def _init(self):
@@ -138,6 +183,9 @@ class NodeInfoAuthor(_NodeBase):
 
 
 class NodeInfoVersion(_NodeBase):
+    """
+    A node for the tag Version
+    """
     tag = "Version"
 
     def _init(self):
@@ -146,6 +194,9 @@ class NodeInfoVersion(_NodeBase):
 
 
 class NodeInfoID(_NodeBase):
+    """
+    A node for the tag Id
+    """
     tag = "Id"
 
     def _init(self):
@@ -154,6 +205,9 @@ class NodeInfoID(_NodeBase):
 
 
 class NodeInfoWebsite(_NodeBase):
+    """
+    A node for the tag Website
+    """
     tag = "Website"
 
     def _init(self):
@@ -162,6 +216,9 @@ class NodeInfoWebsite(_NodeBase):
 
 
 class NodeInfoDescription(_NodeBase):
+    """
+    A node for the tag Description
+    """
     tag = "Description"
 
     def _init(self):
@@ -170,23 +227,32 @@ class NodeInfoDescription(_NodeBase):
 
 
 class NodeInfoGroup(_NodeBase):
+    """
+    A node for the tag Groups
+    """
     tag = "Groups"
 
     def _init(self):
         allowed_child = (NodeInfoElement,)
-        self.init("Group", type(self).tag, 1, allowed_children=allowed_child)
+        self.init("Categories Group", type(self).tag, 1, allowed_children=allowed_child)
         super()._init()
 
 
 class NodeInfoElement(_NodeBase):
+    """
+    A node for the tag element
+    """
     tag = "element"
 
     def _init(self):
-        self.init("Element", type(self).tag, 0, allow_text=True)
+        self.init("Category", type(self).tag, 0, allow_text=True)
         super()._init()
 
 
 class NodeConfigRoot(_NodeBase):
+    """
+    A node for the tag config
+    """
     tag = "config"
 
     def _init(self):
@@ -199,6 +265,9 @@ class NodeConfigRoot(_NodeBase):
 
 
 class NodeConfigModName(_NodeBase):
+    """
+    A node for the tag moduleName
+    """
     tag = "moduleName"
 
     def _init(self):
@@ -209,6 +278,9 @@ class NodeConfigModName(_NodeBase):
 
 
 class NodeConfigModImage(_NodeBase):
+    """
+    A node for the tag moduleImage
+    """
     tag = "moduleImage"
 
     def _init(self):
@@ -220,6 +292,9 @@ class NodeConfigModImage(_NodeBase):
 
 
 class NodeConfigModDepend(_NodeBase):
+    """
+    A node for the tag moduleDependencies
+    """
     tag = "moduleDependencies"
 
     def _init(self):
@@ -231,15 +306,22 @@ class NodeConfigModDepend(_NodeBase):
 
 
 class NodeConfigReqFiles(_NodeBase):
+    """
+    A node for the tag requiredInstallFiles
+    """
     tag = "requiredInstallFiles"
 
     def _init(self):
         allowed_children = (NodeConfigFile, NodeConfigFolder)
-        self.init("Mod Requirements", type(self).tag, 0, allowed_children=allowed_children, sort_order=4)
+        self.init("Mod Requirements", type(self).tag, 1, allowed_children=allowed_children,
+                  sort_order=4, wizard=WizardFiles)
         super()._init()
 
 
 class NodeConfigInstallSteps(_NodeBase):
+    """
+    A node for the tag installSteps
+    """
     tag = "installSteps"
 
     def _init(self):
@@ -251,6 +333,9 @@ class NodeConfigInstallSteps(_NodeBase):
 
 
 class NodeConfigCondInstall(_NodeBase):
+    """
+    A node for the tag conditionalFileInstalls
+    """
     tag = "conditionalFileInstalls"
 
     def _init(self):
@@ -260,6 +345,9 @@ class NodeConfigCondInstall(_NodeBase):
 
 
 class NodeConfigDependFile(_NodeBase):
+    """
+    A node for the tag fileDependency
+    """
     tag = "fileDependency"
 
     def _init(self):
@@ -270,6 +358,9 @@ class NodeConfigDependFile(_NodeBase):
 
 
 class NodeConfigDependFlag(_NodeBase):
+    """
+    A node for the tag flagDependency
+    """
     tag = "flagDependency"
 
     def _init(self):
@@ -279,6 +370,9 @@ class NodeConfigDependFlag(_NodeBase):
 
 
 class NodeConfigDependGame(_NodeBase):
+    """
+    A node for the tag gameDependency
+    """
     tag = "gameDependency"
 
     def _init(self):
@@ -288,6 +382,9 @@ class NodeConfigDependGame(_NodeBase):
 
 
 class NodeConfigFile(_NodeBase):
+    """
+    A node for the tag file
+    """
     tag = "file"
 
     def _init(self):
@@ -301,6 +398,9 @@ class NodeConfigFile(_NodeBase):
 
 
 class NodeConfigFolder(_NodeBase):
+    """
+    A node for the tag folder
+    """
     tag = "folder"
 
     def _init(self):
@@ -314,6 +414,9 @@ class NodeConfigFolder(_NodeBase):
 
 
 class NodeConfigPatterns(_NodeBase):
+    """
+    A node for the tag patterns
+    """
     tag = "patterns"
 
     def _init(self):
@@ -323,6 +426,9 @@ class NodeConfigPatterns(_NodeBase):
 
 
 class NodeConfigPattern(_NodeBase):
+    """
+    A node for the tag pattern
+    """
     tag = "pattern"
 
     def _init(self):
@@ -332,15 +438,21 @@ class NodeConfigPattern(_NodeBase):
 
 
 class NodeConfigFiles(_NodeBase):
+    """
+    A node for the tag files
+    """
     tag = "files"
 
     def _init(self):
         allowed_children = (NodeConfigFile, NodeConfigFolder)
-        self.init("Files", type(self).tag, 1, allowed_children=allowed_children, sort_order=3)
+        self.init("Files", type(self).tag, 1, allowed_children=allowed_children, sort_order=3, wizard=WizardFiles)
         super()._init()
 
 
 class NodeConfigDependencies(_NodeBase):
+    """
+    A node for the tag dependencies
+    """
     tag = "dependencies"
 
     def _init(self):
@@ -353,6 +465,9 @@ class NodeConfigDependencies(_NodeBase):
 
 
 class NodeConfigNestedDependencies(_NodeBase):
+    """
+    A node for the tag dependencies (this one refers to the all the dependencies that have a dependencies as a parent).
+    """
     tag = "dependencies"
 
     def _init(self):
@@ -364,6 +479,9 @@ class NodeConfigNestedDependencies(_NodeBase):
 
 
 class NodeConfigInstallStep(_NodeBase):
+    """
+    A node for the tag installStep
+    """
     tag = "installStep"
 
     def _init(self):
@@ -374,6 +492,9 @@ class NodeConfigInstallStep(_NodeBase):
 
 
 class NodeConfigVisible(_NodeBase):
+    """
+    A node for the tag visible
+    """
     tag = "visible"
 
     def _init(self):
@@ -383,6 +504,9 @@ class NodeConfigVisible(_NodeBase):
 
 
 class NodeConfigOptGroups(_NodeBase):
+    """
+    A node for the tag optionalFileGroups
+    """
     tag = "optionalFileGroups"
 
     def _init(self):
@@ -394,6 +518,9 @@ class NodeConfigOptGroups(_NodeBase):
 
 
 class NodeConfigGroup(_NodeBase):
+    """
+    A node for the tag group
+    """
     tag = "group"
 
     def _init(self):
@@ -406,6 +533,9 @@ class NodeConfigGroup(_NodeBase):
 
 
 class NodeConfigPlugins(_NodeBase):
+    """
+    A node for the tag plugins
+    """
     tag = "plugins"
 
     def _init(self):
@@ -416,6 +546,9 @@ class NodeConfigPlugins(_NodeBase):
 
 
 class NodeConfigPlugin(_NodeBase):
+    """
+    A node for the tag plugin
+    """
     tag = "plugin"
 
     def _init(self):
@@ -427,6 +560,9 @@ class NodeConfigPlugin(_NodeBase):
 
 
 class NodeConfigPluginDescription(_NodeBase):
+    """
+    A node for the tag description
+    """
     tag = "description"
 
     def _init(self):
@@ -435,6 +571,9 @@ class NodeConfigPluginDescription(_NodeBase):
 
 
 class NodeConfigImage(_NodeBase):
+    """
+    A node for the tag image
+    """
     tag = "image"
 
     def _init(self):
@@ -444,6 +583,9 @@ class NodeConfigImage(_NodeBase):
 
 
 class NodeConfigConditionFlags(_NodeBase):
+    """
+    A node for the tag conditionFlags
+    """
     tag = "conditionFlags"
 
     def _init(self):
@@ -453,6 +595,9 @@ class NodeConfigConditionFlags(_NodeBase):
 
 
 class NodeConfigTypeDesc(_NodeBase):
+    """
+    A node for the tag typeDescriptor
+    """
     tag = "typeDescriptor"
 
     def _init(self):
@@ -468,6 +613,9 @@ class NodeConfigTypeDesc(_NodeBase):
 
 
 class NodeConfigFlag(_NodeBase):
+    """
+    A node for the tag flag
+    """
     tag = "flag"
 
     def _init(self):
@@ -477,6 +625,9 @@ class NodeConfigFlag(_NodeBase):
 
 
 class NodeConfigDependencyType(_NodeBase):
+    """
+    A node for the tag dependencyType
+    """
     tag = "dependencyType"
 
     def _init(self):
@@ -486,6 +637,9 @@ class NodeConfigDependencyType(_NodeBase):
 
 
 class NodeConfigDefaultType(_NodeBase):
+    """
+    A node for the tag defaultType
+    """
     tag = "defaultType"
 
     def _init(self):
@@ -496,6 +650,9 @@ class NodeConfigDefaultType(_NodeBase):
 
 
 class NodeConfigType(_NodeBase):
+    """
+    A node for the tag type
+    """
     tag = "type"
 
     def _init(self):
@@ -506,6 +663,9 @@ class NodeConfigType(_NodeBase):
 
 
 class NodeConfigInstallPatterns(_NodeBase):
+    """
+    A node for the tag patterns
+    """
     tag = "patterns"
 
     def _init(self):
@@ -515,6 +675,9 @@ class NodeConfigInstallPatterns(_NodeBase):
 
 
 class NodeConfigInstallPattern(_NodeBase):
+    """
+    A node for the tag pattern
+    """
     tag = "pattern"
 
     def _init(self):

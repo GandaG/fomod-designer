@@ -17,17 +17,19 @@
 from os import listdir, makedirs
 from os.path import join
 from lxml.etree import (PythonElementClassLookup, XMLParser, tostring, fromstring,
-                        Element, SubElement, parse, ParseError, ElementTree, XML)
-from lxml.objectify import deannotate
-from pygments import highlight
-from pygments.formatters.html import HtmlFormatter
-from pygments.lexers.html import XmlLexer
-from . import nodes
+                        Element, SubElement, parse, ParseError, ElementTree)
 from .exceptions import MissingFileError, ParserError, TagNotFound
+
+module_parser = XMLParser(remove_comments=True, remove_pis=True, remove_blank_text=True)
 
 
 class _NodeLookup(PythonElementClassLookup):
+    """
+    Class that handles the custom lookup for the element factories.
+    """
     def lookup(self, doc, element):
+        from . import nodes
+
         if element.tag == "fomod":
             return nodes.NodeInfoRoot
         elif element.tag == "Name":
@@ -121,11 +123,17 @@ class _NodeLookup(PythonElementClassLookup):
             raise TagNotFound(element)
 
 
-module_parser = XMLParser(remove_comments=True, remove_pis=True, remove_blank_text=True)
 module_parser.set_element_class_lookup(_NodeLookup())
 
 
 def _check_file(base_path, file_):
+    """
+    Function used to search case-insensitively for a file/folder is a given path.
+
+    :param base_path: The path to search for the file/folder in.
+    :param file_: The file/folder to search for.
+    :return: The file if found, raises an exception if not.
+    """
     base_file = file_
     try:
         for item in listdir(base_path):
@@ -137,6 +145,12 @@ def _check_file(base_path, file_):
 
 
 def _validate_child(child):
+    """
+    Function used during installer import to check if each element's children is valid.
+
+    :param child: The child to check.
+    :return: True if valid, False if not.
+    """
     if type(child) in child.getparent().allowed_children:
         if child.allowed_instances:
             instances = 0
@@ -151,6 +165,17 @@ def _validate_child(child):
 
 
 def elem_factory(tag, parent):
+    """
+    Function meant as a replacement for the default element factory.
+
+    Creates a tree up to the root, re-parses that tree and returns an element corresponding to the tag given.
+    This is necessary due to the way the _NodeLookup class works when checking for tags
+    (it requires parents and grandparents).
+
+    :param tag: The tag to create an element from.
+    :param parent: The parent of the future element.
+    :return: The created element with the tag *tag*.
+    """
     list_ = [parent]
     for elem in parent.iterancestors():
         list_.append(elem)
@@ -169,6 +194,14 @@ def elem_factory(tag, parent):
 
 
 def import_(package_path):
+    """
+    Function used to import an existing installer from *package_path*.
+
+    Raises ``ParserError`` if the lxml parser could not read a file.
+
+    :param package_path: The package where the installer is.
+    :return: The root elements of each installer file. A tuple of None, None if any file is missing.
+    """
     try:
         fomod_folder = _check_file(package_path, "fomod")
         fomod_folder_path = join(package_path, fomod_folder)
@@ -191,6 +224,8 @@ def import_(package_path):
                     if not _validate_child(elem):
                         element.remove_child(elem)
 
+                element.write_attribs()
+
     except ParseError as e:
         raise ParserError(str(e))
     except MissingFileError:
@@ -200,6 +235,11 @@ def import_(package_path):
 
 
 def new():
+    """
+    Creates and returns new root nodes for each element.
+    """
+    from . import nodes
+
     info_root = module_parser.makeelement(nodes.NodeInfoRoot.tag)
     config_root = module_parser.makeelement(nodes.NodeConfigRoot.tag)
 
@@ -207,6 +247,13 @@ def new():
 
 
 def export(info_root, config_root, package_path):
+    """
+    Exports the root elements and saves them to installer files.
+
+    :param info_root: The root element of the info.xml file.
+    :param config_root: The root element of the moduleconfig.xml file.
+    :param package_path: The path to save the files to.
+    """
     try:
         fomod_folder = _check_file(package_path, "fomod")
     except MissingFileError as e:
@@ -237,15 +284,13 @@ def export(info_root, config_root, package_path):
         config_tree.write(configfile, pretty_print=True)
 
 
-def highlight_fragment(element):
-    element.write_attribs()
-    new_elem = XML(tostring(element))
-    deannotate(new_elem, cleanup_namespaces=True)
-    code = tostring(new_elem, encoding="Unicode", pretty_print=True, xml_declaration=False)
-    return highlight(code, XmlLexer(), HtmlFormatter(noclasses=True, style="autumn"))
-
-
 def sort_elements(info_root, config_root):
+    """
+    Sorts the xml elements according to their sort_order member.
+
+    :param info_root: The root element of the info.xml file.
+    :param config_root: The root element of the moduleconfig.xml file.
+    """
     for root in (info_root, config_root):
         for parent in root.xpath('//*[./*]'):
             parent[:] = sorted(parent, key=lambda x: x.sort_order)

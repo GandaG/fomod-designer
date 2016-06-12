@@ -17,15 +17,14 @@
 import sys
 from PyQt5 import QtWidgets
 from .exceptions import excepthook
-from .gui import MainFrame
+from .gui import IntroWindow
 
 
 def main():
     sys.excepthook = excepthook
 
     app = QtWidgets.QApplication(sys.argv)
-    window = MainFrame()
-    window.show()
+    IntroWindow()
     sys.exit(app.exec_())
 
 

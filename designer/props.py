@@ -18,7 +18,15 @@ from .exceptions import BaseInstanceException
 
 
 class _PropertyBase(object):
+    """
+    Base class for the properties. Shouldn't be used directly.
+    """
     def __init__(self, name, values, editable=True):
+        """
+        :param name: The display name of the variable.
+        :param values: The acceptable values tuple.
+        :param editable: If the property is editable. If not, it will not be displayed.
+        """
         if type(self) is _PropertyBase:
             raise BaseInstanceException(self)
 
@@ -29,17 +37,28 @@ class _PropertyBase(object):
         self.values = values
 
     def set_value(self, value):
+        """
+        Method used to set the property's value. Sub-classes should validate the value before setting it.
+
+        :param value: The value to be validated and set.
+        """
         if self.editable:
             self.value = value
 
 
 class PropertyText(_PropertyBase):
+    """
+    A property that holds simple text.
+    """
     def __init__(self, name, text="", editable=True):
         super().__init__(name, (), editable)
         self.value = text
 
 
 class PropertyCombo(_PropertyBase):
+    """
+    A property that holds a combo list - only one value from this list should be selected.
+    """
     def __init__(self, name, values, editable=True):
         super().__init__(name, values, editable)
         self.value = values[0]
@@ -50,7 +69,17 @@ class PropertyCombo(_PropertyBase):
 
 
 class PropertyInt(_PropertyBase):
+    """
+    A property that holds an integer.
+    """
     def __init__(self, name, min_value, max_value, default, editable=True):
+        """
+        :param name: The display name of the variable.
+        :param min_value: The minimum integer value.
+        :param max_value: The maximum integer value.
+        :param default: The default value for the property.
+        :param editable: If the property is editable. If not, it will not be displayed.
+        """
         self.min = min_value
         self.max = max_value
         values = range(min_value, max_value + 1)
@@ -64,18 +93,27 @@ class PropertyInt(_PropertyBase):
 
 
 class PropertyFolder(_PropertyBase):
+    """
+    A property that holds the path to a folder.
+    """
     def __init__(self, name, text="", editable=True):
         super().__init__(name, (), editable)
         self.value = text
 
 
 class PropertyFile(_PropertyBase):
+    """
+    A property that holds the path to a file.
+    """
     def __init__(self, name, text="", editable=True):
         super().__init__(name, (), editable)
         self.value = text
 
 
 class PropertyColour(_PropertyBase):
+    """
+    A property that holds a colour hex value.
+    """
     def __init__(self, name, text="", editable=True):
         super().__init__(name, (), editable)
         self.value = text

@@ -16,7 +16,10 @@
 
 from traceback import print_tb
 from io import StringIO
-from . import __version__
+from os.path import join
+from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtGui import QPixmap
+from . import __version__, cur_folder
 
 
 def excepthook(exc_type, exc_value, tracebackobj):
@@ -26,11 +29,10 @@ def excepthook(exc_type, exc_value, tracebackobj):
     :param exc_value: exception value
     :param tracebackobj: traceback object
     """
-    from .gui import generic_errorbox
 
     notice = (
         "An unhandled exception occurred. Please report the problem"
-        " at <a href = https://github.com/GandaG/fomod-editor/issues>Github</a>,"
+        " at <a href = https://github.com/GandaG/fomod-designer/issues>Github</a>,"
         " <a href = http://www.nexusmods.com/skyrim/?>Nexus</a> or"
         " <a href = http://forum.step-project.com/index.php>STEP</a>.")
     version_info = __version__
@@ -41,25 +43,42 @@ def excepthook(exc_type, exc_value, tracebackobj):
     errmsg = 'Error information:\n\nVersion: {}\n{}: {}\n'.format(version_info, str(exc_type), str(exc_value))
     sections = [errmsg, tbinfo]
     msg = '\n'.join(sections)
-    generic_errorbox("Nobody Panic!", notice, msg)
+
+    errorbox = QMessageBox()
+    errorbox.setText(notice)
+    errorbox.setWindowTitle("Nobody Panic!")
+    errorbox.setDetailedText(msg)
+    errorbox.setIconPixmap(QPixmap(join(cur_folder, "resources/logos/logo_admin.png")))
+    errorbox.exec_()
 
 
-class GenericError(Exception):
+class DesignerError(Exception):
+    """
+    Base class for all exceptions.
+    """
     def __init__(self):
         self.title = "Generic Error"
         self.detailed = ""
         Exception.__init__(self, "Something happened...")
 
 
-class MissingFileError(GenericError):
-    def __init__(self, file):
+class MissingFileError(DesignerError):
+    """
+    Exception raised when the export/import functions could not find a file/folder.
+    """
+    def __init__(self, fname):
         self.title = "I/O Error"
-        self.message = "{} is missing.".format(file.capitalize())
-        self.file = file
+        self.message = "{} is missing.".format(fname.capitalize())
+        self.file = fname
         Exception.__init__(self, self.message)
 
 
-class ParserError(GenericError):
+class ParserError(DesignerError):
+    """
+    Exception raised when the parser was unable to properly parse the file.
+
+    It tries to locate the line where the error occurred if lxml provides it.
+    """
     def __init__(self, msg):
         self.title = "Parser Error"
         if len(msg.split(",")) <= 2:
@@ -72,7 +91,10 @@ class ParserError(GenericError):
         Exception.__init__(self, self.msg)
 
 
-class TagNotFound(GenericError):
+class TagNotFound(DesignerError):
+    """
+    Exception raised when the element factory did not match the element tag.
+    """
     def __init__(self, element):
         self.title = "Tag Lookup Error"
         self.message = "Tag {} at line {} could not be matched.".format(element.tag, element.sourceline)
@@ -80,7 +102,10 @@ class TagNotFound(GenericError):
 
 
 class BaseInstanceException(Exception):
-    def __init__(self, base):
+    """
+    Exception raised when trying to instanced base classes (not meant to be used).
+    """
+    def __init__(self, base_instance):
         self.title = "Instance Error"
-        self.message = "{} is not meant to be instanced. A subclass should be used instead.".format(type(base))
+        self.message = "{} is not meant to be instanced. A subclass should be used instead.".format(type(base_instance))
         Exception.__init__(self, self.message)

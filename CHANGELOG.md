@@ -1,8 +1,24 @@
 # Changelog
 
-0.4.0 (2016-05-14)
+0.5.0 (2016-06-12)
 
-* Urgent bugfix:Fixed wrong default attributes in file and folder tags.
+* Added intro window.
+* Added Files wizard.
+* Added wizard environment setup.
+* Updated app and file icons.
+* The object box now consists of independent buttons for each child instead of a list.
+* A message box asking for confirmation should now appear when trying to open a new installer while there unsaved changes.
+* Property editor should now be properly cleared when opening a new installer.
+* A message box asking for action should now appear when using the recent files menu and the path no longer exists.
+* Fixed relation between view menu and docked widget states.
+* Dialog windows should now properly be placed on top of other windows.
+* Improved some nodes' names.
+
+----------------------------------
+
+0.4.1 (2016-05-16)
+
+* Fixed wrong default attributes in file and folder tags.
 * Added wizard framework.
 
 ----------------------------------

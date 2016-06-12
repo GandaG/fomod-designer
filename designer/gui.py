@@ -15,71 +15,99 @@
 # limitations under the License.
 
 from os import makedirs
-from os.path import expanduser, normpath, basename, join, relpath
+from os.path import expanduser, normpath, basename, join, relpath, isdir
 from datetime import datetime
 from configparser import ConfigParser
 from PyQt5.uic import loadUiType
-from PyQt5.QtWidgets import (QShortcut, QFileDialog, QColorDialog, QMessageBox, QLabel, QHBoxLayout,
-                             QFormLayout, QLineEdit, QSpinBox, QComboBox, QWidget, QPushButton)
-from PyQt5.QtGui import QIcon, QPixmap, QStandardItemModel, QColor
-from PyQt5.QtCore import Qt
-from validator import validate_tree, check_warnings, ValidatorError, ValidationError, WarningError
+from PyQt5.QtWidgets import (QShortcut, QFileDialog, QColorDialog, QMessageBox, QLabel, QHBoxLayout, QCommandLinkButton,
+                             QFormLayout, QLineEdit, QSpinBox, QComboBox, QWidget, QPushButton, QFrame, QSizePolicy)
+from PyQt5.QtGui import QIcon, QPixmap, QStandardItemModel, QColor, QFont
+from PyQt5.QtCore import Qt, pyqtSignal
+from validator import validate_tree, check_warnings, ValidatorError
 from . import cur_folder, __version__
-from .io import import_, new, export, sort_elements, elem_factory, highlight_fragment
+from .io import import_, new, export, sort_elements, elem_factory
+from .previews import highlight_fragment
 from .props import PropertyFile, PropertyColour, PropertyFolder, PropertyCombo, PropertyInt, PropertyText
-from .exceptions import GenericError
+from .exceptions import DesignerError
 
 
+intro_ui = loadUiType(join(cur_folder, "resources/templates/intro.ui"))
 base_ui = loadUiType(join(cur_folder, "resources/templates/mainframe.ui"))
 settings_ui = loadUiType(join(cur_folder, "resources/templates/settings.ui"))
 about_ui = loadUiType(join(cur_folder, "resources/templates/about.ui"))
 
 
+class IntroWindow(intro_ui[0], intro_ui[1]):
+    """
+    The class for the intro window. Subclassed from QDialog and created in Qt Designer.
+    """
+    def __init__(self):
+        super().__init__()
+        self.setupUi(self)
+        self.setWindowIcon(QIcon(join(cur_folder, "resources/window_icon.svg")))
+        self.setWindowTitle("FOMOD Designer")
+        self.version.setText("Version " + __version__)
+
+        settings = read_settings()
+        for key in sorted(settings["Recent Files"]):
+            if settings["Recent Files"][key]:
+                butto = QCommandLinkButton(basename(settings["Recent Files"][key]), settings["Recent Files"][key], self)
+                butto.clicked.connect(lambda _, path=settings["Recent Files"][key]: self.open_path(path))
+                self.scroll_layout.addWidget(butto)
+
+        if not settings["General"]["show_intro"]:
+            main_window = MainFrame()
+            main_window.move(self.pos())
+            main_window.show()
+            self.close()
+        else:
+            self.show()
+
+        self.new_button.clicked.connect(lambda: self.open_path(""))
+        self.button_about.clicked.connect(lambda _, self_=self: MainFrame.about(self_))
+
+    def open_path(self, path):
+        """
+        Method used to open a path in the main window - closes the intro window and show the main.
+
+        :param path: The path to open.
+        """
+        config = ConfigParser()
+        config.read_dict(read_settings())
+        config["General"]["show_intro"] = str(not self.check_intro.isChecked()).lower()
+        config["General"]["show_advanced"] = str(self.check_advanced.isChecked()).lower()
+        makedirs(join(expanduser("~"), ".fomod"), exist_ok=True)
+        with open(join(expanduser("~"), ".fomod", ".designer"), "w") as configfile:
+            config.write(configfile)
+
+        main_window = MainFrame()
+        main_window.move(self.pos())
+        main_window.open(path)
+        main_window.show()
+        self.close()
+
+
 class MainFrame(base_ui[0], base_ui[1]):
+    """
+    The class for the main window. Subclassed from QMainWindow and created in Qt Designer.
+    """
+
+    # The signal to update the previews.
+    xml_code_changed = pyqtSignal([object])
+
     def __init__(self):
         super().__init__()
         self.setupUi(self)
 
         # setup the icons properly
-        window_icon = QIcon()
-        window_icon.addPixmap(QPixmap(join(cur_folder, "resources/window_icon.jpg")),
-                              QIcon.Normal, QIcon.Off)
-        self.setWindowIcon(window_icon)
-
-        icon_open = QIcon()
-        icon_open.addPixmap(QPixmap(join(cur_folder, "resources/logos/logo_open_file.png")),
-                            QIcon.Normal, QIcon.Off)
-        self.action_Open.setIcon(icon_open)
-
-        icon_save = QIcon()
-        icon_save.addPixmap(QPixmap(join(cur_folder, "resources/logos/logo_floppy_disk.png")),
-                            QIcon.Normal, QIcon.Off)
-        self.action_Save.setIcon(icon_save)
-
-        icon_options = QIcon()
-        icon_options.addPixmap(QPixmap(join(cur_folder, "resources/logos/logo_gear.png")),
-                               QIcon.Normal, QIcon.Off)
-        self.actionO_ptions.setIcon(icon_options)
-
-        icon_refresh = QIcon()
-        icon_refresh.addPixmap(QPixmap(join(cur_folder, "resources/logos/logo_refresh.png")),
-                               QIcon.Normal, QIcon.Off)
-        self.action_Refresh.setIcon(icon_refresh)
-
-        icon_delete = QIcon()
-        icon_delete.addPixmap(QPixmap(join(cur_folder, "resources/logos/logo_cross.png")),
-                              QIcon.Normal, QIcon.Off)
-        self.action_Delete.setIcon(icon_delete)
-
-        icon_about = QIcon()
-        icon_about.addPixmap(QPixmap(join(cur_folder, "resources/logos/logo_notepad.png")),
-                             QIcon.Normal, QIcon.Off)
-        self.action_About.setIcon(icon_about)
-
-        icon_help = QIcon()
-        icon_help.addPixmap(QPixmap(join(cur_folder, "resources/logos/logo_info.png")),
-                            QIcon.Normal, QIcon.Off)
-        self.actionHe_lp.setIcon(icon_help)
+        self.setWindowIcon(QIcon(join(cur_folder, "resources/window_icon.svg")))
+        self.action_Open.setIcon(QIcon(join(cur_folder, "resources/logos/logo_open_file.png")))
+        self.action_Save.setIcon(QIcon(join(cur_folder, "resources/logos/logo_floppy_disk.png")))
+        self.actionO_ptions.setIcon(QIcon(join(cur_folder, "resources/logos/logo_gear.png")))
+        self.action_Refresh.setIcon(QIcon(join(cur_folder, "resources/logos/logo_refresh.png")))
+        self.action_Delete.setIcon(QIcon(join(cur_folder, "resources/logos/logo_cross.png")))
+        self.action_About.setIcon(QIcon(join(cur_folder, "resources/logos/logo_notepad.png")))
+        self.actionHe_lp.setIcon(QIcon(join(cur_folder, "resources/logos/logo_info.png")))
 
         # setup any additional info left from designer
         self.delete_sec_shortcut = QShortcut(self)
@@ -90,17 +118,22 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.actionO_ptions.triggered.connect(self.options)
         self.action_Refresh.triggered.connect(self.refresh)
         self.action_Delete.triggered.connect(self.delete)
-        # noinspection PyUnresolvedReferences
         self.delete_sec_shortcut.activated.connect(self.delete)
         self.actionHe_lp.triggered.connect(self.help)
-        self.action_About.triggered.connect(self.about)
+        self.action_About.triggered.connect(lambda _, self_=self: self.about(self_))
         self.actionClear.triggered.connect(self.clear_recent_files)
-        self.action_Object_Tree.toggled.connect(self.toggle_tree)
-        self.actionObject_Box.toggled.connect(self.toggle_list)
-        self.action_Property_Editor.toggled.connect(self.toggle_editor)
+        self.action_Object_Tree.toggled.connect(self.object_tree.setVisible)
+        self.actionObject_Box.toggled.connect(self.object_box.setVisible)
+        self.action_Property_Editor.toggled.connect(self.property_editor.setVisible)
+
+        self.object_tree.visibilityChanged.connect(self.action_Object_Tree.setChecked)
+        self.object_box.visibilityChanged.connect(self.actionObject_Box.setChecked)
+        self.property_editor.visibilityChanged.connect(self.action_Property_Editor.setChecked)
 
         self.object_tree_view.clicked.connect(self.selected_object_tree)
-        self.object_box_list.activated.connect(self.selected_object_list)
+
+        self.wizard_button.clicked.connect(self.run_wizard)
+        self.xml_code_changed.connect(self.update_gen_code)
 
         self.fomod_changed = False
         self.original_title = self.windowTitle()
@@ -111,20 +144,33 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.config_root = None
         self.current_object = None
         self.current_prop_list = []
-        self.current_children_list = []
         self.tree_model = QStandardItemModel()
-        self.list_model = QStandardItemModel()
 
         self.wizard_button.hide()
 
         self.object_tree_view.setModel(self.tree_model)
         self.object_tree_view.header().hide()
-        self.object_box_list.setModel(self.list_model)
 
         self.update_recent_files()
 
     def open(self, path=""):
+        """
+        Open a new installer if one exists at path (if no path is given a dialog pops up asking the user to choose one)
+        or create a new one.
+
+        If enabled in the Settings the installer is also validated and checked for common errors.
+
+        :param path: Optional. The path to open/create an installer at.
+        """
         try:
+            answer = self.check_fomod_state()
+            if answer == QMessageBox.Save:
+                self.save()
+            elif answer == QMessageBox.Cancel:
+                return
+            else:
+                pass
+
             if not path:
                 open_dialog = QFileDialog()
                 package_path = open_dialog.getExistingDirectory(self, "Select package root directory:", expanduser("~"))
@@ -134,20 +180,11 @@ class MainFrame(base_ui[0], base_ui[1]):
             if package_path:
                 info_root, config_root = import_(normpath(package_path))
                 if info_root is not None and config_root is not None:
-                    try:
-                        if self.settings_dict["Load"]["validate"]:
-                            validate_tree(config_root, join(cur_folder, "resources", "mod_schema.xsd"))
-                    except ValidationError as e:
-                        generic_errorbox(e.title, str(e))
-                        if not self.settings_dict["Load"]["validate_ignore"]:
-                            return
-                    try:
-                        if self.settings_dict["Load"]["warnings"]:
-                            check_warnings(package_path, config_root)
-                    except WarningError as e:
-                        generic_errorbox(e.title, str(e))
-                        if not self.settings_dict["Load"]["warn_ignore"]:
-                            return
+                    if self.settings_dict["Load"]["validate"]:
+                        validate_tree(config_root, join(cur_folder, "resources", "mod_schema.xsd"),
+                                      self.settings_dict["Load"]["validate_ignore"])
+                    if self.settings_dict["Load"]["warnings"]:
+                        check_warnings(package_path, config_root, self.settings_dict["Save"]["warn_ignore"])
                 else:
                     info_root, config_root = new()
 
@@ -162,31 +199,29 @@ class MainFrame(base_ui[0], base_ui[1]):
                 self.package_name = basename(normpath(self.package_path))
                 self.fomod_modified(False)
                 self.current_object = None
+                self.xml_code_changed.emit(self.current_object)
                 self.update_recent_files(self.package_path)
-        except (GenericError, ValidatorError) as p:
+                self.clear_prop_list()
+        except (DesignerError, ValidatorError) as p:
             generic_errorbox(p.title, str(p), p.detailed)
             return
 
     def save(self):
+        """
+        Saves the current installer at the current path.
+
+        If enabled in the Settings the installer is also validated and checked for common errors.
+        """
         try:
-            if not self.info_root and not self.config_root:
+            if self.info_root is not None and self.config_root is not None:
                 return
             elif self.fomod_changed:
                 sort_elements(self.info_root, self.config_root)
-                try:
-                    if self.settings_dict["Save"]["validate"]:
-                        validate_tree(self.config_root, join(cur_folder, "resources", "mod_schema.xsd"))
-                except ValidationError as e:
-                    generic_errorbox(e.title, str(e))
-                    if not self.settings_dict["Save"]["validate_ignore"]:
-                        return
-                try:
-                    if self.settings_dict["Save"]["warnings"]:
-                        check_warnings(self.package_path, self.config_root)
-                except WarningError as e:
-                    generic_errorbox(e.title, str(e))
-                    if not self.settings_dict["Save"]["warn_ignore"]:
-                        return
+                if self.settings_dict["Save"]["validate"]:
+                    validate_tree(self.config_root, join(cur_folder, "resources", "mod_schema.xsd"),
+                                  self.settings_dict["Save"]["validate_ignore"])
+                if self.settings_dict["Save"]["warnings"]:
+                    check_warnings(self.package_path, self.config_root, self.settings_dict["Save"]["warn_ignore"])
                 export(self.info_root, self.config_root, self.package_path)
                 self.fomod_modified(False)
         except ValidatorError as e:
@@ -194,15 +229,24 @@ class MainFrame(base_ui[0], base_ui[1]):
             return
 
     def options(self):
-        config = SettingsDialog()
+        """
+        Opens the Settings dialog.
+        """
+        config = SettingsDialog(self)
         config.exec_()
         self.settings_dict = read_settings()
 
     def refresh(self):
+        """
+        Refreshes all the previews if the refresh rate in Settings is high enough.
+        """
         if self.settings_dict["General"]["code_refresh"] >= 1:
-            self.update_gen_code()
+            self.xml_code_changed.emit(self.current_object)
 
     def delete(self):
+        """
+        Deletes the current node in the tree. No effect when using the Basic View.
+        """
         try:
             if self.current_object is not None:
                 object_to_delete = self.current_object
@@ -213,33 +257,24 @@ class MainFrame(base_ui[0], base_ui[1]):
         except AttributeError:
             generic_errorbox("You can't do that...", "You can't delete root objects!")
 
-    def help(self):
+    @staticmethod
+    def help():
         not_implemented()
 
-    def about(self):
-        # noinspection PyTypeChecker
-        about_dialog = About(self)
+    @staticmethod
+    def about(parent):
+        """
+        Opens the About dialog. This method is static to be able to be called from the Intro window.
+
+        :param parent: The parent of the dialog.
+        """
+        about_dialog = About(parent)
         about_dialog.exec_()
 
-    def toggle_tree(self, visible):
-        if visible:
-            self.object_tree.show()
-        else:
-            self.object_tree.hide()
-
-    def toggle_list(self, visible):
-        if visible:
-            self.object_box.show()
-        else:
-            self.object_box.hide()
-
-    def toggle_editor(self, visible):
-        if visible:
-            self.property_editor.show()
-        else:
-            self.property_editor.hide()
-
     def clear_recent_files(self):
+        """
+        Clears the Recent Files gui menu and settings.
+        """
         config = ConfigParser()
         config.read_dict(read_settings())
         for key in config["Recent Files"]:
@@ -254,18 +289,53 @@ class MainFrame(base_ui[0], base_ui[1]):
                 del child
 
     def update_recent_files(self, add_new=None):
-        def open_path(instance, package):
-            def open_():
-                instance.open(package)
-            return open_
+        """
+        Updates the Recent Files gui menu and settings. If called when opening an installer, pass that installer as
+        add_new so it can be added to list or placed at the top.
+
+        :param add_new: If a new installer is being opened, add it to the list or move it to the top.
+        """
+        def invalid_path(path_):
+            """
+            Called when a Recent Files path in invalid. Requests user decision on wether to delete the item or to leave
+            it.
+
+            :param path_: The invalid path.
+            """
+            msg_box = QMessageBox()
+            msg_box.setWindowTitle("This path no longer exists.")
+            msg_box.setText("Remove it from the Recent Files list?")
+            msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+            msg_box.setDefaultButton(QMessageBox.Yes)
+            answer = msg_box.exec_()
+            config_ = ConfigParser()
+            config_.read_dict(read_settings())
+            if answer == QMessageBox.Yes:
+                for key in config_["Recent Files"]:
+                    if config_["Recent Files"][key] == path_:
+                        config_["Recent Files"][key] = ""
+                        with open(join(expanduser("~"), ".fomod", ".designer"), "w") as configfile_:
+                            config_.write(configfile_)
+                        self.update_recent_files()
+            elif answer == QMessageBox.No:
+                pass
 
         file_list = []
         settings = read_settings()
-        for index in range(1, 5):
+
+        # Populate the file_list with the existing recent files
+        for index in range(1, len(settings["Recent Files"])):
             if settings["Recent Files"]["file" + str(index)]:
                 file_list.append(settings["Recent Files"]["file" + str(index)])
+
+        # remove all duplicates there was an issue with duplicate after invalid path
+        seen = set()
+        seen_add = seen.add
+        file_list = [x for x in file_list if not (x in seen or seen_add(x))]
+
         self.clear_recent_files()
 
+        # check if the path is new or if it already exists - delete the last one or reorder respectively
         if add_new:
             if add_new in file_list:
                 file_list.remove(add_new)
@@ -273,6 +343,7 @@ class MainFrame(base_ui[0], base_ui[1]):
                 file_list.pop()
             file_list.insert(0, add_new)
 
+        # write the new list to the settings file
         config = ConfigParser()
         config.read_dict(settings)
         for path in file_list:
@@ -281,39 +352,97 @@ class MainFrame(base_ui[0], base_ui[1]):
         with open(join(expanduser("~"), ".fomod", ".designer"), "w") as configfile:
             config.write(configfile)
 
+        # populate the gui menu with the new files list
         self.menu_Recent_Files.removeAction(self.actionClear)
         for path in file_list:
             action = self.menu_Recent_Files.addAction(path)
-            action.triggered.connect(open_path(self, path))
+            action.triggered.connect(lambda x, path_=path: self.open(path_) if isdir(path_) else invalid_path(path_))
         self.menu_Recent_Files.addSeparator()
         self.menu_Recent_Files.addAction(self.actionClear)
 
     def selected_object_tree(self, index):
+        """
+        Called when the user selects a node in the Object Tree.
+
+        Updates the current object, emits the preview update signal if Settings allows it,
+        updates the possible children list, the properties list and wizard buttons.
+
+        :param index: The selected node's index.
+        """
         self.current_object = self.tree_model.itemFromIndex(index).xml_node
+        self.object_tree_view.setCurrentIndex(index)
         if self.settings_dict["General"]["code_refresh"] >= 2:
-            self.update_gen_code()
+            self.xml_code_changed.emit(self.current_object)
 
         self.update_box_list()
         self.update_props_list()
-        self.update_wizards()
+        self.update_wizard_button()
 
     def update_box_list(self):
-        self.list_model.clear()
-        self.current_children_list.clear()
+        """
+        Updates the possible children to add in Object Box.
+        """
+        for index in reversed(range(self.layout_box.count())):
+            widget = self.layout_box.takeAt(index).widget()
+            if widget is not None:
+                widget.deleteLater()
 
         for child in self.current_object.allowed_children:
             new_object = child()
             if self.current_object.can_add_child(new_object):
-                self.list_model.appendRow(new_object.model_item)
-                self.current_children_list.append(new_object)
+                child_button = QPushButton(new_object.name)
+                child_button.setFlat(True)
+                font_button = QFont()
+                font_button.setPointSize(8)
+                child_button.setFont(font_button)
+                child_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+                child_button.clicked.connect(lambda _, tag_=new_object.tag: self.selected_object_list(tag_))
+                self.layout_box.addWidget(child_button)
+                if self.current_object.allowed_children.index(child) != len(self.current_object.allowed_children) - 1:
+                    line = QFrame()
+                    line.setFrameShape(4)
+                    self.layout_box.addWidget(line)
 
-    # noinspection PyUnresolvedReferences
-    def update_props_list(self):
+    def selected_object_list(self, tag):
+        """
+        Called when the user selects a possible child in the Object Box.
+
+        Adds the child corresponding to the tag and updates the possible children list.
+
+        :param tag: The tag of the child to add.
+        """
+        new_child = elem_factory(tag, self.current_object)
+        self.current_object.add_child(new_child)
+
+        # expand the parent
+        current_index = self.tree_model.indexFromItem(self.current_object.model_item)
+        self.object_tree_view.expand(current_index)
+
+        # select the new item
+        self.object_tree_view.setCurrentIndex(self.tree_model.indexFromItem(new_child.model_item))
+        self.selected_object_tree(self.tree_model.indexFromItem(new_child.model_item))
+
+        # reload the object box
+        self.update_box_list()
+
+        # set the installer as changed
+        self.fomod_modified(True)
+
+    def clear_prop_list(self):
+        """
+        Deletes all the properties from the Property Editor
+        """
         self.current_prop_list.clear()
         for index in reversed(range(self.formLayout.count())):
             widget = self.formLayout.takeAt(index).widget()
             if widget is not None:
                 widget.deleteLater()
+
+    def update_props_list(self):
+        """
+        Updates the Property Editor's prop list. Deletes everything and then creates the list from the node's properties.
+        """
+        self.clear_prop_list()
 
         prop_index = 0
         prop_list = self.current_prop_list
@@ -330,6 +459,9 @@ class MainFrame(base_ui[0], base_ui[1]):
             prop_list[prop_index].textEdited[str].connect(self.current_object.set_text)
             prop_list[prop_index].textEdited[str].connect(self.current_object.write_attribs)
             prop_list[prop_index].textEdited[str].connect(self.fomod_modified)
+            prop_list[prop_index].textEdited[str].connect(lambda: self.xml_code_changed.emit(self.current_object)
+                                                          if self.settings_dict["General"]["code_refresh"] >= 3
+                                                          else None)
             self.formLayout.setWidget(prop_index, QFormLayout.FieldRole,
                                       prop_list[prop_index])
 
@@ -351,6 +483,9 @@ class MainFrame(base_ui[0], base_ui[1]):
                 prop_list[prop_index].textEdited[str].connect(self.current_object.write_attribs)
                 prop_list[prop_index].textEdited[str].connect(self.current_object.update_item_name)
                 prop_list[prop_index].textEdited[str].connect(self.fomod_modified)
+                prop_list[prop_index].textEdited[str].connect(lambda: self.xml_code_changed.emit(self.current_object)
+                                                              if self.settings_dict["General"]["code_refresh"] >= 3
+                                                              else None)
 
             elif isinstance(props[key], PropertyInt):
                 prop_list.append(QSpinBox(self.dockWidgetContents))
@@ -360,6 +495,9 @@ class MainFrame(base_ui[0], base_ui[1]):
                 prop_list[prop_index].valueChanged.connect(props[key].set_value)
                 prop_list[prop_index].valueChanged.connect(self.current_object.write_attribs)
                 prop_list[prop_index].valueChanged.connect(self.fomod_modified)
+                prop_list[prop_index].valueChanged.connect(lambda: self.xml_code_changed.emit(self.current_object)
+                                                           if self.settings_dict["General"]["code_refresh"] >= 3
+                                                           else None)
 
             elif isinstance(props[key], PropertyCombo):
                 prop_list.append(QComboBox(self.dockWidgetContents))
@@ -369,6 +507,9 @@ class MainFrame(base_ui[0], base_ui[1]):
                 prop_list[prop_index].activated[str].connect(self.current_object.write_attribs)
                 prop_list[prop_index].activated[str].connect(self.current_object.update_item_name)
                 prop_list[prop_index].activated[str].connect(self.fomod_modified)
+                prop_list[prop_index].activated[str].connect(lambda: self.xml_code_changed.emit(self.current_object)
+                                                             if self.settings_dict["General"]["code_refresh"] >= 3
+                                                             else None)
 
             elif isinstance(props[key], PropertyFile):
                 def button_clicked():
@@ -390,6 +531,8 @@ class MainFrame(base_ui[0], base_ui[1]):
                 line_edit.textChanged[str].connect(self.current_object.write_attribs)
                 line_edit.textChanged[str].connect(self.current_object.update_item_name)
                 line_edit.textChanged[str].connect(self.fomod_modified)
+                line_edit.textChanged[str].connect(lambda: self.xml_code_changed.emit(self.current_object)
+                                                   if self.settings_dict["General"]["code_refresh"] >= 3 else None)
                 path_button.clicked.connect(button_clicked)
 
             elif isinstance(props[key], PropertyFolder):
@@ -412,6 +555,8 @@ class MainFrame(base_ui[0], base_ui[1]):
                 line_edit.textChanged.connect(self.current_object.write_attribs)
                 line_edit.textChanged.connect(self.current_object.update_item_name)
                 line_edit.textChanged.connect(self.fomod_modified)
+                line_edit.textChanged.connect(lambda: self.xml_code_changed.emit(self.current_object)
+                                              if self.settings_dict["General"]["code_refresh"] >= 3 else None)
                 path_button.clicked.connect(button_clicked)
 
             elif isinstance(props[key], PropertyColour):
@@ -448,48 +593,73 @@ class MainFrame(base_ui[0], base_ui[1]):
                 line_edit.textChanged.connect(update_button_colour)
                 line_edit.textChanged.connect(self.current_object.write_attribs)
                 line_edit.textChanged.connect(self.fomod_modified)
+                line_edit.textChanged.connect(lambda: self.xml_code_changed.emit(self.current_object)
+                                              if self.settings_dict["General"]["code_refresh"] >= 3 else None)
                 path_button.clicked.connect(button_clicked)
 
             self.formLayout.setWidget(prop_index, QFormLayout.FieldRole, prop_list[prop_index])
             prop_list[prop_index].setObjectName(str(prop_index))
             prop_index += 1
 
-    def update_wizards(self):
-        if self.current_object.wizards:
+    def update_wizard_button(self):
+        """
+        Updates the wizard button, hides or shows it.
+        """
+        if self.current_object.wizard:
             self.wizard_button.show()
-            # do something here, build the wizard gui
         else:
             self.wizard_button.hide()
 
-    def selected_object_list(self, index):
-        item = self.list_model.itemFromIndex(index)
+    def run_wizard(self):
+        """
+        Called when the wizard button is clicked.
 
-        new_child = elem_factory(item.xml_node.tag, self.current_object)
-        self.current_object.add_child(new_child)
+        Sets up the main window and runs the wizard.
+        """
+        def close():
+            wizard.deleteLater()
+            self.action_Object_Tree.toggled.emit(enabled_tree)
+            self.actionObject_Box.toggled.emit(enabled_box)
+            self.action_Property_Editor.toggled.emit(enabled_list)
+            self.menu_File.setEnabled(True)
+            self.menu_Tools.setEnabled(True)
+            self.menu_View.setEnabled(True)
 
-        # expand the parent
         current_index = self.tree_model.indexFromItem(self.current_object.model_item)
-        self.object_tree_view.expand(current_index)
+        enabled_tree = self.action_Object_Tree.isChecked()
+        enabled_box = self.actionObject_Box.isChecked()
+        enabled_list = self.action_Property_Editor.isChecked()
+        self.action_Object_Tree.toggled.emit(False)
+        self.actionObject_Box.toggled.emit(False)
+        self.action_Property_Editor.toggled.emit(False)
+        self.menu_File.setEnabled(False)
+        self.menu_Tools.setEnabled(False)
+        self.menu_View.setEnabled(False)
 
-        # select the new item
-        self.object_tree_view.setCurrentIndex(self.tree_model.indexFromItem(new_child.model_item))
-        self.selected_object_tree(self.tree_model.indexFromItem(new_child.model_item))
+        wizard = self.current_object.wizard(self, self.current_object, self)
+        self.splitter.insertWidget(0, wizard)
 
-        # reload the object box
-        self.update_box_list()
+        wizard.cancelled.connect(close)
+        wizard.cancelled.connect(lambda: self.selected_object_tree(current_index))
+        wizard.finished.connect(close)
+        wizard.finished.connect(lambda: self.selected_object_tree(current_index))
+        wizard.finished.connect(lambda: self.fomod_modified(True))
 
-        # set the installer as changed
-        self.fomod_modified(True)
+    def update_gen_code(self, element):
+        """
+        Updates the previews.
 
-    def update_gen_code(self):
-        if self.current_object is not None:
-            self.xml_code_browser.setHtml(highlight_fragment(self.current_object))
+        :param element: The element to preview.
+        """
+        if element is not None:
+            self.xml_code_browser.setHtml(highlight_fragment(element))
         else:
             self.xml_code_browser.setText("")
 
     def fomod_modified(self, changed):
-        if self.settings_dict["General"]["code_refresh"] >= 3:
-            self.update_gen_code()
+        """
+        Changes the modified state of the installer, according to the parameter.
+        """
         if changed is False:
             self.fomod_changed = False
             self.setWindowTitle(self.package_name + " - " + self.original_title)
@@ -497,7 +667,10 @@ class MainFrame(base_ui[0], base_ui[1]):
             self.fomod_changed = True
             self.setWindowTitle("*" + self.package_name + " - " + self.original_title)
 
-    def closeEvent(self, event):
+    def check_fomod_state(self):
+        """
+        Checks whether the installer has unsaved changes.
+        """
         if self.fomod_changed:
             msg_box = QMessageBox()
             msg_box.setWindowTitle("The installer has been modified.")
@@ -506,21 +679,33 @@ class MainFrame(base_ui[0], base_ui[1]):
                                        QMessageBox.Discard |
                                        QMessageBox.Cancel)
             msg_box.setDefaultButton(QMessageBox.Save)
-            answer = msg_box.exec_()
-            if answer == QMessageBox.Save:
-                self.save()
-            elif answer == QMessageBox.Discard:
-                pass
-            elif answer == QMessageBox.Cancel:
-                event.ignore()
+            return msg_box.exec_()
+        else:
+            return
+
+    def closeEvent(self, event):
+        """
+        Override the Qt close event to account for unsaved changes.
+        :param event:
+        """
+        answer = self.check_fomod_state()
+        if answer == QMessageBox.Save:
+            self.save()
+        elif answer == QMessageBox.Discard:
+            pass
+        elif answer == QMessageBox.Cancel:
+            event.ignore()
 
 
 class SettingsDialog(settings_ui[0], settings_ui[1]):
-    def __init__(self):
-        super().__init__()
+    """
+    The class for the settings window. Subclassed from QDialog and created in Qt Designer.
+    """
+    def __init__(self, parent):
+        super().__init__(parent=parent)
         self.setupUi(self)
 
-        self.setWindowFlags(Qt.WindowSystemMenuHint | Qt.WindowTitleHint)
+        self.setWindowFlags(Qt.WindowSystemMenuHint | Qt.WindowTitleHint | Qt.Dialog)
 
         self.buttonBox.accepted.connect(self.accepted)
         self.buttonBox.rejected.connect(self.rejected)
@@ -531,6 +716,8 @@ class SettingsDialog(settings_ui[0], settings_ui[1]):
 
         config = read_settings()
         self.combo_code_refresh.setCurrentIndex(config["General"]["code_refresh"])
+        self.check_intro.setChecked(config["General"]["show_intro"])
+        self.check_advanced.setChecked(config["General"]["show_advanced"])
         self.check_valid_load.setChecked(config["Load"]["validate"])
         self.check_valid_load_ignore.setChecked(config["Load"]["validate_ignore"])
         self.check_warn_load.setChecked(config["Load"]["warnings"])
@@ -549,6 +736,8 @@ class SettingsDialog(settings_ui[0], settings_ui[1]):
         config = ConfigParser()
         config.read_dict(read_settings())
         config["General"]["code_refresh"] = str(self.combo_code_refresh.currentIndex())
+        config["General"]["show_intro"] = str(self.check_intro.isChecked()).lower()
+        config["General"]["show_advanced"] = str(self.check_advanced.isChecked()).lower()
         config["Load"]["validate"] = str(self.check_valid_load.isChecked()).lower()
         config["Load"]["validate_ignore"] = str(self.check_valid_load_ignore.isChecked()).lower()
         config["Load"]["warnings"] = str(self.check_warn_load.isChecked()).lower()
@@ -593,13 +782,16 @@ class SettingsDialog(settings_ui[0], settings_ui[1]):
 
 
 class About(about_ui[0], about_ui[1]):
+    """
+    The class for the about window. Subclassed from QDialog and created in Qt Designer.
+    """
     def __init__(self, parent):
-        super().__init__()
+        super().__init__(parent=parent)
         self.setupUi(self)
 
         self.move(parent.window().frameGeometry().topLeft() + parent.window().rect().center() - self.rect().center())
 
-        self.setWindowFlags(Qt.WindowTitleHint)
+        self.setWindowFlags(Qt.WindowTitleHint | Qt.Dialog)
 
         self.version.setText("Version: " + __version__)
 
@@ -612,10 +804,20 @@ class About(about_ui[0], about_ui[1]):
 
 
 def not_implemented():
+    """
+    A convenience function for something that has not yet been implemented.
+    """
     generic_errorbox("Nope", "Sorry, this part hasn't been implemented yet!")
 
 
 def generic_errorbox(title, text, detail=""):
+    """
+    A function that creates a generic errorbox with the logo_admin.png logo.
+
+    :param title: A string containing the title of the errorbox.
+    :param text: A string containing the text of the errorbox.
+    :param detail: Optional. A string containing the detail text of the errorbox.
+    """
     errorbox = QMessageBox()
     errorbox.setText(text)
     errorbox.setWindowTitle(title)
@@ -625,7 +827,15 @@ def generic_errorbox(title, text, detail=""):
 
 
 def read_settings():
-    default_settings = {"General": {"code_refresh": 3},
+    """
+    Reads the settings from the ~/.fomod/.designer file. If such a file does not exist it uses the default settings.
+    The settings are processed to be ready to be used in Python code (p.e. "option=1" translates to True).
+
+    :return: The processed settings.
+    """
+    default_settings = {"General": {"code_refresh": 3,
+                                    "show_intro": True,
+                                    "show_advanced": False},
                         "Load": {"validate": True,
                                  "validate_ignore": False,
                                  "warnings": True,
@@ -644,9 +854,9 @@ def read_settings():
     config.read(join(expanduser("~"), ".fomod", ".designer"))
 
     settings = {}
-    for section in config:
+    for section in default_settings:
         settings[section] = {}
-        for key in config[section]:
+        for key in default_settings[section]:
             if isinstance(default_settings[section][key], bool):
                 settings[section][key] = config.getboolean(section, key)
             elif isinstance(default_settings[section][key], int):

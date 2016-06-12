@@ -13,7 +13,7 @@
     <x>0</x>
     <y>0</y>
     <width>565</width>
-    <height>240</height>
+    <height>261</height>
    </rect>
   </property>
   <property name="focusPolicy">
@@ -45,6 +45,89 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_7">
       <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_7">
+        <item>
+         <spacer name="horizontalSpacer_8">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Preferred</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="check_intro">
+          <property name="text">
+           <string>Show intro window at statup.</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_7">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_8">
+        <item>
+         <spacer name="horizontalSpacer_9">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Preferred</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="check_advanced">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Show the Advanced View at startup.</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_10">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
        <layout class="QHBoxLayout" name="horizontalLayout_6">
         <item>
          <spacer name="horizontalSpacer_6">
@@ -65,7 +148,7 @@
         <item>
          <widget class="QLabel" name="label">
           <property name="text">
-           <string>XML Code Refresh Rate</string>
+           <string>Preview Refresh Rate</string>
           </property>
          </widget>
         </item>
@@ -145,9 +228,9 @@
            </widget>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="1,9">
+           <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="0,9">
             <item>
-             <spacer name="horizontalSpacer_4">
+             <spacer name="horizontalSpacer_3">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
@@ -199,9 +282,9 @@
            </widget>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,9">
+           <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,9">
             <item>
-             <spacer name="horizontalSpacer_3">
+             <spacer name="horizontalSpacer_4">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
@@ -284,7 +367,7 @@
            </widget>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,9">
+           <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,9">
             <property name="spacing">
              <number>6</number>
             </property>
@@ -298,9 +381,6 @@
              <spacer name="horizontalSpacer_2">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeType">
-               <enum>QSizePolicy::Expanding</enum>
               </property>
               <property name="sizeHint" stdset="0">
                <size>
@@ -353,7 +433,7 @@
            </widget>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,9">
+           <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,9">
             <item>
              <spacer name="horizontalSpacer">
               <property name="orientation">
