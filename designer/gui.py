@@ -16,13 +16,17 @@
 
 from os import makedirs
 from os.path import expanduser, normpath, basename, join, relpath, isdir
+from threading import Thread
+from webbrowser import open as web_open
 from datetime import datetime
 from configparser import ConfigParser
 from PyQt5.uic import loadUiType
 from PyQt5.QtWidgets import (QShortcut, QFileDialog, QColorDialog, QMessageBox, QLabel, QHBoxLayout, QCommandLinkButton,
-                             QFormLayout, QLineEdit, QSpinBox, QComboBox, QWidget, QPushButton, QFrame, QSizePolicy)
+                             QFormLayout, QLineEdit, QSpinBox, QComboBox, QWidget, QPushButton, QFrame, QSizePolicy,
+                             QStatusBar)
 from PyQt5.QtGui import QIcon, QPixmap, QStandardItemModel, QColor, QFont
 from PyQt5.QtCore import Qt, pyqtSignal
+from requests import get, codes, ConnectionError, Timeout
 from validator import validate_tree, check_warnings, ValidatorError
 from . import cur_folder, __version__
 from .io import import_, new, export, sort_elements, elem_factory
@@ -92,8 +96,17 @@ class MainFrame(base_ui[0], base_ui[1]):
     The class for the main window. Subclassed from QMainWindow and created in Qt Designer.
     """
 
-    # The signal to update the previews.
+    #: The signal to update the previews.
     xml_code_changed = pyqtSignal([object])
+
+    #: The signal to add a label to the status bar.
+    add_label_to_status = pyqtSignal([str])
+
+    #: the signal to add a flat button to the status bar.
+    add_button_to_status = pyqtSignal([str, object])
+
+    #: The signal to clear the status bar.
+    clear_status_bar = pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -152,6 +165,18 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.object_tree_view.header().hide()
 
         self.update_recent_files()
+
+        def add_button_to_status(text, target):
+            boop = QPushButton(text)
+            boop.setFlat(True)
+            boop.clicked.connect(target)
+            self.statusBar().addWidget(boop)
+
+        self.add_label_to_status.connect(lambda text: self.statusBar().addWidget(QLabel(text)))
+        self.add_button_to_status.connect(add_button_to_status)
+        self.clear_status_bar.connect(lambda: self.setStatusBar(QStatusBar()))
+        Thread(target=check_updates,
+               args=(self.add_label_to_status, self.add_button_to_status, self.clear_status_bar)).start()
 
     def open(self, path=""):
         """
@@ -866,3 +891,31 @@ def read_settings():
             else:
                 settings[section][key] = config.get(section, key)
     return settings
+
+
+def check_updates(add_label, add_button, remove_signal):
+    """
+    Checks the version number on the remote repository (Github Releases) and compares it against the current version.
+
+    If the remote version is higher, then the user is warned in the status bar and advised to get the new one.
+    Otherwise, ignore.
+
+    :param 
+    """
+
+    add_label.emit("Checking for updates...")
+
+    try:
+        response = get("https://api.github.com/repos/GandaG/fomod-designer/releases", timeout=10)
+        remove_signal.emit()
+        if response.status_code == codes.ok and response.json()[0]["tag_name"][1:] > __version__:
+            add_button.emit("New Version Available!",
+                            lambda: web_open("https://github.com/GandaG/fomod-designer/releases/latest"))
+        else:
+            add_label.emit("Up-to-date! Version " + __version__)
+    except Timeout:
+        remove_signal.emit()
+        add_label.emit("Connection timed out :(")
+    except ConnectionError:
+        remove_signal.emit()
+        add_label.emit("Could not connect to remote server, check your internet connection.")
