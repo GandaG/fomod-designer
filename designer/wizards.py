@@ -17,8 +17,7 @@
 from abc import ABCMeta, abstractmethod
 from copy import deepcopy
 from os.path import join, relpath
-from PyQt5.QtWidgets import (QHBoxLayout, QWidget, QPushButton, QSizePolicy,
-                             QStackedWidget, QLineEdit, QLabel, QFileDialog)
+from PyQt5.QtWidgets import QStackedWidget, QFileDialog
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.uic import loadUi
@@ -28,12 +27,20 @@ from .exceptions import BaseInstanceException
 
 
 class _WizardBase(QStackedWidget):
+    """
+    The base class for wizards. Shouldn't be instantiated directly.
+    """
     __metaclass__ = ABCMeta
 
     cancelled = pyqtSignal()
     finished = pyqtSignal()
 
     def __init__(self, parent, element, main_window):
+        """
+        :param parent: The parent widget.
+        :param element: The element this wizard corresponds.
+        :param main_window: The app's main window.
+        """
         super().__init__(parent)
         if type(self) is _WizardBase:
             raise BaseInstanceException(self)
@@ -45,14 +52,25 @@ class _WizardBase(QStackedWidget):
 
     @abstractmethod
     def _process_results(self, result):
+        """
+        Method called to process the results into a new element.
+
+        :param result: The temporary element with all the info.
+        """
         pass
 
     @abstractmethod
     def _setup_pages(self):
+        """
+        Method called during initialization to create all the pages necessary for each wizard.
+        """
         pass
 
 
 class WizardFiles(_WizardBase):
+    """
+    Wizard fo the "files" tag.
+    """
     def _process_results(self, result):
         self.element.getparent().replace(self.element, result)
         item_parent = self.element.model_item.parent()
