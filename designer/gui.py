@@ -407,6 +407,7 @@ class MainFrame(base_ui[0], base_ui[1]):
         """
         Updates the possible children to add in Object Box.
         """
+        spacer = self.layout_box.takeAt(self.layout_box.count() - 1)
         for index in reversed(range(self.layout_box.count())):
             widget = self.layout_box.takeAt(index).widget()
             if widget is not None:
@@ -416,17 +417,14 @@ class MainFrame(base_ui[0], base_ui[1]):
             new_object = child()
             if self.current_object.can_add_child(new_object):
                 child_button = QPushButton(new_object.name)
-                child_button.setFlat(True)
                 font_button = QFont()
                 font_button.setPointSize(8)
                 child_button.setFont(font_button)
+                child_button.setMaximumSize(5000, 30)
                 child_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
                 child_button.clicked.connect(lambda _, tag_=new_object.tag: self.selected_object_list(tag_))
                 self.layout_box.addWidget(child_button)
-                if self.current_object.allowed_children.index(child) != len(self.current_object.allowed_children) - 1:
-                    line = QFrame()
-                    line.setFrameShape(4)
-                    self.layout_box.addWidget(line)
+        self.layout_box.addSpacerItem(spacer)
 
     def selected_object_list(self, tag):
         """
