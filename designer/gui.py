@@ -28,7 +28,7 @@ from . import cur_folder, __version__
 from .io import import_, new, export, sort_elements, elem_factory
 from .previews import highlight_fragment
 from .props import PropertyFile, PropertyColour, PropertyFolder, PropertyCombo, PropertyInt, PropertyText
-from .exceptions import GenericError
+from .exceptions import DesignerError
 
 
 intro_ui = loadUiType(join(cur_folder, "resources/templates/intro.ui"))
@@ -202,7 +202,7 @@ class MainFrame(base_ui[0], base_ui[1]):
                 self.xml_code_changed.emit(self.current_object)
                 self.update_recent_files(self.package_path)
                 self.clear_prop_list()
-        except (GenericError, ValidatorError) as p:
+        except (DesignerError, ValidatorError) as p:
             generic_errorbox(p.title, str(p), p.detailed)
             return
 
