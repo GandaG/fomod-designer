@@ -99,14 +99,17 @@ class MainFrame(base_ui[0], base_ui[1]):
     #: The signal to update the previews.
     xml_code_changed = pyqtSignal([object])
 
-    #: The signal to add a label to the status bar.
-    add_label_to_status = pyqtSignal([str])
+    #: Signals there is an update available.
+    update_available = pyqtSignal()
 
-    #: the signal to add a flat button to the status bar.
-    add_button_to_status = pyqtSignal([str, object])
+    #: Signals the app is up-to-date.
+    up_to_date = pyqtSignal()
 
-    #: The signal to clear the status bar.
-    clear_status_bar = pyqtSignal()
+    #: Signals a connection timed out.
+    timeout = pyqtSignal()
+
+    #: Signals there was an error with the internet connection.
+    connection_error = pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -165,18 +168,48 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.object_tree_view.header().hide()
 
         self.update_recent_files()
+        self.check_updates()
 
-        def add_button_to_status(text, target):
-            boop = QPushButton(text)
-            boop.setFlat(True)
-            boop.clicked.connect(target)
-            self.statusBar().addWidget(boop)
+    def check_updates(self):
+        """
+        Checks the version number on the remote repository (Github Releases)
+        and compares it against the current version.
 
-        self.add_label_to_status.connect(lambda text: self.statusBar().addWidget(QLabel(text)))
-        self.add_button_to_status.connect(add_button_to_status)
-        self.clear_status_bar.connect(lambda: self.setStatusBar(QStatusBar()))
-        Thread(target=check_updates,
-               args=(self.add_label_to_status, self.add_button_to_status, self.clear_status_bar)).start()
+        If the remote version is higher, then the user is warned in the status bar and advised to get the new one.
+        Otherwise, ignore.
+        """
+
+        def update_available_button():
+            update_button = QPushButton("New Version Available!")
+            update_button.setFlat(True)
+            update_button.clicked.connect(lambda: web_open("https://github.com/GandaG/fomod-designer/releases/latest"))
+            self.statusBar().addWidget(update_button)
+
+        def check_remote():
+            try:
+                response = get("https://api.github.com/repos/GandaG/fomod-designer/releases", timeout=10)
+                if response.status_code == codes.ok and response.json()[0]["tag_name"][1:] > __version__:
+                    self.update_available.emit()
+                else:
+                    self.up_to_date.emit()
+            except Timeout:
+                self.timeout.emit()
+            except ConnectionError:
+                self.connection_error.emit()
+
+        self.up_to_date.connect(lambda: self.setStatusBar(QStatusBar()))
+        self.up_to_date.connect(lambda: self.statusBar().addWidget(QLabel("Everything is up-to-date.")))
+        self.update_available.connect(lambda: self.setStatusBar(QStatusBar()))
+        self.update_available.connect(update_available_button)
+        self.timeout.connect(lambda: self.setStatusBar(QStatusBar()))
+        self.timeout.connect(lambda: self.statusBar().addWidget(QLabel("Connection timed out.")))
+        self.connection_error.connect(lambda: self.setStatusBar(QStatusBar()))
+        self.connection_error.connect(lambda: self.statusBar().addWidget(QLabel("Could not connect to remote server, "
+                                                                                "check your internet connection.")))
+
+        self.statusBar().addWidget(QLabel("Checking for updates..."))
+
+        Thread(target=check_remote).start()
 
     def open(self, path=""):
         """
@@ -889,31 +922,3 @@ def read_settings():
             else:
                 settings[section][key] = config.get(section, key)
     return settings
-
-
-def check_updates(add_label, add_button, remove_signal):
-    """
-    Checks the version number on the remote repository (Github Releases) and compares it against the current version.
-
-    If the remote version is higher, then the user is warned in the status bar and advised to get the new one.
-    Otherwise, ignore.
-
-    :param 
-    """
-
-    add_label.emit("Checking for updates...")
-
-    try:
-        response = get("https://api.github.com/repos/GandaG/fomod-designer/releases", timeout=10)
-        remove_signal.emit()
-        if response.status_code == codes.ok and response.json()[0]["tag_name"][1:] > __version__:
-            add_button.emit("New Version Available!",
-                            lambda: web_open("https://github.com/GandaG/fomod-designer/releases/latest"))
-        else:
-            add_label.emit("Up-to-date! Version " + __version__)
-    except Timeout:
-        remove_signal.emit()
-        add_label.emit("Connection timed out :(")
-    except ConnectionError:
-        remove_signal.emit()
-        add_label.emit("Could not connect to remote server, check your internet connection.")
