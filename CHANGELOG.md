@@ -1,5 +1,20 @@
 # Changelog
 
+0.6.0 (2016-06-13)
+
+* Added check for updates at startup.
+* Added line numbers to code preview.
+* Moved previews to separate threads, loading each node should now be much faster.
+* Improved button look on object box.
+
+----------------------------------
+
+0.5.1 (2016-06-12)
+
+* Fixed versioning issues.
+
+----------------------------------
+
 0.5.0 (2016-06-12)
 
 * Added intro window.
