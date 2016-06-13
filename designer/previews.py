@@ -24,6 +24,14 @@ from pygments.lexers.html import XmlLexer
 
 
 class PreviewDispatcherThread(QThread):
+    """
+    Thread used to dispatch the element to each preview worker thread.
+
+    :param queue: The main queue containing the elements to process.
+    :param mo_signal: The signal to pass to the MO preview worker, updates the MO preview.
+    :param nmm_signal: The signal to pass to the NMM preview worker, updates the NMM preview.
+    :param code_signal: The signal to pass to the code preview worker, updates the code preview.
+    """
     def __init__(self, queue, mo_signal, nmm_signal, code_signal):
         super().__init__()
         self.queue = queue
@@ -72,4 +80,4 @@ class PreviewCodeWorker(QThread):
             # process the element
             deannotate(element, cleanup_namespaces=True)
             code = tostring(element, encoding="Unicode", pretty_print=True, xml_declaration=False)
-            self.return_signal.emit(highlight(code, XmlLexer(), HtmlFormatter(noclasses=True, style="autumn")))
+            self.return_signal.emit(highlight(code, XmlLexer(), HtmlFormatter(noclasses=True, style="autumn", linenos="table")))

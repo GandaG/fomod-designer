@@ -23,8 +23,7 @@ from datetime import datetime
 from configparser import ConfigParser
 from PyQt5.uic import loadUiType
 from PyQt5.QtWidgets import (QShortcut, QFileDialog, QColorDialog, QMessageBox, QLabel, QHBoxLayout, QCommandLinkButton,
-                             QFormLayout, QLineEdit, QSpinBox, QComboBox, QWidget, QPushButton, QFrame, QSizePolicy,
-                             QStatusBar)
+                             QFormLayout, QLineEdit, QSpinBox, QComboBox, QWidget, QPushButton, QSizePolicy, QStatusBar)
 from PyQt5.QtGui import QIcon, QPixmap, QStandardItemModel, QColor, QFont
 from PyQt5.QtCore import Qt, pyqtSignal
 from requests import get, codes, ConnectionError, Timeout
@@ -513,7 +512,8 @@ class MainFrame(base_ui[0], base_ui[1]):
 
     def update_props_list(self):
         """
-        Updates the Property Editor's prop list. Deletes everything and then creates the list from the node's properties.
+        Updates the Property Editor's prop list. Deletes everything and
+        then creates the list from the node's properties.
         """
         self.clear_prop_list()
 
