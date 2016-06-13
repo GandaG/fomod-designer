@@ -17,6 +17,7 @@
 from os import makedirs
 from os.path import expanduser, normpath, basename, join, relpath, isdir
 from threading import Thread
+from queue import Queue
 from webbrowser import open as web_open
 from datetime import datetime
 from configparser import ConfigParser
@@ -30,7 +31,7 @@ from requests import get, codes, ConnectionError, Timeout
 from validator import validate_tree, check_warnings, ValidatorError
 from . import cur_folder, __version__
 from .io import import_, new, export, sort_elements, elem_factory
-from .previews import highlight_fragment
+from .previews import PreviewDispatcherThread
 from .props import PropertyFile, PropertyColour, PropertyFolder, PropertyCombo, PropertyInt, PropertyText
 from .exceptions import DesignerError
 
@@ -96,8 +97,17 @@ class MainFrame(base_ui[0], base_ui[1]):
     The class for the main window. Subclassed from QMainWindow and created in Qt Designer.
     """
 
-    #: The signal to update the previews.
+    #: Signals the xml code has changed.
     xml_code_changed = pyqtSignal([object])
+
+    #: Signals the mo preview is updated.
+    update_mo_preview = pyqtSignal([QWidget])
+
+    #: Signals the nmm preview is updated.
+    update_nmm_preview = pyqtSignal([QWidget])
+
+    #: Signals the code preview is updated.
+    update_code_preview = pyqtSignal([str])
 
     #: Signals there is an update available.
     update_available = pyqtSignal()
@@ -148,9 +158,6 @@ class MainFrame(base_ui[0], base_ui[1]):
 
         self.object_tree_view.clicked.connect(self.selected_object_tree)
 
-        self.wizard_button.clicked.connect(self.run_wizard)
-        self.xml_code_changed.connect(self.update_gen_code)
-
         self.fomod_changed = False
         self.original_title = self.windowTitle()
         self.package_path = ""
@@ -162,6 +169,16 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.current_prop_list = []
         self.tree_model = QStandardItemModel()
 
+        # start the preview threads
+        self.preview_queue = Queue()
+        self.xml_code_changed.connect(self.preview_queue.put)
+        self.update_code_preview.connect(self.xml_code_browser.setHtml)
+        self.preview_thread = PreviewDispatcherThread(self.preview_queue, self.update_mo_preview,
+                                                      self.update_nmm_preview, self.update_code_preview)
+        self.preview_thread.start()
+
+        # manage the wizard button
+        self.wizard_button.clicked.connect(self.run_wizard)
         self.wizard_button.hide()
 
         self.object_tree_view.setModel(self.tree_model)
@@ -700,17 +717,6 @@ class MainFrame(base_ui[0], base_ui[1]):
         wizard.finished.connect(close)
         wizard.finished.connect(lambda: self.selected_object_tree(current_index))
         wizard.finished.connect(lambda: self.fomod_modified(True))
-
-    def update_gen_code(self, element):
-        """
-        Updates the previews.
-
-        :param element: The element to preview.
-        """
-        if element is not None:
-            self.xml_code_browser.setHtml(highlight_fragment(element))
-        else:
-            self.xml_code_browser.setText("")
 
     def fomod_modified(self, changed):
         """
