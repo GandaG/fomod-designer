@@ -69,6 +69,7 @@ class MissingFileError(DesignerError):
     def __init__(self, fname):
         self.title = "I/O Error"
         self.message = "{} is missing.".format(fname.capitalize())
+        self.detailed = ""
         self.file = fname
         Exception.__init__(self, self.message)
 
@@ -81,6 +82,7 @@ class ParserError(DesignerError):
     """
     def __init__(self, msg):
         self.title = "Parser Error"
+        self.detailed = ""
         if len(msg.split(",")) <= 2:
             self.msg = "The parser couldn't read the installer file. If you need help visit " \
                        "<a href = http://www.w3schools.com/xml/xml_syntax.asp>W3Schools</a>."
@@ -98,6 +100,7 @@ class TagNotFound(DesignerError):
     def __init__(self, element):
         self.title = "Tag Lookup Error"
         self.message = "Tag {} at line {} could not be matched.".format(element.tag, element.sourceline)
+        self.detailed = ""
         Exception.__init__(self, self.message)
 
 
@@ -108,4 +111,5 @@ class BaseInstanceException(Exception):
     def __init__(self, base_instance):
         self.title = "Instance Error"
         self.message = "{} is not meant to be instanced. A subclass should be used instead.".format(type(base_instance))
+        self.detailed = ""
         Exception.__init__(self, self.message)
