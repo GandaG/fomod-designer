@@ -146,6 +146,12 @@ class NodeStandardItem(QStandardItem):
         self.xml_node = node
         super().__init__()
 
+    def __lt__(self, other):
+        if self.xml_node.sort_order < other.xml_node.sort_order:
+            return True
+        else:
+            return False
+
 
 class NodeInfoRoot(_NodeBase):
     """

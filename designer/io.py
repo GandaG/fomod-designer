@@ -286,13 +286,11 @@ def export(info_root, config_root, package_path):
         config_tree.write(configfile, pretty_print=True)
 
 
-def sort_elements(info_root, config_root):
+def sort_elements(root_element):
     """
     Sorts the xml elements according to their sort_order member.
 
-    :param info_root: The root element of the info.xml file.
-    :param config_root: The root element of the moduleconfig.xml file.
+    :param root_element: The root element of xml tree.
     """
-    for root in (info_root, config_root):
-        for parent in root.xpath('//*[./*]'):
-            parent[:] = sorted(parent, key=lambda x: x.sort_order)
+    for parent in root_element.xpath('//*[./*]'):
+        parent[:] = sorted(parent, key=lambda x: x.sort_order)

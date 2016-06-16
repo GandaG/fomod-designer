@@ -290,7 +290,8 @@ class MainFrame(base_ui[0], base_ui[1]):
             if self.info_root is None and self.config_root is None:
                 return
             elif self.fomod_changed:
-                sort_elements(self.info_root, self.config_root)
+                sort_elements(self.info_root)
+                sort_elements(self.config_root)
                 if self.settings_dict["Save"]["validate"]:
                     validate_tree(self.config_root, join(cur_folder, "resources", "mod_schema.xsd"),
                                   self.settings_dict["Save"]["validate_ignore"])
@@ -486,6 +487,7 @@ class MainFrame(base_ui[0], base_ui[1]):
         """
         new_child = elem_factory(tag, self.current_object)
         self.current_object.add_child(new_child)
+        self.tree_model.sort(0)
 
         # expand the parent
         current_index = self.tree_model.indexFromItem(self.current_object.model_item)

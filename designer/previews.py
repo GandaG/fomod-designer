@@ -21,6 +21,7 @@ from lxml.objectify import deannotate
 from pygments import highlight
 from pygments.formatters.html import HtmlFormatter
 from pygments.lexers.html import XmlLexer
+from .io import sort_elements
 
 
 class PreviewDispatcherThread(QThread):
@@ -51,6 +52,7 @@ class PreviewDispatcherThread(QThread):
 
             # turn the element into "normal" lxml elements for easier processing.
             element.write_attribs()
+            sort_elements(element)
             element = XML(tostring(element))
 
             # dispatch to every queue
