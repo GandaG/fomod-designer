@@ -287,7 +287,7 @@ class MainFrame(base_ui[0], base_ui[1]):
         If enabled in the Settings the installer is also validated and checked for common errors.
         """
         try:
-            if self.info_root is not None and self.config_root is not None:
+            if self.info_root is None and self.config_root is None:
                 return
             elif self.fomod_changed:
                 sort_elements(self.info_root, self.config_root)
@@ -464,15 +464,16 @@ class MainFrame(base_ui[0], base_ui[1]):
 
         for child in self.current_object.allowed_children:
             new_object = child()
-            if self.current_object.can_add_child(new_object):
-                child_button = QPushButton(new_object.name)
-                font_button = QFont()
-                font_button.setPointSize(8)
-                child_button.setFont(font_button)
-                child_button.setMaximumSize(5000, 30)
-                child_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-                child_button.clicked.connect(lambda _, tag_=new_object.tag: self.selected_object_list(tag_))
-                self.layout_box.addWidget(child_button)
+            child_button = QPushButton(new_object.name)
+            font_button = QFont()
+            font_button.setPointSize(8)
+            child_button.setFont(font_button)
+            child_button.setMaximumSize(5000, 30)
+            child_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+            child_button.clicked.connect(lambda _, tag_=new_object.tag: self.selected_object_list(tag_))
+            if not self.current_object.can_add_child(new_object):
+                child_button.setEnabled(False)
+            self.layout_box.addWidget(child_button)
         self.layout_box.addSpacerItem(spacer)
 
     def selected_object_list(self, tag):
