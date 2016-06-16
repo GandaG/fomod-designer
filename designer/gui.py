@@ -709,7 +709,8 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.menu_Tools.setEnabled(False)
         self.menu_View.setEnabled(False)
 
-        wizard = self.current_object.wizard(self, self.current_object, self)
+        kwargs = {"package_path": self.package_path}
+        wizard = self.current_object.wizard(self, self.current_object, self.xml_code_changed, **kwargs)
         self.splitter.insertWidget(0, wizard)
 
         wizard.cancelled.connect(close)

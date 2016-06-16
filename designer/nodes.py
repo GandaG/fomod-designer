@@ -17,7 +17,7 @@
 from os import sep
 from PyQt5.QtGui import QStandardItem
 from lxml import etree
-from .wizards import WizardFiles
+from .wizards import WizardFiles, WizardDepend
 from .props import PropertyCombo, PropertyInt, PropertyText, PropertyFile, PropertyFolder, PropertyColour
 from .exceptions import BaseInstanceException
 
@@ -298,10 +298,11 @@ class NodeConfigModDepend(_NodeBase):
     tag = "moduleDependencies"
 
     def _init(self):
-        allowed_children = (NodeConfigDependFile, NodeConfigDependFlag, NodeConfigDependGame)
+        allowed_children = (NodeConfigDependFile, NodeConfigDependFlag, NodeConfigDependGame,
+                            NodeConfigNestedDependencies)
         properties = {"operator": PropertyCombo("Type", ["And", "Or"])}
         self.init("Mod Dependencies", type(self).tag, 1, allowed_children=allowed_children,
-                  properties=properties, sort_order=3)
+                  properties=properties, sort_order=3, wizard=WizardDepend)
         super()._init()
 
 
@@ -460,7 +461,7 @@ class NodeConfigDependencies(_NodeBase):
                             NodeConfigDependGame, NodeConfigNestedDependencies)
         properties = {"operator": PropertyCombo("Type", ["And", "Or"])}
         self.init("Dependencies", type(self).tag, 1, allowed_children=allowed_children,
-                  properties=properties, sort_order=1)
+                  properties=properties, sort_order=1, wizard=WizardDepend)
         super()._init()
 
 
@@ -474,7 +475,8 @@ class NodeConfigNestedDependencies(_NodeBase):
         allowed_children = (NodeConfigDependFile, NodeConfigDependFlag,
                             NodeConfigDependGame, NodeConfigNestedDependencies)
         properties = {"operator": PropertyCombo("Type", ["And", "Or"])}
-        self.init("Dependencies", type(self).tag, 0, allowed_children=allowed_children, properties=properties)
+        self.init("Dependencies", type(self).tag, 0, allowed_children=allowed_children, properties=properties,
+                  wizard=WizardDepend)
         super()._init()
 
 
@@ -498,8 +500,11 @@ class NodeConfigVisible(_NodeBase):
     tag = "visible"
 
     def _init(self):
-        allowed_children = (NodeConfigDependFile, NodeConfigDependFlag, NodeConfigDependGame, NodeConfigDependencies)
-        self.init("Visibility", type(self).tag, 1, allowed_children=allowed_children, sort_order=1)
+        allowed_children = (NodeConfigDependFile, NodeConfigDependFlag, NodeConfigDependGame,
+                            NodeConfigNestedDependencies)
+        properties = {"operator": PropertyCombo("Type", ["And", "Or"])}
+        self.init("Visibility", type(self).tag, 1, allowed_children=allowed_children, sort_order=1, wizard=WizardDepend,
+                  properties=properties)
         super()._init()
 
 

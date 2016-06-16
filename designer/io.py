@@ -86,7 +86,9 @@ class _NodeLookup(PythonElementClassLookup):
         elif element.tag == "files":
             return nodes.NodeConfigFiles
         elif element.tag == "dependencies":
-            if element.getparent().tag == "dependencies":
+            if element.getparent().tag == "dependencies" or \
+                    element.getparent().tag == "moduleDependencies" or \
+                    element.getparent().tag == "visible":
                 return nodes.NodeConfigNestedDependencies
             else:
                 return nodes.NodeConfigDependencies
