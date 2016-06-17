@@ -474,6 +474,12 @@ class MainFrame(base_ui[0], base_ui[1]):
             child_button.clicked.connect(lambda _, tag_=new_object.tag: self.selected_object_list(tag_))
             if not self.current_object.can_add_child(new_object):
                 child_button.setEnabled(False)
+            if child in self.current_object.required_children:
+                child_button.setStyleSheet("background-color: " + QColor("#ba5f5f").name())
+            if child in self.current_object.either_children_group:
+                child_button.setStyleSheet("background-color: " + QColor("#ffaa7f").name())
+            if child in self.current_object.at_least_one_children_group:
+                child_button.setStyleSheet("background-color: " + QColor("#c8c863").name())
             self.layout_box.addWidget(child_button)
         self.layout_box.addSpacerItem(spacer)
 

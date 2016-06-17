@@ -32,18 +32,27 @@ class _NodeBase(etree.ElementBase):
         super()._init()
 
     def init(self, name, tag, allowed_instances, sort_order=0, allow_text=False, allowed_children=None, properties=None,
-             wizard=None):
+             wizard=None, required_children=None, either_children_group=None, at_least_one_children_group=None):
 
         if not properties:
             properties = {}
         if not allowed_children:
             allowed_children = ()
+        if not required_children:
+            required_children = ()
+        if not either_children_group:
+            either_children_group = ()
+        if not at_least_one_children_group:
+            at_least_one_children_group = ()
 
         self.name = name
         self.tag = tag
         self.sort_order = sort_order
         self.properties = properties
         self.allowed_children = allowed_children
+        self.required_children = required_children
+        self.either_children_group = either_children_group
+        self.at_least_one_children_group = at_least_one_children_group
         self.allow_text = allow_text
         self.allowed_instances = allowed_instances
         self.wizard = wizard
@@ -264,9 +273,12 @@ class NodeConfigRoot(_NodeBase):
     def _init(self):
         allowed_children = (NodeConfigModName, NodeConfigModImage, NodeConfigModDepend,
                             NodeConfigInstallSteps, NodeConfigReqFiles, NodeConfigCondInstall)
+        required = (NodeConfigModName,)
+        at_least_one = (NodeConfigModDepend, NodeConfigInstallSteps, NodeConfigReqFiles, NodeConfigCondInstall)
         properties = {"{http://www.w3.org/2001/XMLSchema-instance}noNamespaceSchemaLocation":
                       PropertyText("xsi", "http://qconsulting.ca/fo3/ModConfig5.0.xsd", False)}
-        self.init("Config", type(self).tag, 1, allowed_children=allowed_children, properties=properties)
+        self.init("Config", type(self).tag, 1, allowed_children=allowed_children, properties=properties,
+                  required_children=required, at_least_one_children_group=at_least_one)
         super()._init()
 
 
@@ -333,9 +345,10 @@ class NodeConfigInstallSteps(_NodeBase):
 
     def _init(self):
         allowed_children = (NodeConfigInstallStep,)
+        required = (NodeConfigInstallStep,)
         properties = {"order": PropertyCombo("Order", ["Ascending", "Descending", "Explicit"])}
         self.init("Installation Steps", type(self).tag, 1, allowed_children=allowed_children,
-                  properties=properties, sort_order=5)
+                  properties=properties, sort_order=5, required_children=required)
         super()._init()
 
 
@@ -347,7 +360,9 @@ class NodeConfigCondInstall(_NodeBase):
 
     def _init(self):
         allowed_children = (NodeConfigPatterns,)
-        self.init("Conditional Installation", type(self).tag, 1, allowed_children=allowed_children, sort_order=6)
+        required = (NodeConfigPatterns,)
+        self.init("Conditional Installation", type(self).tag, 1, allowed_children=allowed_children, sort_order=6,
+                  required_children=required)
         super()._init()
 
 
@@ -428,7 +443,8 @@ class NodeConfigPatterns(_NodeBase):
 
     def _init(self):
         allowed_children = (NodeConfigPattern,)
-        self.init("Patterns", type(self).tag, 1, allowed_children=allowed_children)
+        required = (NodeConfigPattern,)
+        self.init("Patterns", type(self).tag, 1, allowed_children=allowed_children, required_children=required)
         super()._init()
 
 
@@ -440,7 +456,8 @@ class NodeConfigPattern(_NodeBase):
 
     def _init(self):
         allowed_children = (NodeConfigFiles, NodeConfigDependencies)
-        self.init("Pattern", type(self).tag, 0, allowed_children=allowed_children)
+        required = (NodeConfigFiles, NodeConfigDependencies)
+        self.init("Pattern", type(self).tag, 0, allowed_children=allowed_children, required_children=required)
         super()._init()
 
 
@@ -494,8 +511,10 @@ class NodeConfigInstallStep(_NodeBase):
 
     def _init(self):
         allowed_children = (NodeConfigVisible, NodeConfigOptGroups)
+        required = (NodeConfigOptGroups,)
         properties = {"name": PropertyText("Name")}
-        self.init("Install Step", type(self).tag, 0, allowed_children=allowed_children, properties=properties)
+        self.init("Install Step", type(self).tag, 0, allowed_children=allowed_children, properties=properties,
+                  required_children=required)
         super()._init()
 
 
@@ -522,9 +541,10 @@ class NodeConfigOptGroups(_NodeBase):
 
     def _init(self):
         allowed_children = (NodeConfigGroup,)
+        required = (NodeConfigGroup,)
         properties = {"order": PropertyCombo("Order", ["Ascending", "Descending", "Explicit"])}
         self.init("Option Group", type(self).tag, 0, allowed_children=allowed_children,
-                  properties=properties, sort_order=2)
+                  properties=properties, sort_order=2, required_children=required)
         super()._init()
 
 
@@ -536,10 +556,12 @@ class NodeConfigGroup(_NodeBase):
 
     def _init(self):
         allowed_children = (NodeConfigPlugins,)
+        required = (NodeConfigPlugins,)
         properties = {"name": PropertyText("Name"),
                       "type": PropertyCombo("Type", ["SelectAny", "SelectAtMostOne",
                                                      "SelectExactlyOne", "SelectAll", "SelectAtLeastOne"])}
-        self.init("Group", type(self).tag, 0, allowed_children=allowed_children, properties=properties)
+        self.init("Group", type(self).tag, 0, allowed_children=allowed_children, properties=properties,
+                  required_children=required)
         super()._init()
 
 
@@ -551,8 +573,10 @@ class NodeConfigPlugins(_NodeBase):
 
     def _init(self):
         allowed_children = (NodeConfigPlugin,)
+        required = (NodeConfigPlugin,)
         properties = {"order": PropertyCombo("Order", ["Ascending", "Descending", "Explicit"])}
-        self.init("Plugins", type(self).tag, 0, allowed_children=allowed_children, properties=properties)
+        self.init("Plugins", type(self).tag, 0, allowed_children=allowed_children, properties=properties,
+                  required_children=required)
         super()._init()
 
 
@@ -565,8 +589,11 @@ class NodeConfigPlugin(_NodeBase):
     def _init(self):
         allowed_children = (NodeConfigPluginDescription, NodeConfigImage, NodeConfigFiles,
                             NodeConfigConditionFlags, NodeConfigTypeDesc)
+        required = (NodeConfigPluginDescription,)
+        at_least_one_child = (NodeConfigFiles, NodeConfigConditionFlags)
         properties = {"name": PropertyText("Name")}
-        self.init("Plugin", type(self).tag, 0, allowed_children=allowed_children, properties=properties)
+        self.init("Plugin", type(self).tag, 0, allowed_children=allowed_children, properties=properties,
+                  at_least_one_children_group=at_least_one_child, required_children=required)
         super()._init()
 
 
@@ -601,7 +628,9 @@ class NodeConfigConditionFlags(_NodeBase):
 
     def _init(self):
         allowed_children = (NodeConfigFlag,)
-        self.init("Flags", type(self).tag, 1, allowed_children=allowed_children, sort_order=3)
+        required = (NodeConfigFlag,)
+        self.init("Flags", type(self).tag, 1, allowed_children=allowed_children, sort_order=3,
+                  required_children=required)
         super()._init()
 
 
@@ -613,7 +642,9 @@ class NodeConfigTypeDesc(_NodeBase):
 
     def _init(self):
         allowed_children = (NodeConfigDependencyType, NodeConfigType)
-        self.init("Type Descriptor", type(self).tag, 1, allowed_children=allowed_children, sort_order=4)
+        either_children = (NodeConfigDependencyType, NodeConfigType)
+        self.init("Type Descriptor", type(self).tag, 1, allowed_children=allowed_children, sort_order=4,
+                  either_children_group=either_children)
         super()._init()
 
     def can_add_child(self, child):
@@ -643,7 +674,8 @@ class NodeConfigDependencyType(_NodeBase):
 
     def _init(self):
         allowed_children = (NodeConfigInstallPatterns, NodeConfigDefaultType)
-        self.init("Dependency Type", type(self).tag, 1, allowed_children=allowed_children)
+        required = (NodeConfigInstallPatterns, NodeConfigDefaultType)
+        self.init("Dependency Type", type(self).tag, 1, allowed_children=allowed_children, required_children=required)
         super()._init()
 
 
@@ -681,7 +713,9 @@ class NodeConfigInstallPatterns(_NodeBase):
 
     def _init(self):
         allowed_children = (NodeConfigInstallPattern,)
-        self.init("Patterns", type(self).tag, 1, allowed_children=allowed_children, sort_order=2)
+        required = (NodeConfigInstallPattern,)
+        self.init("Patterns", type(self).tag, 1, allowed_children=allowed_children, sort_order=2,
+                  required_children=required)
         super()._init()
 
 
@@ -693,5 +727,6 @@ class NodeConfigInstallPattern(_NodeBase):
 
     def _init(self):
         allowed_children = (NodeConfigType, NodeConfigDependencies)
-        self.init("Pattern", type(self).tag, 0, allowed_children=allowed_children)
+        required = (NodeConfigType, NodeConfigDependencies)
+        self.init("Pattern", type(self).tag, 0, allowed_children=allowed_children, required_children=required)
         super()._init()
