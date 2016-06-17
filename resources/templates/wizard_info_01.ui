@@ -1,0 +1,490 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>470</width>
+    <height>539</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_2">
+   <item>
+    <layout class="QVBoxLayout" name="verticalLayout" stretch="2,2,5">
+     <item>
+      <widget class="QLabel" name="label_4">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>40</height>
+        </size>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>14</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Info Wizard</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Fill in the following fields with the information about your package.&lt;/p&gt;&lt;p&gt;See the &lt;span style=&quot; text-decoration: underline;&quot;&gt;Help&lt;/span&gt; for more information.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QFormLayout" name="formLayout">
+       <item row="0" column="0">
+        <widget class="QLabel" name="nameLabel">
+         <property name="text">
+          <string>Name</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="nameLineEdit"/>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="versionLabel">
+         <property name="text">
+          <string>Version</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="versionLineEdit"/>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="authorLabel">
+         <property name="text">
+          <string>Author</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="authorLineEdit"/>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="descriptionLabel">
+         <property name="text">
+          <string>Description</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLineEdit" name="descriptionLineEdit"/>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="iDLabel">
+         <property name="text">
+          <string>ID</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QLineEdit" name="iDLineEdit"/>
+       </item>
+       <item row="5" column="0">
+        <widget class="QLabel" name="websiteLabel">
+         <property name="text">
+          <string>Website</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="1">
+        <widget class="QLineEdit" name="websiteLineEdit"/>
+       </item>
+       <item row="6" column="0">
+        <widget class="QLabel" name="categoryLabel">
+         <property name="text">
+          <string>Category</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="1">
+        <widget class="QComboBox" name="categoryComboBox">
+         <property name="editable">
+          <bool>true</bool>
+         </property>
+         <item>
+          <property name="text">
+           <string>Alchemy</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Animation</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Armour</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Armour - Shields</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Audio - SFX, Music, Voice</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Books and Scrolls</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Bug Fixes</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Buildings</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Castles, Palaces, Mansions and Estates</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Cheats and God Items</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Cities, Towns, Villages and Hamlets</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Clothing</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Clothing - Jewelry</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Collectables, Treasure Hunts and Puzzles</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Combat</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Companions - Creatures</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Companions - Other</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Crafting</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Creatures</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Dungeons - New</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Dungeons - Vanilla</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>ENB Preset</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Environmental</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Followers</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Forts, Ruins and Abandoned Structures</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Gameplay Effects and Changes</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Guilds/Factions</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Hair, Face and Body</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Immersion</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Items and Objects - Player</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Items and Objects - World</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Landscape Changes</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Locations - New</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Locations - Vanilla</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Magic - Gameplay</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Magic - Spells &amp; Enchantments</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Mercantiles</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Miscellaneous</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Modder's Resources and Tutorials</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Models and Textures</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Mounts</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>New Lands</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>NPC</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>NPC - Children</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Overhauls</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Patches</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Player Homes</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Quests and Adventures</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Races, Classes and Birthsigns</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Save Games</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Shouts</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Skills and Leveling</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Stealth</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>User Interface</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Utilities</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Videos and Trailers</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Visuals and Graphics</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Weapons</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Weapons and Armour</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="finish_button">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>Finish</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="cancel_button">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
