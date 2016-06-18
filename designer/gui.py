@@ -471,15 +471,20 @@ class MainFrame(base_ui[0], base_ui[1]):
             child_button.setFont(font_button)
             child_button.setMaximumSize(5000, 30)
             child_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+            child_button.setStatusTip("A possible child node.")
             child_button.clicked.connect(lambda _, tag_=new_object.tag: self.selected_object_list(tag_))
             if not self.current_object.can_add_child(new_object):
                 child_button.setEnabled(False)
             if child in self.current_object.required_children:
                 child_button.setStyleSheet("background-color: " + QColor("#ba5f5f").name())
+                child_button.setStatusTip("A red button indicates that at least one of this node is required.")
             if child in self.current_object.either_children_group:
                 child_button.setStyleSheet("background-color: " + QColor("#ffaa7f").name())
+                child_button.setStatusTip("An orange button indicates that only one of these buttons must be used.")
             if child in self.current_object.at_least_one_children_group:
                 child_button.setStyleSheet("background-color: " + QColor("#c8c863").name())
+                child_button.setStatusTip("A yellow button indicates that from all the yellow buttons, "
+                                          "at least one is required.")
             self.layout_box.addWidget(child_button)
         self.layout_box.addSpacerItem(spacer)
 
