@@ -38,18 +38,18 @@ class _WizardBase(QStackedWidget):
     cancelled = pyqtSignal()
     finished = pyqtSignal([object])
 
-    def __init__(self, parent, element, code_signal, **kwargs):
+    def __init__(self, parent_widget, element, code_signal, **kwargs):
         """
-        :param parent: The parent widget.
+        :param parent_widget: The parent widget.
         :param element: The element this wizard corresponds.
         :param main_window: The app's main window.
         """
-        super().__init__(parent)
+        super().__init__(parent_widget)
         if type(self) is _WizardBase:
             raise BaseInstanceException(self)
 
         self.element = element
-        self.parent = parent
+        self.parent_widget = parent_widget
         self.kwargs = kwargs
         self.code_changed.connect(code_signal.emit)
         self._setup_pages()
@@ -447,3 +447,152 @@ class WizardDepend(_WizardBase):
                     widget.deleteLater()
 
         [self.add_elem(main_elem, depend_layout, element_=elem) for elem in main_elem if elem.tag == "dependencies"]
+
+
+class WizardDependType(_WizardBase):
+    def __init__(self, parent_widget, element, code_signal, **kwargs):
+        super().__init__(parent_widget, element, code_signal, **kwargs)
+
+    def _process_results(self, result):
+        self.element.getparent().replace(self.element, result)
+        item_parent = self.element.model_item.parent()
+        row = self.element.model_item.row()
+        item_parent.removeRow(row)
+        item_parent.insertRow(row, result.model_item)
+        self.finished.emit()
+
+    def _setup_pages(self):
+        def copy_elem(element_):
+            result = elem_factory(element_.tag, element_.getparent())
+            element_.write_attribs()
+            for key in element_.keys():
+                result.set(key, element_.get(key))
+            result.parse_attribs()
+
+            for child in element_:
+                new_child = copy_elem(child)
+                result.add_child(new_child)
+
+            return result
+
+        element_result = copy_elem(self.element)
+
+        default_type = [elem for elem in element_result if elem.tag == "defaultType"]
+        if default_type:
+            default_type_elem = default_type[0]
+        else:
+            default_type_elem = elem_factory("defaultType", element_result)
+            element_result.add_child(default_type_elem)
+
+        patterns = [elem for elem in element_result if elem.tag == "patterns"]
+        if patterns:
+            patterns_elem = patterns[0]
+        else:
+            patterns_elem = elem_factory("patterns", element_result)
+            element_result.add_child(patterns_elem)
+
+        page = loadUi(join(cur_folder, "resources/templates/wizard_dependtype_01.ui"))
+
+        pattern_list = [elem for elem in patterns_elem if elem.tag == "pattern"]
+        for element in pattern_list:
+            element_result.remove_child(element)
+            self.add_elem(element_result, page.layout_pattern, element_=element)
+
+        page.typeComboBox.setCurrentText(default_type_elem.properties["name"].value)
+
+        # finish with connections
+        page.typeComboBox.currentTextChanged.connect(default_type_elem.properties["name"].set_value)
+        page.typeComboBox.currentTextChanged.connect(default_type_elem.write_attribs)
+        page.typeComboBox.currentTextChanged.connect(lambda: self.code_changed.emit(element_result))
+
+        page.button_pattern.clicked.connect(
+            lambda: self.add_elem(patterns_elem, page.layout_pattern, tag="pattern"))
+        page.button_pattern.clicked.connect(lambda: self.code_changed.emit(element_result))
+
+        page.finish_button.clicked.connect(lambda: self._process_results(element_result))
+        page.cancel_button.clicked.connect(self.cancelled.emit)
+
+        self.code_changed.emit(element_result)
+        self.addWidget(page)
+
+    def add_elem(self, parent_elem, layout, tag="", element_=None):
+        """
+        :param parent_elem: The parent element - the element the wizard is being applied on.
+        :param tag: The tag of the element to be created
+        :param element_: The element to be used
+        :param layout: The layout into which to insert the newly copied element
+        """
+        if element_ is None and tag:
+            child = elem_factory(tag, parent_elem)
+            parent_elem.add_child(child)
+        else:
+            if element_ is None:
+                return
+            child = element_
+        spacer = layout.takeAt(layout.count() - 1)
+        item = self._create_field(child)
+        layout.addWidget(item)
+        layout.addSpacerItem(spacer)
+        self.code_changed.emit(parent_elem)
+
+    def _create_field(self, element):
+        """
+        :param element: the element newly copied
+        :return: base QWidget, with the source and destination fields built
+        """
+        parent_element = element.getparent()
+
+        type_elem_list = [elem for elem in element if elem.tag == "type"]
+        depend_elem_list = [elem for elem in element if elem.tag == "dependencies"]
+
+        if type_elem_list:
+            type_elem = type_elem_list[0]
+        else:
+            type_elem = elem_factory("type", element)
+            element.add_child(type_elem)
+
+        if depend_elem_list:
+            depend_elem = depend_elem_list[0]
+        else:
+            depend_elem = elem_factory("dependencies", element)
+            element.add_child(depend_elem)
+
+        item = loadUi(join(cur_folder, "resources/templates/wizard_dependtype_pattern.ui"))
+
+        # set initial values
+        item.combo_type.setCurrentText(type_elem.properties["name"].value)
+        item.button_delete.setIcon(QIcon(join(cur_folder, "resources/logos/logo_cross.png")))
+
+        # connect the signals
+        item.combo_type.currentTextChanged.connect(type_elem.properties["name"].set_value)
+        item.combo_type.currentTextChanged.connect(type_elem.write_attribs)
+        item.combo_type.currentTextChanged.connect(lambda: self.code_changed.emit(parent_element.getparent()))
+
+        item.button_depend.clicked.connect(
+            lambda _, element_=depend_elem: self._nested_wizard(element_, item.button_depend))
+
+        item.button_delete.clicked.connect(item.deleteLater)
+        item.button_delete.clicked.connect(lambda: parent_element.remove_child(element))
+        item.button_delete.clicked.connect(lambda: self.code_changed.emit(parent_element.getparent()))
+
+        return item
+
+    def _nested_wizard(self, element, depend_button):
+        def update_depend_button(parent_element, depend_button_):
+            depend_elem_list = [elem for elem in parent_element if elem.tag == "dependencies"]
+            depend_button_.clicked.disconnect()
+            depend_button_.clicked.connect(
+                lambda _, element_=depend_elem_list[0]: self._nested_wizard(element_, depend_button_))
+
+        nested_wiz = WizardDepend(self, element, self.code_changed, **self.kwargs)
+        self.addWidget(nested_wiz)
+        self.setCurrentWidget(nested_wiz)
+
+        nested_wiz.cancelled.connect(lambda: nested_wiz.deleteLater())
+        nested_wiz.cancelled.connect(
+            lambda parent=element.getparent().getparent().getparent(): self.code_changed.emit(parent))
+
+        nested_wiz.finished.connect(lambda: nested_wiz.deleteLater())
+        nested_wiz.finished.connect(
+            lambda parent=element.getparent().getparent().getparent(): self.code_changed.emit(parent))
+        nested_wiz.finished.connect(lambda parent=element.getparent(): update_depend_button(parent, depend_button))

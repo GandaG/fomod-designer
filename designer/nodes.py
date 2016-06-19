@@ -21,7 +21,7 @@ from PyQt5.QtCore import Qt
 from lxml import etree
 from jsonpickle import encode, decode, set_encoder_options
 from json import JSONDecodeError
-from .wizards import WizardFiles, WizardDepend
+from .wizards import WizardFiles, WizardDepend, WizardDependType
 from .props import PropertyCombo, PropertyInt, PropertyText, PropertyFile, PropertyFolder, PropertyColour, \
     PropertyFlagLabel, PropertyFlagValue, PropertyHTML
 from .exceptions import BaseInstanceException
@@ -1203,7 +1203,8 @@ class NodeConfigDependencyType(_NodeBase):
             type(self).tag,
             1,
             allowed_children=allowed_children,
-            required_children=required
+            required_children=required,
+            wizard=WizardDependType
         )
         super()._init()
 
