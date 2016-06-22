@@ -120,6 +120,7 @@ class WizardFiles(_WizardBase):
         page_ui.finish_button.clicked.connect(lambda: self._process_results(element_result))
         page_ui.cancel_button.clicked.connect(self.cancelled.emit)
 
+        self.code_changed.emit(element_result)
         self.addWidget(page)
 
     def _create_field(self, element):
@@ -450,9 +451,6 @@ class WizardDepend(_WizardBase):
 
 
 class WizardDependType(_WizardBase):
-    def __init__(self, parent_widget, element, code_signal, **kwargs):
-        super().__init__(parent_widget, element, code_signal, **kwargs)
-
     def _process_results(self, result):
         self.element.getparent().replace(self.element, result)
         item_parent = self.element.model_item.parent()
@@ -596,3 +594,263 @@ class WizardDependType(_WizardBase):
         nested_wiz.finished.connect(
             lambda parent=element.getparent().getparent().getparent(): self.code_changed.emit(parent))
         nested_wiz.finished.connect(lambda parent=element.getparent(): update_depend_button(parent, depend_button))
+
+
+class WizardPlugin(_WizardBase):
+    def _process_results(self, result):
+        self.element.getparent().replace(self.element, result)
+        item_parent = self.element.model_item.parent()
+        row = self.element.model_item.row()
+        item_parent.removeRow(row)
+        item_parent.insertRow(row, result.model_item)
+        self.finished.emit()
+
+    def _setup_pages(self):
+        def copy_elem(element_):
+            result = elem_factory(element_.tag, element_.getparent())
+            element_.write_attribs()
+            for key in element_.keys():
+                result.set(key, element_.get(key))
+            result.set_text(element_.text)
+            result.parse_attribs()
+
+            for child in element_:
+                new_child = copy_elem(child)
+                result.add_child(new_child)
+
+            return result
+
+        def button_clicked(line_edit):
+            open_dialog = QFileDialog()
+            file_path = open_dialog.getOpenFileName(self, "Select File:", self.kwargs["package_path"])
+            if file_path[0]:
+                line_edit.setText(relpath(file_path[0], self.kwargs["package_path"]))
+
+        def create_type_depend(type_descriptor_elem_):
+            for elem in type_descriptor_elem_:
+                type_descriptor_elem_.remove_child(elem)
+            type_depend_elem_ = elem_factory("dependencyType", type_descriptor_elem_)
+            type_depend_elem_.add_child(elem_factory("patterns", type_depend_elem_))
+            type_depend_elem_.add_child(elem_factory("defaultType", type_depend_elem_))
+            type_descriptor_elem_.add_child(type_depend_elem_)
+            try:
+                page.button_depend.clicked.disconnect()
+            except TypeError:
+                pass
+            page.button_depend.clicked.connect(
+                lambda _, element_=type_depend_elem_: self._nested_type_depend(element_, page.button_depend)
+            )
+
+        def create_type(type_descriptor_elem_):
+            for elem in type_descriptor_elem_:
+                type_descriptor_elem_.remove_child(elem)
+            type_elem_ = elem_factory("type", type_descriptor_elem_)
+            type_descriptor_elem_.add_child(type_elem_)
+            page.combo_type.currentTextChanged.disconnect()
+            page.combo_type.currentTextChanged.connect(type_elem_.properties["name"].set_value)
+            page.combo_type.currentTextChanged.connect(type_elem_.write_attribs)
+            page.combo_type.currentTextChanged.connect(lambda: self.code_changed.emit(element_result))
+            page.combo_type.setCurrentText("Required")
+            page.combo_type.setCurrentText("Optional")
+
+        element_result = copy_elem(self.element)
+
+        description_list = [elem for elem in element_result if elem.tag == "description"]
+        if description_list:
+            description_elem = description_list[0]
+        else:
+            description_elem = elem_factory("description", element_result)
+            element_result.add_child(description_elem)
+
+        image_list = [elem for elem in element_result if elem.tag == "image"]
+        if image_list:
+            image_elem = image_list[0]
+        else:
+            image_elem = elem_factory("image", element_result)
+            element_result.add_child(image_elem)
+
+        files_list = [elem for elem in element_result if elem.tag == "files"]
+        if files_list:
+            files_elem = files_list[0]
+        else:
+            files_elem = elem_factory("files", element_result)
+            element_result.add_child(files_elem)
+
+        condition_flags_list = [elem for elem in element_result if elem.tag == "conditionFlags"]
+        if condition_flags_list:
+            condition_flags_elem = condition_flags_list[0]
+        else:
+            condition_flags_elem = elem_factory("conditionFlags", element_result)
+            element_result.add_child(condition_flags_elem)
+
+        type_descriptor_list = [elem for elem in element_result if elem.tag == "typeDescriptor"]
+        if type_descriptor_list:
+            type_descriptor_elem = type_descriptor_list[0]
+        else:
+            type_descriptor_elem = elem_factory("typeDescriptor", element_result)
+            element_result.add_child(type_descriptor_elem)
+
+        page = loadUi(join(cur_folder, "resources/templates/wizard_plugin_01.ui"))
+
+        flag_list = [elem for elem in condition_flags_elem if elem.tag == "flag"]
+        for element in flag_list:
+            element_result.remove_child(element)
+            self.add_elem(element_result, page.layout_flag, element_=element)
+
+        page.nameLineEdit.setText(element_result.properties["name"].value)
+        page.descriptionLineEdit.setText(description_elem.text)
+        page.edit_image.setText(image_elem.properties["path"].value)
+
+        type_list = [elem for elem in type_descriptor_elem if elem.tag == "type"]
+        type_depend_list = [elem for elem in type_descriptor_elem if elem.tag == "dependencyType"]
+        if type_depend_list:
+            page.radio_depend.setChecked(True)
+            page.button_depend.setEnabled(True)
+            page.combo_type.setEnabled(False)
+            page.button_depend.clicked.connect(
+                lambda _, element_=type_depend_list[0]: self._nested_type_depend(element_, page.button_depend)
+            )
+        elif type_list:
+            page.combo_type.setCurrentText(type_list[0].properties["name"].value)
+            page.combo_type.currentTextChanged.connect(type_list[0].properties["name"].set_value)
+            page.combo_type.currentTextChanged.connect(type_list[0].write_attribs)
+            page.combo_type.currentTextChanged.connect(lambda: self.code_changed.emit(element_result))
+        else:
+            type_elem = elem_factory("type", type_descriptor_elem)
+            type_descriptor_elem.add_child(type_elem)
+            page.combo_type.currentTextChanged.connect(type_elem.properties["name"].set_value)
+            page.combo_type.currentTextChanged.connect(type_elem.write_attribs)
+            page.combo_type.currentTextChanged.connect(lambda: self.code_changed.emit(element_result))
+            page.combo_type.setCurrentText("Optional")
+
+        # finish with connections
+        page.nameLineEdit.textChanged.connect(element_result.properties["name"].set_value)
+        page.nameLineEdit.textChanged.connect(element_result.write_attribs)
+        page.nameLineEdit.textChanged.connect(lambda: self.code_changed.emit(element_result))
+
+        page.descriptionLineEdit.textChanged.connect(description_elem.set_text)
+        page.descriptionLineEdit.textChanged.connect(description_elem.write_attribs)
+        page.descriptionLineEdit.textChanged.connect(lambda: self.code_changed.emit(element_result))
+
+        page.edit_image.textChanged.connect(image_elem.properties["path"].set_value)
+        page.edit_image.textChanged.connect(image_elem.write_attribs)
+        page.edit_image.textChanged.connect(lambda: self.code_changed.emit(element_result))
+        page.button_image.clicked.connect(lambda: button_clicked(page.edit_image))
+
+        page.button_files.clicked.connect(
+            lambda _, element_=files_elem: self._nested_files(element_, page.button_files)
+        )
+
+        page.button_flag.clicked.connect(
+            lambda: self.add_elem(condition_flags_elem, page.layout_flag, tag="flag")
+        )
+        page.button_flag.clicked.connect(lambda: self.code_changed.emit(element_result))
+
+        page.radio_type.toggled.connect(page.combo_type.setEnabled)
+        page.radio_type.clicked.connect(lambda: create_type(type_descriptor_elem))
+        page.radio_type.clicked.connect(lambda: self.code_changed.emit(element_result))
+
+        page.radio_depend.toggled.connect(page.button_depend.setEnabled)
+        page.radio_depend.clicked.connect(lambda: create_type_depend(type_descriptor_elem))
+        page.radio_depend.clicked.connect(lambda: self.code_changed.emit(element_result))
+
+        page.finish_button.clicked.connect(lambda: self._process_results(element_result))
+        page.cancel_button.clicked.connect(self.cancelled.emit)
+
+        self.code_changed.emit(element_result)
+        self.addWidget(page)
+
+    def add_elem(self, parent_elem, layout, tag="", element_=None):
+        """
+        :param parent_elem: The parent element - the element the wizard is being applied on.
+        :param tag: The tag of the element to be created
+        :param element_: The element to be used
+        :param layout: The layout into which to insert the newly copied element
+        """
+        if element_ is None and tag:
+            child = elem_factory(tag, parent_elem)
+            parent_elem.add_child(child)
+        else:
+            if element_ is None:
+                return
+            child = element_
+        spacer = layout.takeAt(layout.count() - 1)
+        item = self._create_field(child)
+        layout.addWidget(item)
+        layout.addSpacerItem(spacer)
+        self.code_changed.emit(parent_elem)
+
+    def _create_field(self, element):
+        """
+        :param element: the element newly copied
+        :return: base QWidget, with the source and destination fields built
+        """
+        parent_element = element.getparent()
+
+        item = loadUi(join(cur_folder, "resources/templates/wizard_plugin_flag.ui"))
+
+        # set initial values
+        item.edit_flag.setText(element.properties["name"].value)
+        item.edit_value.setText(element.text)
+        item.button_delete.setIcon(QIcon(join(cur_folder, "resources/logos/logo_cross.png")))
+
+        # connect the signals
+        item.edit_flag.textChanged.connect(element.properties["name"].set_value)
+        item.edit_flag.textChanged.connect(element.write_attribs)
+        item.edit_flag.textChanged.connect(lambda: self.code_changed.emit(parent_element.getparent()))
+
+        item.edit_value.textChanged.connect(element.set_text)
+        item.edit_value.textChanged.connect(element.write_attribs)
+        item.edit_value.textChanged.connect(lambda: self.code_changed.emit(parent_element.getparent()))
+
+        item.button_delete.clicked.connect(item.deleteLater)
+        item.button_delete.clicked.connect(lambda: parent_element.remove_child(element))
+        item.button_delete.clicked.connect(lambda: self.code_changed.emit(parent_element.getparent()))
+
+        return item
+
+    def _nested_type_depend(self, element, depend_button):
+        def update_depend_button(parent_element, depend_button_):
+            depend_elem_list = [elem for elem in parent_element if elem.tag == "dependencyType"]
+            depend_button_.clicked.disconnect()
+            depend_button_.clicked.connect(
+                lambda _, element_=depend_elem_list[0]: self._nested_wizard(element_, depend_button_)
+            )
+
+        nested_wiz = WizardDependType(self, element, self.code_changed, **self.kwargs)
+        self.addWidget(nested_wiz)
+        self.setCurrentWidget(nested_wiz)
+
+        nested_wiz.cancelled.connect(lambda: nested_wiz.deleteLater())
+        nested_wiz.cancelled.connect(
+            lambda parent=element.getparent().getparent(): self.code_changed.emit(parent)
+        )
+
+        nested_wiz.finished.connect(lambda: nested_wiz.deleteLater())
+        nested_wiz.finished.connect(
+            lambda parent=element.getparent().getparent(): self.code_changed.emit(parent)
+        )
+        nested_wiz.finished.connect(lambda parent=element.getparent(): update_depend_button(parent, depend_button))
+
+    def _nested_files(self, element, file_button):
+        def update_files_button(parent_element, files_button_):
+            files_list = [elem for elem in parent_element if elem.tag == "files"]
+            files_button_.clicked.disconnect()
+            files_button_.clicked.connect(
+                lambda _, element_=files_list[0]: self._nested_files(element_, files_button_)
+            )
+
+        nested_wiz = WizardFiles(self, element, self.code_changed, **self.kwargs)
+        self.addWidget(nested_wiz)
+        self.setCurrentWidget(nested_wiz)
+
+        nested_wiz.cancelled.connect(lambda: nested_wiz.deleteLater())
+        nested_wiz.cancelled.connect(
+            lambda parent=element.getparent(): self.code_changed.emit(parent)
+        )
+
+        nested_wiz.finished.connect(lambda: nested_wiz.deleteLater())
+        nested_wiz.finished.connect(
+            lambda parent=element.getparent(): self.code_changed.emit(parent)
+        )
+        nested_wiz.finished.connect(lambda parent=element.getparent(): update_files_button(parent, file_button))
