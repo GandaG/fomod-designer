@@ -23,15 +23,17 @@ from datetime import datetime
 from configparser import ConfigParser
 from PyQt5.uic import loadUiType
 from PyQt5.QtWidgets import (QShortcut, QFileDialog, QColorDialog, QMessageBox, QLabel, QHBoxLayout, QCommandLinkButton,
-                             QFormLayout, QLineEdit, QSpinBox, QComboBox, QWidget, QPushButton, QSizePolicy, QStatusBar)
+                             QFormLayout, QLineEdit, QSpinBox, QComboBox, QWidget, QPushButton, QSizePolicy, QStatusBar,
+                             QCompleter)
 from PyQt5.QtGui import QIcon, QPixmap, QStandardItemModel, QColor, QFont
-from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtCore import Qt, pyqtSignal, QStringListModel
 from requests import get, codes, ConnectionError, Timeout
 from validator import validate_tree, check_warnings, ValidatorError
 from . import cur_folder, __version__
 from .io import import_, new, export, sort_elements, elem_factory
 from .previews import PreviewDispatcherThread
-from .props import PropertyFile, PropertyColour, PropertyFolder, PropertyCombo, PropertyInt, PropertyText
+from .props import PropertyFile, PropertyColour, PropertyFolder, PropertyCombo, PropertyInt, PropertyText, \
+    PropertyFlagLabel, PropertyFlagValue
 from .exceptions import DesignerError
 
 
@@ -180,11 +182,38 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.wizard_button.clicked.connect(self.run_wizard)
         self.wizard_button.hide()
 
+        # manage auto-completion
+        self.flag_label_model = QStringListModel()
+        self.flag_label_completer = QCompleter()
+        self.flag_label_completer.setModel(self.flag_label_model)
+
+        self.flag_value_model = QStringListModel()
+        self.flag_value_completer = QCompleter()
+        self.flag_value_completer.setModel(self.flag_value_model)
+
         self.object_tree_view.setModel(self.tree_model)
         self.object_tree_view.header().hide()
 
         self.update_recent_files()
         self.check_updates()
+
+    @staticmethod
+    def update_flag_label_completer(label_model, elem_root):
+        label_list = []
+        for elem in elem_root.iter():
+            if elem.tag == "flag":
+                value = elem.properties["name"].value
+                if value not in label_list:
+                    label_list.append(value)
+        label_model.setStringList(label_list)
+
+    @staticmethod
+    def update_flag_value_completer(value_model, elem_root, label):
+        value_list = []
+        for elem in elem_root.iter():
+            if elem.tag == "flag" and elem.text not in value_list and elem.properties["name"].value == label:
+                value_list.append(elem.text)
+        value_model.setStringList(value_list)
 
     def check_updates(self):
         """
@@ -563,18 +592,51 @@ class MainFrame(base_ui[0], base_ui[1]):
             label.setText(props[key].name)
             self.formLayout.setWidget(prop_index, QFormLayout.LabelRole, label)
 
-            if isinstance(props[key], PropertyText):
+            if type(props[key]) is PropertyText:
                 prop_list.append(QLineEdit(self.dockWidgetContents))
                 prop_list[prop_index].setText(props[key].value)
                 prop_list[prop_index].textEdited[str].connect(props[key].set_value)
                 prop_list[prop_index].textEdited[str].connect(self.current_object.write_attribs)
                 prop_list[prop_index].textEdited[str].connect(self.current_object.update_item_name)
                 prop_list[prop_index].textEdited[str].connect(self.fomod_modified)
-                prop_list[prop_index].textEdited[str].connect(lambda: self.xml_code_changed.emit(self.current_object)
-                                                              if self.settings_dict["General"]["code_refresh"] >= 3
-                                                              else None)
+                prop_list[prop_index].textEdited[str].connect(
+                    lambda: self.xml_code_changed.emit(self.current_object)
+                    if self.settings_dict["General"]["code_refresh"] >= 3 else None
+                )
 
-            elif isinstance(props[key], PropertyInt):
+            if type(props[key]) is PropertyFlagLabel:
+                prop_list.append(QLineEdit(self.dockWidgetContents))
+                self.update_flag_label_completer(self.flag_label_model, self.config_root)
+                self.flag_label_completer.activated[str].connect(prop_list[prop_index].setText)
+                prop_list[prop_index].setCompleter(self.flag_label_completer)
+                prop_list[prop_index].textChanged[str].connect(
+                    lambda text: self.update_flag_value_completer(self.flag_value_model, self.config_root, text)
+                )
+                prop_list[prop_index].setText(props[key].value)
+                prop_list[prop_index].textChanged[str].connect(props[key].set_value)
+                prop_list[prop_index].textChanged[str].connect(self.current_object.write_attribs)
+                prop_list[prop_index].textChanged[str].connect(self.current_object.update_item_name)
+                prop_list[prop_index].textChanged[str].connect(self.fomod_modified)
+                prop_list[prop_index].textChanged[str].connect(
+                    lambda: self.xml_code_changed.emit(self.current_object)
+                    if self.settings_dict["General"]["code_refresh"] >= 3 else None
+                )
+
+            if type(props[key]) is PropertyFlagValue:
+                prop_list.append(QLineEdit(self.dockWidgetContents))
+                prop_list[prop_index].setCompleter(self.flag_value_completer)
+                self.flag_value_completer.activated[str].connect(prop_list[prop_index].setText)
+                prop_list[prop_index].setText(props[key].value)
+                prop_list[prop_index].textChanged[str].connect(props[key].set_value)
+                prop_list[prop_index].textChanged[str].connect(self.current_object.write_attribs)
+                prop_list[prop_index].textChanged[str].connect(self.current_object.update_item_name)
+                prop_list[prop_index].textChanged[str].connect(self.fomod_modified)
+                prop_list[prop_index].textChanged[str].connect(
+                    lambda: self.xml_code_changed.emit(self.current_object)
+                    if self.settings_dict["General"]["code_refresh"] >= 3 else None
+                )
+
+            elif type(props[key]) is PropertyInt:
                 prop_list.append(QSpinBox(self.dockWidgetContents))
                 prop_list[prop_index].setValue(int(props[key].value))
                 prop_list[prop_index].setMinimum(props[key].min)
@@ -586,7 +648,7 @@ class MainFrame(base_ui[0], base_ui[1]):
                                                            if self.settings_dict["General"]["code_refresh"] >= 3
                                                            else None)
 
-            elif isinstance(props[key], PropertyCombo):
+            elif type(props[key]) is PropertyCombo:
                 prop_list.append(QComboBox(self.dockWidgetContents))
                 prop_list[prop_index].insertItems(0, props[key].values)
                 prop_list[prop_index].setCurrentIndex(props[key].values.index(props[key].value))
@@ -598,7 +660,7 @@ class MainFrame(base_ui[0], base_ui[1]):
                                                              if self.settings_dict["General"]["code_refresh"] >= 3
                                                              else None)
 
-            elif isinstance(props[key], PropertyFile):
+            elif type(props[key]) is PropertyFile:
                 def button_clicked():
                     open_dialog = QFileDialog()
                     file_path = open_dialog.getOpenFileName(self, "Select File:", self.package_path)
@@ -622,7 +684,7 @@ class MainFrame(base_ui[0], base_ui[1]):
                                                    if self.settings_dict["General"]["code_refresh"] >= 3 else None)
                 path_button.clicked.connect(button_clicked)
 
-            elif isinstance(props[key], PropertyFolder):
+            elif type(props[key]) is PropertyFolder:
                 def button_clicked():
                     open_dialog = QFileDialog()
                     folder_path = open_dialog.getExistingDirectory(self, "Select folder:", self.package_path)
@@ -646,7 +708,7 @@ class MainFrame(base_ui[0], base_ui[1]):
                                               if self.settings_dict["General"]["code_refresh"] >= 3 else None)
                 path_button.clicked.connect(button_clicked)
 
-            elif isinstance(props[key], PropertyColour):
+            elif type(props[key]) is PropertyColour:
                 def button_clicked():
                     init_colour = QColor("#" + props[key].value)
                     colour_dialog = QColorDialog()

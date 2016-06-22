@@ -18,7 +18,8 @@ from os import sep
 from PyQt5.QtGui import QStandardItem
 from lxml import etree
 from .wizards import WizardFiles, WizardDepend
-from .props import PropertyCombo, PropertyInt, PropertyText, PropertyFile, PropertyFolder, PropertyColour
+from .props import PropertyCombo, PropertyInt, PropertyText, PropertyFile, PropertyFolder, PropertyColour, \
+    PropertyFlagLabel, PropertyFlagValue
 from .exceptions import BaseInstanceException
 
 
@@ -386,7 +387,7 @@ class NodeConfigDependFlag(_NodeBase):
     tag = "flagDependency"
 
     def _init(self):
-        properties = {"flag": PropertyText("Flag"), "value": PropertyText("Value")}
+        properties = {"flag": PropertyFlagLabel("Label"), "value": PropertyFlagValue("Value")}
         self.init("Flag Dependency", type(self).tag, 0, properties=properties)
         super()._init()
 
@@ -661,7 +662,7 @@ class NodeConfigFlag(_NodeBase):
     tag = "flag"
 
     def _init(self):
-        properties = {"name": PropertyText("Name")}
+        properties = {"name": PropertyFlagLabel("Label")}
         self.init("Flag", type(self).tag, 0, properties=properties, allow_text=True)
         super()._init()
 
