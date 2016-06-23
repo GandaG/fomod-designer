@@ -20,7 +20,9 @@ from threading import Thread
 from queue import Queue
 from webbrowser import open as web_open
 from datetime import datetime
-from configparser import ConfigParser
+from json import JSONDecodeError
+from jsonpickle import encode, decode, set_encoder_options
+from collections import deque
 from PyQt5.uic import loadUiType
 from PyQt5.QtWidgets import (QShortcut, QFileDialog, QColorDialog, QMessageBox, QLabel, QHBoxLayout, QCommandLinkButton,
                              QFormLayout, QLineEdit, QSpinBox, QComboBox, QWidget, QPushButton, QSizePolicy, QStatusBar,
@@ -36,11 +38,14 @@ from .props import PropertyFile, PropertyColour, PropertyFolder, PropertyCombo, 
     PropertyFlagLabel, PropertyFlagValue
 from .exceptions import DesignerError
 
-
+# load all the ui types
 intro_ui = loadUiType(join(cur_folder, "resources/templates/intro.ui"))
 base_ui = loadUiType(join(cur_folder, "resources/templates/mainframe.ui"))
 settings_ui = loadUiType(join(cur_folder, "resources/templates/settings.ui"))
 about_ui = loadUiType(join(cur_folder, "resources/templates/about.ui"))
+
+# set the pretty print for the json encoder.
+set_encoder_options("json", indent=4)
 
 
 class IntroWindow(intro_ui[0], intro_ui[1]):
@@ -54,14 +59,17 @@ class IntroWindow(intro_ui[0], intro_ui[1]):
         self.setWindowTitle("FOMOD Designer")
         self.version.setText("Version " + __version__)
 
-        settings = read_settings()
-        for key in sorted(settings["Recent Files"]):
-            if settings["Recent Files"][key]:
-                butto = QCommandLinkButton(basename(settings["Recent Files"][key]), settings["Recent Files"][key], self)
-                butto.clicked.connect(lambda _, path=settings["Recent Files"][key]: self.open_path(path))
-                self.scroll_layout.addWidget(butto)
+        self.settings_dict = read_settings()
+        recent_files = self.settings_dict["Recent Files"]
+        for path in recent_files:
+            if not isdir(path):
+                recent_files.remove(path)
+                continue
+            button = QCommandLinkButton(basename(path), path, self)
+            button.clicked.connect(lambda _, path_=path: self.open_path(path_))
+            self.scroll_layout.addWidget(button)
 
-        if not settings["General"]["show_intro"]:
+        if not self.settings_dict["General"]["show_intro"]:
             main_window = MainFrame()
             main_window.move(self.pos())
             main_window.show()
@@ -78,13 +86,11 @@ class IntroWindow(intro_ui[0], intro_ui[1]):
 
         :param path: The path to open.
         """
-        config = ConfigParser()
-        config.read_dict(read_settings())
-        config["General"]["show_intro"] = str(not self.check_intro.isChecked()).lower()
-        config["General"]["show_advanced"] = str(self.check_advanced.isChecked()).lower()
+        self.settings_dict["General"]["show_intro"] = not self.check_intro.isChecked()
+        self.settings_dict["General"]["show_advanced"] = self.check_advanced.isChecked()
         makedirs(join(expanduser("~"), ".fomod"), exist_ok=True)
         with open(join(expanduser("~"), ".fomod", ".designer"), "w") as configfile:
-            config.write(configfile)
+            configfile.write(encode(self.settings_dict))
 
         main_window = MainFrame()
         main_window.move(self.pos())
@@ -379,13 +385,10 @@ class MainFrame(base_ui[0], base_ui[1]):
         """
         Clears the Recent Files gui menu and settings.
         """
-        config = ConfigParser()
-        config.read_dict(read_settings())
-        for key in config["Recent Files"]:
-            config["Recent Files"][key] = ""
+        self.settings_dict["Recent Files"].clear()
         makedirs(join(expanduser("~"), ".fomod"), exist_ok=True)
         with open(join(expanduser("~"), ".fomod", ".designer"), "w") as configfile:
-            config.write(configfile)
+            configfile.write(encode(self.settings_dict))
 
         for child in self.menu_Recent_Files.actions():
             if child is not self.actionClear:
@@ -399,68 +402,31 @@ class MainFrame(base_ui[0], base_ui[1]):
 
         :param add_new: If a new installer is being opened, add it to the list or move it to the top.
         """
-        def invalid_path(path_):
-            """
-            Called when a Recent Files path in invalid. Requests user decision on wether to delete the item or to leave
-            it.
-
-            :param path_: The invalid path.
-            """
-            msg_box = QMessageBox()
-            msg_box.setWindowTitle("This path no longer exists.")
-            msg_box.setText("Remove it from the Recent Files list?")
-            msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-            msg_box.setDefaultButton(QMessageBox.Yes)
-            answer = msg_box.exec_()
-            config_ = ConfigParser()
-            config_.read_dict(read_settings())
-            if answer == QMessageBox.Yes:
-                for key in config_["Recent Files"]:
-                    if config_["Recent Files"][key] == path_:
-                        config_["Recent Files"][key] = ""
-                        with open(join(expanduser("~"), ".fomod", ".designer"), "w") as configfile_:
-                            config_.write(configfile_)
-                        self.update_recent_files()
-            elif answer == QMessageBox.No:
-                pass
-
-        file_list = []
-        settings = read_settings()
-
-        # Populate the file_list with the existing recent files
-        for index in range(1, len(settings["Recent Files"])):
-            if settings["Recent Files"]["file" + str(index)]:
-                file_list.append(settings["Recent Files"]["file" + str(index)])
-
-        # remove all duplicates there was an issue with duplicate after invalid path
-        seen = set()
-        seen_add = seen.add
-        file_list = [x for x in file_list if not (x in seen or seen_add(x))]
-
+        file_list = deque(self.settings_dict["Recent Files"], maxlen=5)
         self.clear_recent_files()
+
+        # check for invalid paths and remove them
+        for path in file_list:
+            if not isdir(path):
+                file_list.remove(path)
 
         # check if the path is new or if it already exists - delete the last one or reorder respectively
         if add_new:
             if add_new in file_list:
                 file_list.remove(add_new)
-            elif len(file_list) == 5:
-                file_list.pop()
-            file_list.insert(0, add_new)
+            file_list.appendleft(add_new)
 
         # write the new list to the settings file
-        config = ConfigParser()
-        config.read_dict(settings)
-        for path in file_list:
-            config["Recent Files"]["file" + str(file_list.index(path) + 1)] = path
+        self.settings_dict["Recent Files"] = file_list
         makedirs(join(expanduser("~"), ".fomod"), exist_ok=True)
         with open(join(expanduser("~"), ".fomod", ".designer"), "w") as configfile:
-            config.write(configfile)
+            configfile.write(encode(self.settings_dict))
 
         # populate the gui menu with the new files list
         self.menu_Recent_Files.removeAction(self.actionClear)
-        for path in file_list:
+        for path in self.settings_dict["Recent Files"]:
             action = self.menu_Recent_Files.addAction(path)
-            action.triggered.connect(lambda x, path_=path: self.open(path_) if isdir(path_) else invalid_path(path_))
+            action.triggered.connect(lambda _, path_=path: self.open(path_))
         self.menu_Recent_Files.addSeparator()
         self.menu_Recent_Files.addAction(self.actionClear)
 
@@ -853,18 +819,18 @@ class SettingsDialog(settings_ui[0], settings_ui[1]):
         self.check_valid_save.stateChanged.connect(self.update_valid_save)
         self.check_warn_save.stateChanged.connect(self.update_warn_save)
 
-        config = read_settings()
-        self.combo_code_refresh.setCurrentIndex(config["General"]["code_refresh"])
-        self.check_intro.setChecked(config["General"]["show_intro"])
-        self.check_advanced.setChecked(config["General"]["show_advanced"])
-        self.check_valid_load.setChecked(config["Load"]["validate"])
-        self.check_valid_load_ignore.setChecked(config["Load"]["validate_ignore"])
-        self.check_warn_load.setChecked(config["Load"]["warnings"])
-        self.check_warn_load_ignore.setChecked(config["Load"]["warn_ignore"])
-        self.check_valid_save.setChecked(config["Save"]["validate"])
-        self.check_valid_save_ignore.setChecked(config["Save"]["validate_ignore"])
-        self.check_warn_save.setChecked(config["Save"]["warnings"])
-        self.check_warn_save_ignore.setChecked(config["Save"]["warn_ignore"])
+        self.settings_dict = read_settings()
+        self.combo_code_refresh.setCurrentIndex(self.settings_dict["General"]["code_refresh"])
+        self.check_intro.setChecked(self.settings_dict["General"]["show_intro"])
+        self.check_advanced.setChecked(self.settings_dict["General"]["show_advanced"])
+        self.check_valid_load.setChecked(self.settings_dict["Load"]["validate"])
+        self.check_valid_load_ignore.setChecked(self.settings_dict["Load"]["validate_ignore"])
+        self.check_warn_load.setChecked(self.settings_dict["Load"]["warnings"])
+        self.check_warn_load_ignore.setChecked(self.settings_dict["Load"]["warn_ignore"])
+        self.check_valid_save.setChecked(self.settings_dict["Save"]["validate"])
+        self.check_valid_save_ignore.setChecked(self.settings_dict["Save"]["validate_ignore"])
+        self.check_warn_save.setChecked(self.settings_dict["Save"]["warnings"])
+        self.check_warn_save_ignore.setChecked(self.settings_dict["Save"]["warn_ignore"])
 
         self.check_valid_load.stateChanged.emit(self.check_valid_load.isChecked())
         self.check_warn_load.stateChanged.emit(self.check_warn_load.isChecked())
@@ -872,23 +838,21 @@ class SettingsDialog(settings_ui[0], settings_ui[1]):
         self.check_warn_save.stateChanged.emit(self.check_warn_save.isChecked())
 
     def accepted(self):
-        config = ConfigParser()
-        config.read_dict(read_settings())
-        config["General"]["code_refresh"] = str(self.combo_code_refresh.currentIndex())
-        config["General"]["show_intro"] = str(self.check_intro.isChecked()).lower()
-        config["General"]["show_advanced"] = str(self.check_advanced.isChecked()).lower()
-        config["Load"]["validate"] = str(self.check_valid_load.isChecked()).lower()
-        config["Load"]["validate_ignore"] = str(self.check_valid_load_ignore.isChecked()).lower()
-        config["Load"]["warnings"] = str(self.check_warn_load.isChecked()).lower()
-        config["Load"]["warn_ignore"] = str(self.check_warn_load_ignore.isChecked()).lower()
-        config["Save"]["validate"] = str(self.check_valid_save.isChecked()).lower()
-        config["Save"]["validate_ignore"] = str(self.check_valid_save_ignore.isChecked()).lower()
-        config["Save"]["warnings"] = str(self.check_warn_save.isChecked()).lower()
-        config["Save"]["warn_ignore"] = str(self.check_warn_save_ignore.isChecked()).lower()
+        self.settings_dict["General"]["code_refresh"] = self.combo_code_refresh.currentIndex()
+        self.settings_dict["General"]["show_intro"] = self.check_intro.isChecked()
+        self.settings_dict["General"]["show_advanced"] = self.check_advanced.isChecked()
+        self.settings_dict["Load"]["validate"] = self.check_valid_load.isChecked()
+        self.settings_dict["Load"]["validate_ignore"] = self.check_valid_load_ignore.isChecked()
+        self.settings_dict["Load"]["warnings"] = self.check_warn_load.isChecked()
+        self.settings_dict["Load"]["warn_ignore"] = self.check_warn_load_ignore.isChecked()
+        self.settings_dict["Save"]["validate"] = self.check_valid_save.isChecked()
+        self.settings_dict["Save"]["validate_ignore"] = self.check_valid_save_ignore.isChecked()
+        self.settings_dict["Save"]["warnings"] = self.check_warn_save.isChecked()
+        self.settings_dict["Save"]["warn_ignore"] = self.check_warn_save_ignore.isChecked()
 
         makedirs(join(expanduser("~"), ".fomod"), exist_ok=True)
         with open(join(expanduser("~"), ".fomod", ".designer"), "w") as configfile:
-            config.write(configfile)
+            configfile.write(encode(self.settings_dict))
 
         self.close()
 
@@ -972,36 +936,48 @@ def read_settings():
 
     :return: The processed settings.
     """
-    default_settings = {"General": {"code_refresh": 3,
-                                    "show_intro": True,
-                                    "show_advanced": False},
-                        "Load": {"validate": True,
-                                 "validate_ignore": False,
-                                 "warnings": True,
-                                 "warn_ignore": True},
-                        "Save": {"validate": True,
-                                 "validate_ignore": False,
-                                 "warnings": True,
-                                 "warn_ignore": True},
-                        "Recent Files": {"file1": "",
-                                         "file2": "",
-                                         "file3": "",
-                                         "file4": "",
-                                         "file5": ""}}
-    config = ConfigParser()
-    config.read_dict(default_settings)
-    config.read(join(expanduser("~"), ".fomod", ".designer"))
-
-    settings = {}
-    for section in default_settings:
-        settings[section] = {}
-        for key in default_settings[section]:
-            if isinstance(default_settings[section][key], bool):
-                settings[section][key] = config.getboolean(section, key)
-            elif isinstance(default_settings[section][key], int):
-                settings[section][key] = config.getint(section, key)
-            elif isinstance(default_settings[section][key], float):
-                settings[section][key] = config.getfloat(section, key)
+    def deep_merge(a, b, path=None):
+        """merges b into a"""
+        if path is None:
+            path = []
+        for key in b:
+            if key in a:
+                if isinstance(a[key], dict) and isinstance(b[key], dict):
+                    deep_merge(a[key], b[key], path + [str(key)])
+                elif a[key] == b[key]:
+                    pass  # same leaf value
+                elif isinstance(b[key], type(a[key])):
+                    a[key] = b[key]
+                elif not isinstance(b[key], type(a[key])):
+                    pass  # user has messed with conf files
+                else:
+                    raise Exception('Conflict at {}'.format('.'.join(path + [str(key)])))
             else:
-                settings[section][key] = config.get(section, key)
-    return settings
+                a[key] = b[key]
+        return a
+
+    default_settings = {
+        "General": {
+            "code_refresh": 3,
+            "show_intro": True,
+            "show_advanced": False
+        }, "Load": {
+            "validate": True,
+            "validate_ignore": False,
+            "warnings": True,
+            "warn_ignore": True
+        }, "Save": {
+            "validate": True,
+            "validate_ignore": False,
+            "warnings": True,
+            "warn_ignore": True
+        }, "Recent Files": deque(maxlen=5)
+    }
+
+    try:
+        with open(join(expanduser("~"), ".fomod", ".designer"), "r") as configfile:
+            settings_dict = decode(configfile.read())
+        deep_merge(default_settings, settings_dict)
+        return default_settings
+    except (FileNotFoundError, JSONDecodeError):
+        return default_settings
