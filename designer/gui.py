@@ -526,24 +526,6 @@ class MainFrame(base_ui[0], base_ui[1]):
         prop_list = self.current_prop_list
         props = self.current_object.properties
 
-        if self.current_object.allow_text:
-            text_label = QLabel(self.dockWidgetContents)
-            text_label.setObjectName("text_label")
-            text_label.setText("Text")
-            self.formLayout.setWidget(prop_index, QFormLayout.LabelRole, text_label)
-            prop_list.append(QLineEdit(self.dockWidgetContents))
-            prop_list[prop_index].setObjectName(str(prop_index))
-            prop_list[prop_index].setText(self.current_object.text)
-            prop_list[prop_index].textEdited[str].connect(self.current_object.set_text)
-            prop_list[prop_index].textEdited[str].connect(self.current_object.write_attribs)
-            prop_list[prop_index].textEdited[str].connect(lambda: self.xml_code_changed.emit(self.current_object)
-                                                          if self.settings_dict["General"]["code_refresh"] >= 3
-                                                          else None)
-            self.formLayout.setWidget(prop_index, QFormLayout.FieldRole,
-                                      prop_list[prop_index])
-
-            prop_index += 1
-
         for key in props:
             if not props[key].editable:
                 continue

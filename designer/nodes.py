@@ -39,7 +39,6 @@ class _NodeBase(etree.ElementBase):
         tag,
         allowed_instances,
         sort_order=0,
-        allow_text=False,
         allowed_children=None,
         properties=None,
         wizard=None,
@@ -67,7 +66,6 @@ class _NodeBase(etree.ElementBase):
         self.required_children = required_children
         self.either_children_group = either_children_group
         self.at_least_one_children_group = at_least_one_children_group
-        self.allow_text = allow_text
         self.allowed_instances = allowed_instances
         self.wizard = wizard
 
@@ -119,6 +117,9 @@ class _NodeBase(etree.ElementBase):
         Reads the values from the BaseElement's attrib dictionary into the node's properties.
         """
         for key in self.properties:
+            if key == "<node_text>":
+                self.properties[key].set_value(self.text)
+                continue
             if key not in self.attrib.keys():
                 continue
             self.properties[key].set_value(self.attrib[key])
@@ -130,6 +131,9 @@ class _NodeBase(etree.ElementBase):
         """
         self.attrib.clear()
         for key in self.properties:
+            if key == "<node_text>":
+                self.text = self.properties[key].value
+                continue
             self.set(key, str(self.properties[key].value))
 
     def update_item_name(self):
@@ -152,15 +156,6 @@ class _NodeBase(etree.ElementBase):
             self.model_item.setText(split_name[len(split_name) - 1])
         else:
             self.model_item.setText(self.name)
-
-    def set_text(self, text):
-        """
-        Method used to set the node's text, if allowed.
-
-        :param text: The text to set.
-        """
-        if self.allow_text:
-            self.text = text
 
 
 class NodeStandardItem(QStandardItem):
@@ -196,7 +191,6 @@ class NodeInfoRoot(_NodeBase):
             "Info",
             type(self).tag,
             1,
-            allow_text=False,
             allowed_children=allowed_children
         )
         super()._init()
@@ -209,11 +203,14 @@ class NodeInfoName(_NodeBase):
     tag = "Name"
 
     def _init(self):
+        properties = OrderedDict([
+            ("<node_text>", PropertyText("Name"))
+        ])
         self.init(
             "Name",
             type(self).tag,
             1,
-            allow_text=True
+            properties=properties
         )
         super()._init()
 
@@ -225,11 +222,14 @@ class NodeInfoAuthor(_NodeBase):
     tag = "Author"
 
     def _init(self):
+        properties = OrderedDict([
+            ("<node_text>", PropertyText("Author"))
+        ])
         self.init(
             "Author",
             type(self).tag,
             1,
-            allow_text=True
+            properties=properties
         )
         super()._init()
 
@@ -241,11 +241,14 @@ class NodeInfoVersion(_NodeBase):
     tag = "Version"
 
     def _init(self):
+        properties = OrderedDict([
+            ("<node_text>", PropertyText("Version"))
+        ])
         self.init(
             "Version",
             type(self).tag,
             1,
-            allow_text=True
+            properties=properties
         )
         super()._init()
 
@@ -257,11 +260,14 @@ class NodeInfoID(_NodeBase):
     tag = "Id"
 
     def _init(self):
+        properties = OrderedDict([
+            ("<node_text>", PropertyText("ID"))
+        ])
         self.init(
             "ID",
             type(self).tag,
             1,
-            allow_text=True
+            properties=properties
         )
         super()._init()
 
@@ -273,11 +279,14 @@ class NodeInfoWebsite(_NodeBase):
     tag = "Website"
 
     def _init(self):
+        properties = OrderedDict([
+            ("<node_text>", PropertyText("Website"))
+        ])
         self.init(
             "Website",
             type(self).tag,
             1,
-            allow_text=True
+            properties=properties
         )
         super()._init()
 
@@ -289,11 +298,14 @@ class NodeInfoDescription(_NodeBase):
     tag = "Description"
 
     def _init(self):
+        properties = OrderedDict([
+            ("<node_text>", PropertyText("Description"))
+        ])
         self.init(
             "Description",
             type(self).tag,
             1,
-            allow_text=True
+            properties=properties
         )
         super()._init()
 
@@ -324,11 +336,14 @@ class NodeInfoElement(_NodeBase):
     tag = "element"
 
     def _init(self):
+        properties = OrderedDict([
+            ("<node_text>", PropertyText("Category"))
+        ])
         self.init(
             "Category",
             type(self).tag,
             0,
-            allow_text=True
+            properties=properties
         )
         super()._init()
 
@@ -385,6 +400,7 @@ class NodeConfigModName(_NodeBase):
 
     def _init(self):
         properties = OrderedDict([
+            ("<node_text>", PropertyText("Name")),
             ("position", PropertyCombo("Position", ("Left", "Right", "RightOfImage"))),
             ("colour", PropertyColour("Colour", "000000"))
         ])
@@ -392,7 +408,6 @@ class NodeConfigModName(_NodeBase):
             "Name",
             type(self).tag,
             1,
-            allow_text=True,
             properties=properties,
             sort_order=1
         )
@@ -942,11 +957,14 @@ class NodeConfigPluginDescription(_NodeBase):
     tag = "description"
 
     def _init(self):
+        properties = OrderedDict([
+            ("<node_text>", PropertyText("Description"))
+        ])
         self.init(
             "Description",
             type(self).tag,
             1,
-            allow_text=True,
+            properties=properties,
             sort_order=1
         )
         super()._init()
@@ -1036,14 +1054,14 @@ class NodeConfigFlag(_NodeBase):
 
     def _init(self):
         properties = OrderedDict([
-            ("name", PropertyFlagLabel("Label"))
+            ("name", PropertyFlagLabel("Label")),
+            ("<node_text>", PropertyText("Value")),
         ])
         self.init(
             "Flag",
             type(self).tag,
             0,
             properties=properties,
-            allow_text=True
         )
         super()._init()
 
