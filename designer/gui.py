@@ -128,6 +128,9 @@ class MainFrame(base_ui[0], base_ui[1]):
     #: Signals there was an error with the internet connection.
     connection_error = pyqtSignal()
 
+    #: Signals a new node has been selected in the node tree.
+    node_selected = pyqtSignal([object])
+
     def __init__(self):
         super().__init__()
         self.setupUi(self)
@@ -163,7 +166,7 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.object_box.visibilityChanged.connect(self.actionObject_Box.setChecked)
         self.property_editor.visibilityChanged.connect(self.action_Property_Editor.setChecked)
 
-        self.object_tree_view.clicked.connect(self.selected_object_tree)
+        self.object_tree_view.clicked.connect(self.node_selected.emit)
 
         self.fomod_changed = False
         self.original_title = self.windowTitle()
@@ -192,16 +195,31 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.flag_label_model = QStringListModel()
         self.flag_label_completer = QCompleter()
         self.flag_label_completer.setModel(self.flag_label_model)
-
         self.flag_value_model = QStringListModel()
         self.flag_value_completer = QCompleter()
         self.flag_value_completer.setModel(self.flag_value_model)
+
+        # connect node selected signal
+        self.node_selected.connect(lambda index: self.set_current_object(self.tree_model.itemFromIndex(index).xml_node))
+        self.node_selected.connect(lambda index: self.object_tree_view.setCurrentIndex(index))
+        self.node_selected.connect(
+            lambda: self.xml_code_changed.emit(self.current_object)
+            if self.settings_dict["General"]["code_refresh"] >= 2 else None
+        )
+        self.node_selected.connect(self.update_box_list)
+        self.node_selected.connect(self.update_props_list)
+        self.node_selected.connect(self.update_wizard_button)
+
+        self.xml_code_changed.connect(lambda: self.fomod_modified(True))
 
         self.object_tree_view.setModel(self.tree_model)
         self.object_tree_view.header().hide()
 
         self.update_recent_files()
         self.check_updates()
+
+    def set_current_object(self, object_):
+        self.current_object = object_
 
     @staticmethod
     def update_flag_label_completer(label_model, elem_root):
@@ -306,9 +324,9 @@ class MainFrame(base_ui[0], base_ui[1]):
                 self.tree_model.appendRow(self.config_root.model_item)
 
                 self.package_name = basename(normpath(self.package_path))
-                self.fomod_modified(False)
                 self.current_object = None
                 self.xml_code_changed.emit(self.current_object)
+                self.fomod_modified(False)
                 self.update_recent_files(self.package_path)
                 self.clear_prop_list()
         except (DesignerError, ValidatorError) as p:
@@ -362,8 +380,7 @@ class MainFrame(base_ui[0], base_ui[1]):
                 object_to_delete = self.current_object
                 new_index = self.tree_model.indexFromItem(self.current_object.getparent().model_item)
                 object_to_delete.getparent().remove_child(object_to_delete)
-                self.fomod_modified(True)
-                self.selected_object_tree(new_index)
+                self.node_selected.emit(new_index)
         except AttributeError:
             generic_errorbox("You can't do that...", "You can't delete root objects!")
 
@@ -430,24 +447,6 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.menu_Recent_Files.addSeparator()
         self.menu_Recent_Files.addAction(self.actionClear)
 
-    def selected_object_tree(self, index):
-        """
-        Called when the user selects a node in the Object Tree.
-
-        Updates the current object, emits the preview update signal if Settings allows it,
-        updates the possible children list, the properties list and wizard buttons.
-
-        :param index: The selected node's index.
-        """
-        self.current_object = self.tree_model.itemFromIndex(index).xml_node
-        self.object_tree_view.setCurrentIndex(index)
-        if self.settings_dict["General"]["code_refresh"] >= 2:
-            self.xml_code_changed.emit(self.current_object)
-
-        self.update_box_list()
-        self.update_props_list()
-        self.update_wizard_button()
-
     def update_box_list(self):
         """
         Updates the possible children to add in Object Box.
@@ -501,13 +500,10 @@ class MainFrame(base_ui[0], base_ui[1]):
 
         # select the new item
         self.object_tree_view.setCurrentIndex(self.tree_model.indexFromItem(new_child.model_item))
-        self.selected_object_tree(self.tree_model.indexFromItem(new_child.model_item))
+        self.node_selected.emit(self.tree_model.indexFromItem(new_child.model_item))
 
         # reload the object box
         self.update_box_list()
-
-        # set the installer as changed
-        self.fomod_modified(True)
 
     def clear_prop_list(self):
         """
@@ -540,7 +536,6 @@ class MainFrame(base_ui[0], base_ui[1]):
             prop_list[prop_index].setText(self.current_object.text)
             prop_list[prop_index].textEdited[str].connect(self.current_object.set_text)
             prop_list[prop_index].textEdited[str].connect(self.current_object.write_attribs)
-            prop_list[prop_index].textEdited[str].connect(self.fomod_modified)
             prop_list[prop_index].textEdited[str].connect(lambda: self.xml_code_changed.emit(self.current_object)
                                                           if self.settings_dict["General"]["code_refresh"] >= 3
                                                           else None)
@@ -564,7 +559,6 @@ class MainFrame(base_ui[0], base_ui[1]):
                 prop_list[prop_index].textEdited[str].connect(props[key].set_value)
                 prop_list[prop_index].textEdited[str].connect(self.current_object.write_attribs)
                 prop_list[prop_index].textEdited[str].connect(self.current_object.update_item_name)
-                prop_list[prop_index].textEdited[str].connect(self.fomod_modified)
                 prop_list[prop_index].textEdited[str].connect(
                     lambda: self.xml_code_changed.emit(self.current_object)
                     if self.settings_dict["General"]["code_refresh"] >= 3 else None
@@ -582,7 +576,6 @@ class MainFrame(base_ui[0], base_ui[1]):
                 prop_list[prop_index].textChanged[str].connect(props[key].set_value)
                 prop_list[prop_index].textChanged[str].connect(self.current_object.write_attribs)
                 prop_list[prop_index].textChanged[str].connect(self.current_object.update_item_name)
-                prop_list[prop_index].textChanged[str].connect(self.fomod_modified)
                 prop_list[prop_index].textChanged[str].connect(
                     lambda: self.xml_code_changed.emit(self.current_object)
                     if self.settings_dict["General"]["code_refresh"] >= 3 else None
@@ -596,7 +589,6 @@ class MainFrame(base_ui[0], base_ui[1]):
                 prop_list[prop_index].textChanged[str].connect(props[key].set_value)
                 prop_list[prop_index].textChanged[str].connect(self.current_object.write_attribs)
                 prop_list[prop_index].textChanged[str].connect(self.current_object.update_item_name)
-                prop_list[prop_index].textChanged[str].connect(self.fomod_modified)
                 prop_list[prop_index].textChanged[str].connect(
                     lambda: self.xml_code_changed.emit(self.current_object)
                     if self.settings_dict["General"]["code_refresh"] >= 3 else None
@@ -609,7 +601,6 @@ class MainFrame(base_ui[0], base_ui[1]):
                 prop_list[prop_index].setMaximum(props[key].max)
                 prop_list[prop_index].valueChanged.connect(props[key].set_value)
                 prop_list[prop_index].valueChanged.connect(self.current_object.write_attribs)
-                prop_list[prop_index].valueChanged.connect(self.fomod_modified)
                 prop_list[prop_index].valueChanged.connect(lambda: self.xml_code_changed.emit(self.current_object)
                                                            if self.settings_dict["General"]["code_refresh"] >= 3
                                                            else None)
@@ -621,7 +612,6 @@ class MainFrame(base_ui[0], base_ui[1]):
                 prop_list[prop_index].activated[str].connect(props[key].set_value)
                 prop_list[prop_index].activated[str].connect(self.current_object.write_attribs)
                 prop_list[prop_index].activated[str].connect(self.current_object.update_item_name)
-                prop_list[prop_index].activated[str].connect(self.fomod_modified)
                 prop_list[prop_index].activated[str].connect(lambda: self.xml_code_changed.emit(self.current_object)
                                                              if self.settings_dict["General"]["code_refresh"] >= 3
                                                              else None)
@@ -645,7 +635,6 @@ class MainFrame(base_ui[0], base_ui[1]):
                 line_edit.textChanged.connect(props[key].set_value)
                 line_edit.textChanged[str].connect(self.current_object.write_attribs)
                 line_edit.textChanged[str].connect(self.current_object.update_item_name)
-                line_edit.textChanged[str].connect(self.fomod_modified)
                 line_edit.textChanged[str].connect(lambda: self.xml_code_changed.emit(self.current_object)
                                                    if self.settings_dict["General"]["code_refresh"] >= 3 else None)
                 path_button.clicked.connect(button_clicked)
@@ -669,7 +658,6 @@ class MainFrame(base_ui[0], base_ui[1]):
                 line_edit.textChanged.connect(props[key].set_value)
                 line_edit.textChanged.connect(self.current_object.write_attribs)
                 line_edit.textChanged.connect(self.current_object.update_item_name)
-                line_edit.textChanged.connect(self.fomod_modified)
                 line_edit.textChanged.connect(lambda: self.xml_code_changed.emit(self.current_object)
                                               if self.settings_dict["General"]["code_refresh"] >= 3 else None)
                 path_button.clicked.connect(button_clicked)
@@ -707,7 +695,6 @@ class MainFrame(base_ui[0], base_ui[1]):
                 line_edit.textChanged.connect(props[key].set_value)
                 line_edit.textChanged.connect(update_button_colour)
                 line_edit.textChanged.connect(self.current_object.write_attribs)
-                line_edit.textChanged.connect(self.fomod_modified)
                 line_edit.textChanged.connect(lambda: self.xml_code_changed.emit(self.current_object)
                                               if self.settings_dict["General"]["code_refresh"] >= 3 else None)
                 path_button.clicked.connect(button_clicked)
@@ -756,10 +743,9 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.splitter.insertWidget(0, wizard)
 
         wizard.cancelled.connect(close)
-        wizard.cancelled.connect(lambda: self.selected_object_tree(current_index))
+        wizard.cancelled.connect(lambda: self.node_selected.emit(current_index))
         wizard.finished.connect(close)
-        wizard.finished.connect(lambda: self.selected_object_tree(current_index))
-        wizard.finished.connect(lambda: self.fomod_modified(True))
+        wizard.finished.connect(lambda: self.node_selected.emit(current_index))
 
     def fomod_modified(self, changed):
         """
