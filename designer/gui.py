@@ -194,9 +194,11 @@ class MainFrame(base_ui[0], base_ui[1]):
         # manage auto-completion
         self.flag_label_model = QStringListModel()
         self.flag_label_completer = QCompleter()
+        self.flag_label_completer.setCaseSensitivity(Qt.CaseInsensitive)
         self.flag_label_completer.setModel(self.flag_label_model)
         self.flag_value_model = QStringListModel()
         self.flag_value_completer = QCompleter()
+        self.flag_value_completer.setCaseSensitivity(Qt.CaseInsensitive)
         self.flag_value_completer.setModel(self.flag_value_model)
 
         # connect node selected signal
