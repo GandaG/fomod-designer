@@ -1,3 +1,5 @@
+os: Previous Visual Studio 2015
+
 install:
   - .\dev\appveyor-bootstrap.bat
 
