@@ -179,7 +179,7 @@ class _NodeBase(etree.ElementBase):
             if type(child) is NodeComment:
                 if child.text.split()[0] == "<designer.metadata.do.not.edit>":
                     try:
-                        self.metadata = decode(child.text.split()[1])
+                        self.metadata = decode(child.text.split(maxsplit=1)[1])
                     except JSONDecodeError:
                         continue
 
