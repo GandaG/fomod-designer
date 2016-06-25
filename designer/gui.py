@@ -216,6 +216,8 @@ class MainFrame(base_ui[0], base_ui[1]):
 
         self.object_tree_view.setModel(self.tree_model)
         self.object_tree_view.header().hide()
+        self.tree_model.itemChanged.connect(lambda item: item.xml_node.save_metadata({"name": item.text()}))
+        self.tree_model.itemChanged.connect(lambda item: self.xml_code_changed.emit(item.xml_node))
 
         self.update_recent_files()
         self.check_updates()

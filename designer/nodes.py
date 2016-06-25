@@ -52,7 +52,8 @@ class _NodeBase(etree.ElementBase):
         wizard=None,
         required_children=None,
         either_children_group=None,
-        at_least_one_children_group=None
+        at_least_one_children_group=None,
+        name_editable=False
     ):
 
         if not properties:
@@ -80,7 +81,7 @@ class _NodeBase(etree.ElementBase):
 
         self.model_item = NodeStandardItem(self)
         self.model_item.setText(self.name)
-        self.model_item.setEditable(False)
+        self.model_item.setEditable(name_editable)
 
     def can_add_child(self, child):
         """
@@ -156,16 +157,19 @@ class _NodeBase(etree.ElementBase):
         if "name" in self.properties:
             if not self.properties["name"].value:
                 self.model_item.setText(self.name)
-                return
+                return self.name
             self.model_item.setText(self.properties["name"].value)
+            return self.properties["name"].value
         elif "source" in self.properties:
             if not self.properties["source"].value:
                 self.model_item.setText(self.name)
-                return
+                return self.name
             split_name = self.properties["source"].value.split(sep)
             self.model_item.setText(split_name[len(split_name) - 1])
+            return split_name[len(split_name) - 1]
         else:
             self.model_item.setText(self.name)
+            return self.name
 
     def load_metadata(self):
         """
@@ -179,10 +183,13 @@ class _NodeBase(etree.ElementBase):
                     except JSONDecodeError:
                         continue
 
-    def save_metadata(self):
+        self.model_item.setText(self.metadata.get("name", self.update_item_name()))
+
+    def save_metadata(self, update_metadata):
         """
         Saves this node's metadata.
         """
+        self.metadata.update(update_metadata)
         meta_comment = None
         for child in self:
             if type(child) is NodeComment:
@@ -723,7 +730,8 @@ class NodeConfigPattern(_NodeBase):
             type(self).tag,
             0,
             allowed_children=allowed_children,
-            required_children=required
+            required_children=required,
+            name_editable=True
         )
         super()._init()
 
@@ -1211,6 +1219,7 @@ class NodeConfigInstallPattern(_NodeBase):
             type(self).tag,
             0,
             allowed_children=allowed_children,
-            required_children=required
+            required_children=required,
+            name_editable=True
         )
         super()._init()
