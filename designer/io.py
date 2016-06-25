@@ -16,14 +16,24 @@
 
 from os import listdir, makedirs
 from os.path import join
-from lxml.etree import (PythonElementClassLookup, XMLParser, tostring, fromstring,
-                        Element, SubElement, parse, ParseError, ElementTree)
+from lxml.etree import (PythonElementClassLookup, XMLParser, tostring, fromstring, CommentBase,
+                        Element, SubElement, parse, ParseError, ElementTree, CustomElementClassLookup)
 from .exceptions import MissingFileError, ParserError, TagNotFound
 
-module_parser = XMLParser(remove_comments=True, remove_pis=True, remove_blank_text=True)
+module_parser = XMLParser(remove_pis=True, remove_blank_text=True)
 
 
-class _NodeLookup(PythonElementClassLookup):
+class _CommentLookup(CustomElementClassLookup):
+    def lookup(self, type, doc, namespace, name):
+        from .nodes import NodeComment
+
+        if type == "comment":
+            return NodeComment
+        else:
+            return None
+
+
+class _NodeClassLookup(PythonElementClassLookup):
     """
     Class that handles the custom lookup for the element factories.
     """
@@ -125,7 +135,7 @@ class _NodeLookup(PythonElementClassLookup):
             raise TagNotFound(element)
 
 
-module_parser.set_element_class_lookup(_NodeLookup())
+module_parser.set_element_class_lookup(_CommentLookup(_NodeClassLookup()))
 
 
 def _check_file(base_path, file_):
@@ -218,15 +228,17 @@ def import_(package_path):
         config_root = parse(config_path, parser=module_parser).getroot()
 
         for root in (info_root, config_root):
-            for element in root.iter():
+            for element in root.iter(tag=Element):
                 element.parse_attribs()
 
                 for elem in element:
-                    element.model_item.appendRow(elem.model_item)
-                    if not _validate_child(elem):
-                        element.remove_child(elem)
+                    if not isinstance(elem, CommentBase):
+                        element.model_item.appendRow(elem.model_item)
+                        if not _validate_child(elem):
+                            element.remove_child(elem)
 
                 element.write_attribs()
+                element.load_metadata()
 
     except ParseError as e:
         raise ParserError(str(e))
@@ -293,4 +305,4 @@ def sort_elements(root_element):
     :param root_element: The root element of xml tree.
     """
     for parent in root_element.xpath('//*[./*]'):
-        parent[:] = sorted(parent, key=lambda x: x.sort_order)
+        parent[:] = sorted(parent, key=lambda x: x.sort_order if not isinstance(x, CommentBase) else 0)

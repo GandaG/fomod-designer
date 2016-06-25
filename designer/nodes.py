@@ -18,10 +18,18 @@ from os import sep
 from collections import OrderedDict
 from PyQt5.QtGui import QStandardItem
 from lxml import etree
+from jsonpickle import encode, decode, set_encoder_options
+from json import JSONDecodeError
 from .wizards import WizardFiles, WizardDepend
 from .props import PropertyCombo, PropertyInt, PropertyText, PropertyFile, PropertyFolder, PropertyColour, \
     PropertyFlagLabel, PropertyFlagValue
 from .exceptions import BaseInstanceException
+
+set_encoder_options("json", separators=(',', ':'))
+
+
+class NodeComment(etree.CommentBase):
+    pass
 
 
 class _NodeBase(etree.ElementBase):
@@ -68,6 +76,7 @@ class _NodeBase(etree.ElementBase):
         self.at_least_one_children_group = at_least_one_children_group
         self.allowed_instances = allowed_instances
         self.wizard = wizard
+        self.metadata = {}
 
         self.model_item = NodeStandardItem(self)
         self.model_item.setText(self.name)
@@ -101,6 +110,7 @@ class _NodeBase(etree.ElementBase):
             self.append(child)
             self.model_item.appendRow(child.model_item)
             child.write_attribs()
+            child.load_metadata()
 
     def remove_child(self, child):
         """
@@ -156,6 +166,32 @@ class _NodeBase(etree.ElementBase):
             self.model_item.setText(split_name[len(split_name) - 1])
         else:
             self.model_item.setText(self.name)
+
+    def load_metadata(self):
+        """
+        Loads this node's metadata which is stored in a child comment encoded in json.
+        """
+        for child in self:
+            if type(child) is NodeComment:
+                if child.text.split()[0] == "<designer.metadata.do.not.edit>":
+                    try:
+                        self.metadata = decode(child.text.split()[1])
+                    except JSONDecodeError:
+                        continue
+
+    def save_metadata(self):
+        """
+        Saves this node's metadata.
+        """
+        meta_comment = None
+        for child in self:
+            if type(child) is NodeComment:
+                if child.text.split()[0] == "<designer.metadata.do.not.edit>":
+                    meta_comment = child
+                    child.text = "<designer.metadata.do.not.edit> " + encode(self.metadata)
+
+        if meta_comment is None:
+            self.append(NodeComment("<designer.metadata.do.not.edit> " + encode(self.metadata)))
 
 
 class NodeStandardItem(QStandardItem):

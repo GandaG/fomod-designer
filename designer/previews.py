@@ -52,6 +52,7 @@ class PreviewDispatcherThread(QThread):
 
             # turn the element into "normal" lxml elements for easier processing.
             element.write_attribs()
+            element.load_metadata()
             sort_elements(element)
             element = XML(tostring(element))
 
