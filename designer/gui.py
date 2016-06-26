@@ -44,8 +44,9 @@ base_ui = loadUiType(join(cur_folder, "resources/templates/mainframe.ui"))
 settings_ui = loadUiType(join(cur_folder, "resources/templates/settings.ui"))
 about_ui = loadUiType(join(cur_folder, "resources/templates/about.ui"))
 
-# set the pretty print for the json encoder.
-set_encoder_options("json", indent=4)
+# set the "pretty print" for the json encoder. It's not pretty printing right now because the metadata separators
+#   interfere with the options, so now everything has these separators until a better solution comes up.
+set_encoder_options("json", separators=(',', ':'))
 
 
 class IntroWindow(intro_ui[0], intro_ui[1]):
@@ -495,6 +496,9 @@ class MainFrame(base_ui[0], base_ui[1]):
         :param tag: The tag of the child to add.
         """
         new_child = elem_factory(tag, self.current_object)
+        defaults_dict = self.settings_dict["Defaults"]
+        if tag in defaults_dict and defaults_dict[tag][0]:
+            new_child.properties[defaults_dict[tag][1]].set_value(defaults_dict[tag][2])
         self.current_object.add_child(new_child)
         self.tree_model.sort(0)
 
@@ -785,75 +789,107 @@ class SettingsDialog(settings_ui[0], settings_ui[1]):
         self.setWindowFlags(Qt.WindowSystemMenuHint | Qt.WindowTitleHint | Qt.Dialog)
 
         self.buttonBox.accepted.connect(self.accepted)
-        self.buttonBox.rejected.connect(self.rejected)
-        self.check_valid_load.stateChanged.connect(self.update_valid_load)
-        self.check_warn_load.stateChanged.connect(self.update_warn_load)
-        self.check_valid_save.stateChanged.connect(self.update_valid_save)
-        self.check_warn_save.stateChanged.connect(self.update_warn_save)
+        self.buttonBox.rejected.connect(self.close)
+
+        self.check_valid_load.stateChanged.connect(self.check_valid_load_ignore.setEnabled)
+        self.check_warn_load.stateChanged.connect(self.check_warn_load_ignore.setEnabled)
+        self.check_valid_save.stateChanged.connect(self.check_valid_save_ignore.setEnabled)
+        self.check_warn_save.stateChanged.connect(self.check_warn_save_ignore.setEnabled)
+
+        self.check_installSteps.stateChanged.connect(self.combo_installSteps.setEnabled)
+        self.check_optionalFileGroups.stateChanged.connect(self.combo_optionalFileGroups.setEnabled)
+        self.check_type.stateChanged.connect(self.combo_type.setEnabled)
+        self.check_defaultType.stateChanged.connect(self.combo_defaultType.setEnabled)
 
         self.settings_dict = read_settings()
         self.combo_code_refresh.setCurrentIndex(self.settings_dict["General"]["code_refresh"])
         self.check_intro.setChecked(self.settings_dict["General"]["show_intro"])
         self.check_advanced.setChecked(self.settings_dict["General"]["show_advanced"])
+
         self.check_valid_load.setChecked(self.settings_dict["Load"]["validate"])
         self.check_valid_load_ignore.setChecked(self.settings_dict["Load"]["validate_ignore"])
         self.check_warn_load.setChecked(self.settings_dict["Load"]["warnings"])
         self.check_warn_load_ignore.setChecked(self.settings_dict["Load"]["warn_ignore"])
+
         self.check_valid_save.setChecked(self.settings_dict["Save"]["validate"])
         self.check_valid_save_ignore.setChecked(self.settings_dict["Save"]["validate_ignore"])
         self.check_warn_save.setChecked(self.settings_dict["Save"]["warnings"])
         self.check_warn_save_ignore.setChecked(self.settings_dict["Save"]["warn_ignore"])
 
-        self.check_valid_load.stateChanged.emit(self.check_valid_load.isChecked())
-        self.check_warn_load.stateChanged.emit(self.check_warn_load.isChecked())
-        self.check_valid_save.stateChanged.emit(self.check_valid_save.isChecked())
-        self.check_warn_save.stateChanged.emit(self.check_warn_save.isChecked())
+        self.check_installSteps.setChecked(self.settings_dict["Defaults"]["installSteps"][0])
+        self.combo_installSteps.setEnabled(self.settings_dict["Defaults"]["installSteps"][0])
+        self.combo_installSteps.setCurrentText(self.settings_dict["Defaults"]["installSteps"][2])
+        self.check_optionalFileGroups.setChecked(self.settings_dict["Defaults"]["optionalFileGroups"][0])
+        self.combo_optionalFileGroups.setEnabled(self.settings_dict["Defaults"]["optionalFileGroups"][0])
+        self.combo_optionalFileGroups.setCurrentText(self.settings_dict["Defaults"]["optionalFileGroups"][2])
+        self.check_type.setChecked(self.settings_dict["Defaults"]["type"][0])
+        self.combo_type.setEnabled(self.settings_dict["Defaults"]["type"][0])
+        self.combo_type.setCurrentText(self.settings_dict["Defaults"]["type"][2])
+        self.check_defaultType.setChecked(self.settings_dict["Defaults"]["defaultType"][0])
+        self.combo_defaultType.setEnabled(self.settings_dict["Defaults"]["defaultType"][0])
+        self.combo_defaultType.setCurrentText(self.settings_dict["Defaults"]["defaultType"][2])
 
     def accepted(self):
         self.settings_dict["General"]["code_refresh"] = self.combo_code_refresh.currentIndex()
         self.settings_dict["General"]["show_intro"] = self.check_intro.isChecked()
         self.settings_dict["General"]["show_advanced"] = self.check_advanced.isChecked()
+
         self.settings_dict["Load"]["validate"] = self.check_valid_load.isChecked()
         self.settings_dict["Load"]["validate_ignore"] = self.check_valid_load_ignore.isChecked()
         self.settings_dict["Load"]["warnings"] = self.check_warn_load.isChecked()
         self.settings_dict["Load"]["warn_ignore"] = self.check_warn_load_ignore.isChecked()
+
         self.settings_dict["Save"]["validate"] = self.check_valid_save.isChecked()
         self.settings_dict["Save"]["validate_ignore"] = self.check_valid_save_ignore.isChecked()
         self.settings_dict["Save"]["warnings"] = self.check_warn_save.isChecked()
         self.settings_dict["Save"]["warn_ignore"] = self.check_warn_save_ignore.isChecked()
+
+        self.settings_dict["Defaults"]["installSteps"] = (
+            self.check_installSteps.isChecked(),
+            self.settings_dict["Defaults"]["installSteps"][1],
+            self.settings_dict["Defaults"]["installSteps"][2]
+        )
+        self.settings_dict["Defaults"]["installSteps"] = (
+            self.settings_dict["Defaults"]["installSteps"][0],
+            self.settings_dict["Defaults"]["installSteps"][1],
+            self.combo_installSteps.currentText(),
+        )
+        self.settings_dict["Defaults"]["optionalFileGroups"] = (
+            self.check_optionalFileGroups.isChecked(),
+            self.settings_dict["Defaults"]["optionalFileGroups"][1],
+            self.settings_dict["Defaults"]["optionalFileGroups"][2]
+        )
+        self.settings_dict["Defaults"]["optionalFileGroups"] = (
+            self.settings_dict["Defaults"]["optionalFileGroups"][0],
+            self.settings_dict["Defaults"]["optionalFileGroups"][1],
+            self.combo_optionalFileGroups.currentText(),
+        )
+        self.settings_dict["Defaults"]["type"] = (
+            self.check_type.isChecked(),
+            self.settings_dict["Defaults"]["type"][1],
+            self.settings_dict["Defaults"]["type"][2]
+        )
+        self.settings_dict["Defaults"]["type"] = (
+            self.settings_dict["Defaults"]["type"][0],
+            self.settings_dict["Defaults"]["type"][1],
+            self.combo_type.currentText()
+        )
+        self.settings_dict["Defaults"]["defaultType"] = (
+            self.check_defaultType.isChecked(),
+            self.settings_dict["Defaults"]["defaultType"][1],
+            self.settings_dict["Defaults"]["defaultType"][2]
+        )
+        self.settings_dict["Defaults"]["defaultType"] = (
+            self.settings_dict["Defaults"]["defaultType"][0],
+            self.settings_dict["Defaults"]["defaultType"][1],
+            self.combo_defaultType.currentText()
+        )
 
         makedirs(join(expanduser("~"), ".fomod"), exist_ok=True)
         with open(join(expanduser("~"), ".fomod", ".designer"), "w") as configfile:
             configfile.write(encode(self.settings_dict))
 
         self.close()
-
-    def rejected(self):
-        self.close()
-
-    def update_valid_load(self, new_state):
-        if not new_state:
-            self.check_valid_load_ignore.setEnabled(False)
-        else:
-            self.check_valid_load_ignore.setEnabled(True)
-
-    def update_warn_load(self, new_state):
-        if not new_state:
-            self.check_warn_load_ignore.setEnabled(False)
-        else:
-            self.check_warn_load_ignore.setEnabled(True)
-
-    def update_valid_save(self, new_state):
-        if not new_state:
-            self.check_valid_save_ignore.setEnabled(False)
-        else:
-            self.check_valid_save_ignore.setEnabled(True)
-
-    def update_warn_save(self, new_state):
-        if not new_state:
-            self.check_warn_save_ignore.setEnabled(False)
-        else:
-            self.check_warn_save_ignore.setEnabled(True)
 
 
 class About(about_ui[0], about_ui[1]):
@@ -933,6 +969,11 @@ def read_settings():
             "code_refresh": 3,
             "show_intro": True,
             "show_advanced": False
+        }, "Defaults": {
+            "installSteps": (True, "order", "Explicit"),
+            "optionalFileGroups": (True, "order", "Explicit"),
+            "type": (True, "name", "Optional"),
+            "defaultType": (True, "name", "Optional"),
         }, "Load": {
             "validate": True,
             "validate_ignore": False,
