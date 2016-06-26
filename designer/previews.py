@@ -47,14 +47,13 @@ class PreviewDispatcherThread(QThread):
         while True:
             # wait for next element
             element = self.queue.get()
-            if element is None:  # needed because connecting the signal to the queue adds a NoneType, no idea why.
-                continue
 
             # turn the element into "normal" lxml elements for easier processing.
-            element.write_attribs()
-            element.load_metadata()
-            sort_elements(element)
-            element = XML(tostring(element))
+            if element is not None:
+                element.write_attribs()
+                element.load_metadata()
+                sort_elements(element)
+                element = XML(tostring(element))
 
             # dispatch to every queue
             self.mo_queue.put(element)
@@ -80,7 +79,12 @@ class PreviewCodeWorker(QThread):
             # wait for next element
             element = self.queue.get()
 
+            if element is None:
+                self.return_signal.emit("")
+                continue
+
             # process the element
             deannotate(element, cleanup_namespaces=True)
             code = tostring(element, encoding="Unicode", pretty_print=True, xml_declaration=False)
-            self.return_signal.emit(highlight(code, XmlLexer(), HtmlFormatter(noclasses=True, style="autumn", linenos="table")))
+            self.return_signal.emit(highlight(code, XmlLexer(), HtmlFormatter(noclasses=True, style="autumn",
+                                                                              linenos="table")))
