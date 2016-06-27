@@ -16,7 +16,8 @@
 
 from os import sep
 from collections import OrderedDict
-from PyQt5.QtGui import QStandardItem
+from PyQt5.QtGui import QStandardItem, QStandardItemModel
+from PyQt5.QtCore import Qt, QMimeData
 from lxml import etree
 from jsonpickle import encode, decode, set_encoder_options
 from json import JSONDecodeError
@@ -46,14 +47,14 @@ class _NodeBase(etree.ElementBase):
         name,
         tag,
         allowed_instances,
-        sort_order=0,
+        sort_order="0",
         allowed_children=None,
         properties=None,
         wizard=None,
         required_children=None,
         either_children_group=None,
         at_least_one_children_group=None,
-        name_editable=False
+        name_editable=False,
     ):
 
         if not properties:
@@ -78,9 +79,14 @@ class _NodeBase(etree.ElementBase):
         self.allowed_instances = allowed_instances
         self.wizard = wizard
         self.metadata = {}
+        self.user_sort_order = "0"
 
         self.model_item = NodeStandardItem(self)
         self.model_item.setText(self.name)
+        if allowed_instances > 1 or not allowed_instances:
+            self.model_item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsEnabled | Qt.ItemIsEditable)
+        else:
+            self.model_item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsDropEnabled | Qt.ItemIsEnabled | Qt.ItemIsEditable)
         self.model_item.setEditable(name_editable)
 
     def can_add_child(self, child):
@@ -207,11 +213,96 @@ class NodeStandardItem(QStandardItem):
         self.xml_node = node
         super().__init__()
 
+    def clone(self):
+        return NodeStandardItem(self.xml_node)
+
     def __lt__(self, other):
-        if self.xml_node.sort_order < other.xml_node.sort_order:
+        self_sort = self.xml_node.sort_order + "." + self.xml_node.user_sort_order
+        other_sort = other.xml_node.sort_order + "." + other.xml_node.user_sort_order
+        if self_sort < other_sort:
             return True
         else:
             return False
+
+
+class NodeStandardModel(QStandardItemModel):
+    def mimeData(self, list_of_QModelIndex):
+        if not list_of_QModelIndex:
+            return 0
+
+        mime_data = NodeMimeData()
+        mime_data.set_item(self.itemFromIndex(list_of_QModelIndex[0]))
+        mime_data.set_node(self.itemFromIndex(list_of_QModelIndex[0]).xml_node)
+        return mime_data
+
+    def canDropMimeData(self, QMimeData, Qt_DropAction, row, col, QModelIndex):
+        if self.itemFromIndex(QModelIndex) and QMimeData.has_node() and QMimeData.has_item() and Qt_DropAction == 2:
+            if isinstance(self.itemFromIndex(QModelIndex).xml_node, type(QMimeData.node().getparent())):
+                return True
+            else:
+                return False
+        else:
+            return False
+
+    def dropMimeData(self, QMimeData, Qt_DropAction, row, col, QModelIndex):
+        def deep_copy_items(child_node):
+            new_item = NodeStandardItem(child_node)
+            child_node.model_item = new_item
+            child_node.getparent().model_item.appendRow(new_item)
+            for child_ in child_node:
+                deep_copy_items(child_) if not isinstance(child_, etree.CommentBase) else None
+            if not isinstance(child_node, etree.CommentBase):
+                child_node.write_attribs()
+                child_node.load_metadata()
+
+        if not self.canDropMimeData(QMimeData, Qt_DropAction, row, col, QModelIndex):
+            return False
+
+        parent = self.itemFromIndex(QModelIndex)
+        xml_node = QMimeData.node()
+        new_item = NodeStandardItem(xml_node)
+        xml_node.model_item = new_item
+        xml_node.load_metadata()
+        for child in xml_node:
+            deep_copy_items(child)
+        parent.insertRow(row, new_item)
+        for row_index in range(0, parent.rowCount()):
+            if parent.child(row_index) == QMimeData.item():
+                continue
+            parent.child(row_index).xml_node.user_sort_order = str(parent.child(row_index).row()).zfill(7)
+            parent.child(row_index).xml_node.save_metadata({"user_sort": str(parent.child(row_index).row()).zfill(7)})
+        return True
+
+
+class NodeMimeData(QMimeData):
+    def __init__(self):
+        super().__init__()
+        self._node = None
+        self._item = None
+
+    def has_node(self):
+        if self._node is None:
+            return False
+        else:
+            return True
+
+    def node(self):
+        return self._node
+
+    def set_node(self, node):
+        self._node = node
+
+    def has_item(self):
+        if self._item is None:
+            return False
+        else:
+            return True
+
+    def item(self):
+        return self._item
+
+    def set_item(self, item):
+        self._item = item
 
 
 class NodeInfoRoot(_NodeBase):
@@ -452,7 +543,7 @@ class NodeConfigModName(_NodeBase):
             type(self).tag,
             1,
             properties=properties,
-            sort_order=1
+            sort_order="1"
         )
         super()._init()
 
@@ -475,7 +566,7 @@ class NodeConfigModImage(_NodeBase):
             "moduleImage",
             1,
             properties=properties,
-            sort_order=2
+            sort_order="2"
         )
         super()._init()
 
@@ -502,7 +593,7 @@ class NodeConfigModDepend(_NodeBase):
             1,
             allowed_children=allowed_children,
             properties=properties,
-            sort_order=3,
+            sort_order="3",
             wizard=WizardDepend
         )
         super()._init()
@@ -524,7 +615,7 @@ class NodeConfigReqFiles(_NodeBase):
             type(self).tag,
             1,
             allowed_children=allowed_children,
-            sort_order=4,
+            sort_order="4",
             wizard=WizardFiles
         )
         super()._init()
@@ -552,7 +643,7 @@ class NodeConfigInstallSteps(_NodeBase):
             1,
             allowed_children=allowed_children,
             properties=properties,
-            sort_order=5,
+            sort_order="5",
             required_children=required
         )
         super()._init()
@@ -576,7 +667,7 @@ class NodeConfigCondInstall(_NodeBase):
             type(self).tag,
             1,
             allowed_children=allowed_children,
-            sort_order=6,
+            sort_order="6",
             required_children=required
         )
         super()._init()
@@ -752,7 +843,7 @@ class NodeConfigFiles(_NodeBase):
             type(self).tag,
             1,
             allowed_children=allowed_children,
-            sort_order=3,
+            sort_order="3",
             wizard=WizardFiles
         )
         super()._init()
@@ -780,7 +871,7 @@ class NodeConfigDependencies(_NodeBase):
             1,
             allowed_children=allowed_children,
             properties=properties,
-            sort_order=1,
+            sort_order="1",
             wizard=WizardDepend
         )
         super()._init()
@@ -862,7 +953,7 @@ class NodeConfigVisible(_NodeBase):
             type(self).tag,
             1,
             allowed_children=allowed_children,
-            sort_order=1,
+            sort_order="1",
             wizard=WizardDepend,
             properties=properties
         )
@@ -891,7 +982,7 @@ class NodeConfigOptGroups(_NodeBase):
             0,
             allowed_children=allowed_children,
             properties=properties,
-            sort_order=2,
+            sort_order="2",
             required_children=required
         )
         super()._init()
@@ -1009,7 +1100,7 @@ class NodeConfigPluginDescription(_NodeBase):
             type(self).tag,
             1,
             properties=properties,
-            sort_order=1
+            sort_order="1"
         )
         super()._init()
 
@@ -1029,7 +1120,7 @@ class NodeConfigImage(_NodeBase):
             type(self).tag,
             1,
             properties=properties,
-            sort_order=2
+            sort_order="2"
         )
         super()._init()
 
@@ -1052,7 +1143,7 @@ class NodeConfigConditionFlags(_NodeBase):
             type(self).tag,
             1,
             allowed_children=allowed_children,
-            sort_order=3,
+            sort_order="3",
             required_children=required
         )
         super()._init()
@@ -1078,7 +1169,7 @@ class NodeConfigTypeDesc(_NodeBase):
             type(self).tag,
             1,
             allowed_children=allowed_children,
-            sort_order=4,
+            sort_order="4",
             either_children_group=either_children
         )
         super()._init()
@@ -1150,7 +1241,7 @@ class NodeConfigDefaultType(_NodeBase):
             type(self).tag,
             1,
             properties=properties,
-            sort_order=1
+            sort_order="1"
         )
         super()._init()
 
@@ -1170,7 +1261,7 @@ class NodeConfigType(_NodeBase):
             type(self).tag,
             1,
             properties=properties,
-            sort_order=2
+            sort_order="2"
         )
         super()._init()
 
@@ -1193,7 +1284,7 @@ class NodeConfigInstallPatterns(_NodeBase):
             type(self).tag,
             1,
             allowed_children=allowed_children,
-            sort_order=2,
+            sort_order="2",
             required_children=required
         )
         super()._init()

@@ -305,4 +305,7 @@ def sort_elements(root_element):
     :param root_element: The root element of xml tree.
     """
     for parent in root_element.xpath('//*[./*]'):
-        parent[:] = sorted(parent, key=lambda x: x.sort_order if not isinstance(x, CommentBase) else 0)
+        parent[:] = sorted(
+            parent,
+            key=lambda x: x.sort_order + "." + x.user_sort_order if not isinstance(x, CommentBase) else "0"
+        )

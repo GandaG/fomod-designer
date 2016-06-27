@@ -178,7 +178,6 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.config_root = None
         self.current_object = None
         self.current_prop_list = []
-        self.tree_model = QStandardItemModel()
 
         # start the preview threads
         self.preview_queue = Queue()
@@ -190,7 +189,6 @@ class MainFrame(base_ui[0], base_ui[1]):
 
         # manage the wizard button
         self.wizard_button.clicked.connect(self.run_wizard)
-        self.wizard_button.hide()
 
         # manage auto-completion
         self.flag_label_model = QStringListModel()
@@ -211,12 +209,19 @@ class MainFrame(base_ui[0], base_ui[1]):
         )
         self.node_selected.connect(self.update_box_list)
         self.node_selected.connect(self.update_props_list)
-        self.node_selected.connect(self.update_wizard_button)
+        self.node_selected.connect(
+            lambda: self.wizard_button.setEnabled(False)
+            if self.current_object.wizard is None else self.wizard_button.setEnabled(True)
+        )
 
         self.xml_code_changed.connect(lambda: self.fomod_modified(True))
 
+        # manage node tree model
+        from .nodes import NodeStandardItem, NodeStandardModel
+        self.tree_model = NodeStandardModel()
+        self.tree_model.supportedDragActions = lambda: Qt.MoveAction
+        #self.tree_model.setItemPrototype(NodeStandardItem(None))
         self.object_tree_view.setModel(self.tree_model)
-        self.object_tree_view.header().hide()
         self.tree_model.itemChanged.connect(lambda item: item.xml_node.save_metadata({"name": item.text()}))
         self.tree_model.itemChanged.connect(lambda item: self.xml_code_changed.emit(item.xml_node))
 
@@ -334,6 +339,7 @@ class MainFrame(base_ui[0], base_ui[1]):
                 self.fomod_modified(False)
                 self.update_recent_files(self.package_path)
                 self.clear_prop_list()
+                self.wizard_button.setEnabled(False)
         except (DesignerError, ValidatorError) as p:
             generic_errorbox(p.title, str(p), p.detailed)
             return
@@ -692,15 +698,6 @@ class MainFrame(base_ui[0], base_ui[1]):
             self.formLayout.setWidget(prop_index, QFormLayout.FieldRole, prop_list[prop_index])
             prop_list[prop_index].setObjectName(str(prop_index))
             prop_index += 1
-
-    def update_wizard_button(self):
-        """
-        Updates the wizard button, hides or shows it.
-        """
-        if self.current_object.wizard:
-            self.wizard_button.show()
-        else:
-            self.wizard_button.hide()
 
     def run_wizard(self):
         """
