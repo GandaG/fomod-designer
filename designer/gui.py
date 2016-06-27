@@ -222,7 +222,7 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.tree_model.supportedDragActions = lambda: Qt.MoveAction
         #self.tree_model.setItemPrototype(NodeStandardItem(None))
         self.object_tree_view.setModel(self.tree_model)
-        self.tree_model.itemChanged.connect(lambda item: item.xml_node.save_metadata({"name": item.text()}))
+        self.tree_model.itemChanged.connect(lambda item: item.xml_node.save_metadata())
         self.tree_model.itemChanged.connect(lambda item: self.xml_code_changed.emit(item.xml_node))
 
         self.update_recent_files()

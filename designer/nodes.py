@@ -190,15 +190,24 @@ class _NodeBase(etree.ElementBase):
                         continue
 
         self.model_item.setText(self.metadata.get("name", self.update_item_name()))
+        self.user_sort_order = self.metadata.get("user_sort", "0".zfill(7))
 
-    def save_metadata(self, update_metadata):
+    def save_metadata(self):
         """
         Saves this node's metadata.
         """
-        self.metadata.update(update_metadata)
+        if self.model_item.text() != self.name:
+            self.metadata["name"] = self.model_item.text()
+        else:
+            self.metadata.pop("name", None)
+        if self.user_sort_order:
+            self.metadata["user_sort"] = self.user_sort_order
+        else:
+            self.metadata.pop("user_sort", None)
+
         meta_comment = None
         for child in self:
-            if type(child) is NodeComment:
+            if type(child) is NodeComment and self.metadata:
                 if child.text.split()[0] == "<designer.metadata.do.not.edit>":
                     meta_comment = child
                     child.text = "<designer.metadata.do.not.edit> " + encode(self.metadata)
@@ -270,7 +279,7 @@ class NodeStandardModel(QStandardItemModel):
             if parent.child(row_index) == QMimeData.item():
                 continue
             parent.child(row_index).xml_node.user_sort_order = str(parent.child(row_index).row()).zfill(7)
-            parent.child(row_index).xml_node.save_metadata({"user_sort": str(parent.child(row_index).row()).zfill(7)})
+            parent.child(row_index).xml_node.save_metadata()
         return True
 
 
