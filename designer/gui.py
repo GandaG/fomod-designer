@@ -24,10 +24,10 @@ from json import JSONDecodeError
 from jsonpickle import encode, decode, set_encoder_options
 from collections import deque
 from PyQt5.uic import loadUiType
-from PyQt5.QtWidgets import (QShortcut, QFileDialog, QColorDialog, QMessageBox, QLabel, QHBoxLayout, QCommandLinkButton,
+from PyQt5.QtWidgets import (QFileDialog, QColorDialog, QMessageBox, QLabel, QHBoxLayout, QCommandLinkButton,
                              QFormLayout, QLineEdit, QSpinBox, QComboBox, QWidget, QPushButton, QSizePolicy, QStatusBar,
                              QCompleter)
-from PyQt5.QtGui import QIcon, QPixmap, QStandardItemModel, QColor, QFont
+from PyQt5.QtGui import QIcon, QPixmap, QColor, QFont
 from PyQt5.QtCore import Qt, pyqtSignal, QStringListModel
 from requests import get, codes, ConnectionError, Timeout
 from validator import validate_tree, check_warnings, ValidatorError
@@ -43,10 +43,6 @@ intro_ui = loadUiType(join(cur_folder, "resources/templates/intro.ui"))
 base_ui = loadUiType(join(cur_folder, "resources/templates/mainframe.ui"))
 settings_ui = loadUiType(join(cur_folder, "resources/templates/settings.ui"))
 about_ui = loadUiType(join(cur_folder, "resources/templates/about.ui"))
-
-# set the "pretty print" for the json encoder. It's not pretty printing right now because the metadata separators
-#   interfere with the options, so now everything has these separators until a better solution comes up.
-set_encoder_options("json", separators=(',', ':'))
 
 
 class IntroWindow(intro_ui[0], intro_ui[1]):
@@ -91,6 +87,7 @@ class IntroWindow(intro_ui[0], intro_ui[1]):
         self.settings_dict["General"]["show_advanced"] = self.check_advanced.isChecked()
         makedirs(join(expanduser("~"), ".fomod"), exist_ok=True)
         with open(join(expanduser("~"), ".fomod", ".designer"), "w") as configfile:
+            set_encoder_options("json", indent=4)
             configfile.write(encode(self.settings_dict))
 
         main_window = MainFrame()
@@ -147,15 +144,11 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.actionHe_lp.setIcon(QIcon(join(cur_folder, "resources/logos/logo_info.png")))
 
         # setup any additional info left from designer
-        self.delete_sec_shortcut = QShortcut(self)
-        self.delete_sec_shortcut.setKey(Qt.Key_Delete)
-
         self.action_Open.triggered.connect(self.open)
         self.action_Save.triggered.connect(self.save)
         self.actionO_ptions.triggered.connect(self.options)
         self.action_Refresh.triggered.connect(self.refresh)
         self.action_Delete.triggered.connect(self.delete)
-        self.delete_sec_shortcut.activated.connect(self.delete)
         self.actionHe_lp.triggered.connect(self.help)
         self.action_About.triggered.connect(lambda _, self_=self: self.about(self_))
         self.actionClear.triggered.connect(self.clear_recent_files)
@@ -416,6 +409,7 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.settings_dict["Recent Files"].clear()
         makedirs(join(expanduser("~"), ".fomod"), exist_ok=True)
         with open(join(expanduser("~"), ".fomod", ".designer"), "w") as configfile:
+            set_encoder_options("json", indent=4)
             configfile.write(encode(self.settings_dict))
 
         for child in self.menu_Recent_Files.actions():
@@ -448,6 +442,7 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.settings_dict["Recent Files"] = file_list
         makedirs(join(expanduser("~"), ".fomod"), exist_ok=True)
         with open(join(expanduser("~"), ".fomod", ".designer"), "w") as configfile:
+            set_encoder_options("json", indent=4)
             configfile.write(encode(self.settings_dict))
 
         # populate the gui menu with the new files list
@@ -481,13 +476,13 @@ class MainFrame(base_ui[0], base_ui[1]):
             if not self.current_object.can_add_child(new_object):
                 child_button.setEnabled(False)
             if child in self.current_object.required_children:
-                child_button.setStyleSheet("background-color: " + QColor("#ba5f5f").name())
+                child_button.setStyleSheet("background-color: " + QColor("#FFD9D9").name())#ba5f5f
                 child_button.setStatusTip("A red button indicates that at least one of this node is required.")
             if child in self.current_object.either_children_group:
                 child_button.setStyleSheet("background-color: " + QColor("#ffaa7f").name())
                 child_button.setStatusTip("An orange button indicates that only one of these buttons must be used.")
             if child in self.current_object.at_least_one_children_group:
-                child_button.setStyleSheet("background-color: " + QColor("#c8c863").name())
+                child_button.setStyleSheet("background-color: " + QColor("#FFFFD9").name())#c8c863
                 child_button.setStatusTip("A yellow button indicates that from all the yellow buttons, "
                                           "at least one is required.")
             self.layout_box.addWidget(child_button)
@@ -884,6 +879,7 @@ class SettingsDialog(settings_ui[0], settings_ui[1]):
 
         makedirs(join(expanduser("~"), ".fomod"), exist_ok=True)
         with open(join(expanduser("~"), ".fomod", ".designer"), "w") as configfile:
+            set_encoder_options("json", indent=4)
             configfile.write(encode(self.settings_dict))
 
         self.close()
@@ -966,22 +962,26 @@ def read_settings():
             "code_refresh": 3,
             "show_intro": True,
             "show_advanced": False
-        }, "Defaults": {
+        },
+        "Defaults": {
             "installSteps": (True, "order", "Explicit"),
             "optionalFileGroups": (True, "order", "Explicit"),
             "type": (True, "name", "Optional"),
             "defaultType": (True, "name", "Optional"),
-        }, "Load": {
+        },
+        "Load": {
             "validate": True,
             "validate_ignore": False,
             "warnings": True,
             "warn_ignore": True
-        }, "Save": {
+        },
+        "Save": {
             "validate": True,
             "validate_ignore": False,
             "warnings": True,
             "warn_ignore": True
-        }, "Recent Files": deque(maxlen=5)
+        },
+        "Recent Files": deque(maxlen=5)
     }
 
     try:

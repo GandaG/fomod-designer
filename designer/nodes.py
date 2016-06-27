@@ -16,6 +16,7 @@
 
 from os import sep
 from collections import OrderedDict
+from PyQt5.QtWidgets import QShortcut
 from PyQt5.QtGui import QStandardItem, QStandardItemModel
 from PyQt5.QtCore import Qt, QMimeData
 from lxml import etree
@@ -25,8 +26,6 @@ from .wizards import WizardFiles, WizardDepend
 from .props import PropertyCombo, PropertyInt, PropertyText, PropertyFile, PropertyFolder, PropertyColour, \
     PropertyFlagLabel, PropertyFlagValue
 from .exceptions import BaseInstanceException
-
-set_encoder_options("json", separators=(',', ':'))
 
 
 class NodeComment(etree.CommentBase):
@@ -206,6 +205,7 @@ class _NodeBase(etree.ElementBase):
             self.metadata.pop("user_sort", None)
 
         meta_comment = None
+        set_encoder_options("json", separators=(',', ':'))
         for child in self:
             if type(child) is NodeComment and self.metadata:
                 if child.text.split()[0] == "<designer.metadata.do.not.edit>":

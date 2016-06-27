@@ -436,7 +436,7 @@
     <string>Delete the currently selected node.</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+D</string>
+    <string>Del</string>
    </property>
    <property name="shortcutContext">
     <enum>Qt::WindowShortcut</enum>
