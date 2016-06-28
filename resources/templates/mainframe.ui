@@ -316,6 +316,8 @@
     </property>
     <addaction name="action_Refresh"/>
     <addaction name="action_Delete"/>
+    <addaction name="actionCopy"/>
+    <addaction name="actionPaste"/>
    </widget>
    <widget class="QMenu" name="menu_View">
     <property name="title">
@@ -388,7 +390,7 @@
      <normaloff>../logos/logo_gear.png</normaloff>../logos/logo_gear.png</iconset>
    </property>
    <property name="text">
-    <string>O&amp;ptions</string>
+    <string>Settings</string>
    </property>
    <property name="iconText">
     <string>Settings</string>
@@ -540,6 +542,16 @@
    </property>
    <property name="statusTip">
     <string>Clear all the recent files.</string>
+   </property>
+  </action>
+  <action name="actionCopy">
+   <property name="text">
+    <string>Copy</string>
+   </property>
+  </action>
+  <action name="actionPaste">
+   <property name="text">
+    <string>Paste</string>
    </property>
   </action>
  </widget>

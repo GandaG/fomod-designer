@@ -24,15 +24,15 @@ from json import JSONDecodeError
 from jsonpickle import encode, decode, set_encoder_options
 from collections import deque
 from PyQt5.uic import loadUiType
-from PyQt5.QtWidgets import (QFileDialog, QColorDialog, QMessageBox, QLabel, QHBoxLayout, QCommandLinkButton,
+from PyQt5.QtWidgets import (QFileDialog, QColorDialog, QMessageBox, QLabel, QHBoxLayout, QCommandLinkButton, QShortcut,
                              QFormLayout, QLineEdit, QSpinBox, QComboBox, QWidget, QPushButton, QSizePolicy, QStatusBar,
-                             QCompleter)
-from PyQt5.QtGui import QIcon, QPixmap, QColor, QFont
+                             QCompleter, QApplication)
+from PyQt5.QtGui import QIcon, QPixmap, QColor, QFont, QKeySequence
 from PyQt5.QtCore import Qt, pyqtSignal, QStringListModel
 from requests import get, codes, ConnectionError, Timeout
 from validator import validate_tree, check_warnings, ValidatorError
 from . import cur_folder, __version__
-from .io import import_, new, export, sort_elements, elem_factory
+from .io import import_, new, export, sort_elements, elem_factory, copy_elem
 from .previews import PreviewDispatcherThread
 from .props import PropertyFile, PropertyColour, PropertyFolder, PropertyCombo, PropertyInt, PropertyText, \
     PropertyFlagLabel, PropertyFlagValue
@@ -63,6 +63,7 @@ class IntroWindow(intro_ui[0], intro_ui[1]):
                 recent_files.remove(path)
                 continue
             button = QCommandLinkButton(basename(path), path, self)
+            button.setIcon(QIcon(join(cur_folder, "resources/logos/logo_enter.png")))
             button.clicked.connect(lambda _, path_=path: self.open_path(path_))
             self.scroll_layout.addWidget(button)
 
@@ -142,6 +143,8 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.action_Delete.setIcon(QIcon(join(cur_folder, "resources/logos/logo_cross.png")))
         self.action_About.setIcon(QIcon(join(cur_folder, "resources/logos/logo_notepad.png")))
         self.actionHe_lp.setIcon(QIcon(join(cur_folder, "resources/logos/logo_info.png")))
+        self.actionCopy.setIcon(QIcon(join(cur_folder, "resources/logos/logo_copy.png")))
+        self.actionPaste.setIcon(QIcon(join(cur_folder, "resources/logos/logo_paste.png")))
 
         # setup any additional info left from designer
         self.action_Open.triggered.connect(self.open)
@@ -210,11 +213,30 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.xml_code_changed.connect(lambda: self.fomod_modified(True))
 
         # manage node tree model
-        from .nodes import NodeStandardItem, NodeStandardModel
+        from .nodes import NodeStandardModel
         self.tree_model = NodeStandardModel()
         self.tree_model.supportedDragActions = lambda: Qt.MoveAction
-        #self.tree_model.setItemPrototype(NodeStandardItem(None))
         self.object_tree_view.setModel(self.tree_model)
+        copy_shortcut = QShortcut(QKeySequence(Qt.CTRL + Qt.Key_C), self.object_tree_view, context=Qt.WidgetShortcut)
+        paste_shortcut = QShortcut(QKeySequence(Qt.CTRL + Qt.Key_V), self.object_tree_view, context=Qt.WidgetShortcut)
+        copy_shortcut.activated.connect(
+            lambda: self.copy_item_to_clipboard(
+                self.tree_model.itemFromIndex(
+                    self.object_tree_view.selectedIndexes()[0]
+                ),
+                self.tree_model
+            )
+            if self.object_tree_view.selectedIndexes() else None
+        )
+        paste_shortcut.activated.connect(
+            lambda: self.paste_item_from_clipboard(
+                self.tree_model.itemFromIndex(
+                    self.object_tree_view.selectedIndexes()[0]
+                ),
+                self.statusBar()
+            )
+            if self.object_tree_view.selectedIndexes() else None
+        )
         self.tree_model.itemChanged.connect(lambda item: item.xml_node.save_metadata())
         self.tree_model.itemChanged.connect(lambda item: self.xml_code_changed.emit(item.xml_node))
 
@@ -223,6 +245,20 @@ class MainFrame(base_ui[0], base_ui[1]):
 
     def set_current_object(self, object_):
         self.current_object = object_
+
+    @staticmethod
+    def copy_item_to_clipboard(item, model):
+        QApplication.clipboard().setMimeData(model.mimeData([model.indexFromItem(item)]))
+
+    @staticmethod
+    def paste_item_from_clipboard(parent_item, status_bar):
+        new_node = copy_elem(QApplication.clipboard().mimeData().node())
+        if not parent_item.xml_node.can_add_child(new_node):
+            status_bar.showMessage("This parent is not valid!")
+        else:
+            parent_item.xml_node.append(new_node)
+            parent_item.appendRow(new_node.model_item)
+            parent_item.sortChildren(0)
 
     @staticmethod
     def update_flag_label_completer(label_model, elem_root):

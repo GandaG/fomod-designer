@@ -16,12 +16,12 @@
 
 from os import sep
 from collections import OrderedDict
-from PyQt5.QtWidgets import QShortcut
 from PyQt5.QtGui import QStandardItem, QStandardItemModel
 from PyQt5.QtCore import Qt, QMimeData
 from lxml import etree
 from jsonpickle import encode, decode, set_encoder_options
 from json import JSONDecodeError
+from .io import copy_elem
 from .wizards import WizardFiles, WizardDepend
 from .props import PropertyCombo, PropertyInt, PropertyText, PropertyFile, PropertyFolder, PropertyColour, \
     PropertyFlagLabel, PropertyFlagValue
@@ -240,8 +240,10 @@ class NodeStandardModel(QStandardItemModel):
             return 0
 
         mime_data = NodeMimeData()
-        mime_data.set_item(self.itemFromIndex(list_of_QModelIndex[0]))
-        mime_data.set_node(self.itemFromIndex(list_of_QModelIndex[0]).xml_node)
+        new_node = copy_elem(self.itemFromIndex(list_of_QModelIndex[0]).xml_node)
+        mime_data.set_item(new_node.model_item)
+        mime_data.set_node(new_node)
+        mime_data.set_original_item(self.itemFromIndex(list_of_QModelIndex[0]))
         return mime_data
 
     def canDropMimeData(self, QMimeData, Qt_DropAction, row, col, QModelIndex):
@@ -254,29 +256,14 @@ class NodeStandardModel(QStandardItemModel):
             return False
 
     def dropMimeData(self, QMimeData, Qt_DropAction, row, col, QModelIndex):
-        def deep_copy_items(child_node):
-            new_item = NodeStandardItem(child_node)
-            child_node.model_item = new_item
-            child_node.getparent().model_item.appendRow(new_item)
-            for child_ in child_node:
-                deep_copy_items(child_) if not isinstance(child_, etree.CommentBase) else None
-            if not isinstance(child_node, etree.CommentBase):
-                child_node.write_attribs()
-                child_node.load_metadata()
-
         if not self.canDropMimeData(QMimeData, Qt_DropAction, row, col, QModelIndex):
             return False
 
         parent = self.itemFromIndex(QModelIndex)
         xml_node = QMimeData.node()
-        new_item = NodeStandardItem(xml_node)
-        xml_node.model_item = new_item
-        xml_node.load_metadata()
-        for child in xml_node:
-            deep_copy_items(child)
-        parent.insertRow(row, new_item)
+        parent.insertRow(row, xml_node.model_item)
         for row_index in range(0, parent.rowCount()):
-            if parent.child(row_index) == QMimeData.item():
+            if parent.child(row_index) == QMimeData.original_item():
                 continue
             parent.child(row_index).xml_node.user_sort_order = str(parent.child(row_index).row()).zfill(7)
             parent.child(row_index).xml_node.save_metadata()
@@ -288,6 +275,7 @@ class NodeMimeData(QMimeData):
         super().__init__()
         self._node = None
         self._item = None
+        self._original_item = None
 
     def has_node(self):
         if self._node is None:
@@ -312,6 +300,12 @@ class NodeMimeData(QMimeData):
 
     def set_item(self, item):
         self._item = item
+
+    def original_item(self):
+        return self._original_item
+
+    def set_original_item(self, item):
+        self._original_item = item
 
 
 class NodeInfoRoot(_NodeBase):

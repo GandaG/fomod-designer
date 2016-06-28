@@ -205,6 +205,23 @@ def elem_factory(tag, parent):
     return parsed_list[len(parsed_list) - 1]
 
 
+def copy_elem(element_):
+    result = elem_factory(element_.tag, element_.getparent())
+    element_.write_attribs()
+    result.text = element_.text
+    for key in element_.keys():
+        result.set(key, element_.get(key))
+    result.parse_attribs()
+    for child in element_:
+        if isinstance(child, CommentBase):
+            result.append(type(child)(child.text))
+        else:
+            new_child = copy_elem(child)
+            result.add_child(new_child)
+    result.load_metadata()
+    return result
+
+
 def import_(package_path):
     """
     Function used to import an existing installer from *package_path*.
