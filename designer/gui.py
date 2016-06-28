@@ -146,6 +146,34 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.actionCopy.setIcon(QIcon(join(cur_folder, "resources/logos/logo_copy.png")))
         self.actionPaste.setIcon(QIcon(join(cur_folder, "resources/logos/logo_paste.png")))
 
+        # manage node tree model
+        from .nodes import NodeStandardModel
+        self.tree_model = NodeStandardModel()
+        self.tree_model.supportedDragActions = lambda: Qt.MoveAction
+        self.object_tree_view.setModel(self.tree_model)
+        copy_shortcut = QShortcut(QKeySequence(Qt.CTRL + Qt.Key_C), self.object_tree_view, context=Qt.WidgetShortcut)
+        paste_shortcut = QShortcut(QKeySequence(Qt.CTRL + Qt.Key_V), self.object_tree_view, context=Qt.WidgetShortcut)
+        copy_shortcut.activated.connect(
+            lambda: self.copy_item_to_clipboard(
+                self.tree_model.itemFromIndex(
+                    self.object_tree_view.selectedIndexes()[0]
+                ),
+                self.tree_model
+            )
+            if self.object_tree_view.selectedIndexes() else None
+        )
+        paste_shortcut.activated.connect(
+            lambda: self.paste_item_from_clipboard(
+                self.tree_model.itemFromIndex(
+                    self.object_tree_view.selectedIndexes()[0]
+                ),
+                self.statusBar()
+            )
+            if self.object_tree_view.selectedIndexes() else None
+        )
+        self.tree_model.itemChanged.connect(lambda item: item.xml_node.save_metadata())
+        self.tree_model.itemChanged.connect(lambda item: self.xml_code_changed.emit(item.xml_node))
+
         # setup any additional info left from designer
         self.action_Open.triggered.connect(self.open)
         self.action_Save.triggered.connect(self.save)
@@ -155,6 +183,9 @@ class MainFrame(base_ui[0], base_ui[1]):
         self.actionHe_lp.triggered.connect(self.help)
         self.action_About.triggered.connect(lambda _, self_=self: self.about(self_))
         self.actionClear.triggered.connect(self.clear_recent_files)
+        self.actionCopy.triggered.connect(copy_shortcut.activated.emit)
+        self.actionPaste.triggered.connect(paste_shortcut.activated.emit)
+
         self.action_Object_Tree.toggled.connect(self.object_tree.setVisible)
         self.actionObject_Box.toggled.connect(self.object_box.setVisible)
         self.action_Property_Editor.toggled.connect(self.property_editor.setVisible)
@@ -211,34 +242,6 @@ class MainFrame(base_ui[0], base_ui[1]):
         )
 
         self.xml_code_changed.connect(lambda: self.fomod_modified(True))
-
-        # manage node tree model
-        from .nodes import NodeStandardModel
-        self.tree_model = NodeStandardModel()
-        self.tree_model.supportedDragActions = lambda: Qt.MoveAction
-        self.object_tree_view.setModel(self.tree_model)
-        copy_shortcut = QShortcut(QKeySequence(Qt.CTRL + Qt.Key_C), self.object_tree_view, context=Qt.WidgetShortcut)
-        paste_shortcut = QShortcut(QKeySequence(Qt.CTRL + Qt.Key_V), self.object_tree_view, context=Qt.WidgetShortcut)
-        copy_shortcut.activated.connect(
-            lambda: self.copy_item_to_clipboard(
-                self.tree_model.itemFromIndex(
-                    self.object_tree_view.selectedIndexes()[0]
-                ),
-                self.tree_model
-            )
-            if self.object_tree_view.selectedIndexes() else None
-        )
-        paste_shortcut.activated.connect(
-            lambda: self.paste_item_from_clipboard(
-                self.tree_model.itemFromIndex(
-                    self.object_tree_view.selectedIndexes()[0]
-                ),
-                self.statusBar()
-            )
-            if self.object_tree_view.selectedIndexes() else None
-        )
-        self.tree_model.itemChanged.connect(lambda item: item.xml_node.save_metadata())
-        self.tree_model.itemChanged.connect(lambda item: self.xml_code_changed.emit(item.xml_node))
 
         self.update_recent_files()
         self.check_updates()
