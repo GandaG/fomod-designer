@@ -39,6 +39,20 @@ def preview():
 
 
 @task
+def gen_ui():
+    from os import listdir, remove
+    from os.path import join, isfile
+    from PyQt5.uic import compileUiDir
+
+    target_dir = "designer/ui_templates"
+    init_fname = "__init__.py"
+    for item in listdir(target_dir):
+        if item != init_fname and isfile(join(target_dir, item)):
+            remove(join(target_dir, item))
+    compileUiDir("resources/templates", map=lambda dir, fname: (target_dir, fname), from_imports=True)
+
+
+@task
 def clean():
     from shutil import rmtree
 
@@ -47,7 +61,7 @@ def clean():
     print("Build caches cleaned.")
 
 
-@task(clean)
+@task(clean, gen_ui)
 def build():
     from platform import system, architecture
     from shutil import copy

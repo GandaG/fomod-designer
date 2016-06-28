@@ -23,10 +23,9 @@ from datetime import datetime
 from json import JSONDecodeError
 from jsonpickle import encode, decode, set_encoder_options
 from collections import deque
-from PyQt5.uic import loadUiType
 from PyQt5.QtWidgets import (QFileDialog, QColorDialog, QMessageBox, QLabel, QHBoxLayout, QCommandLinkButton, QShortcut,
                              QFormLayout, QLineEdit, QSpinBox, QComboBox, QWidget, QPushButton, QSizePolicy, QStatusBar,
-                             QCompleter, QApplication)
+                             QCompleter, QApplication, QDialog, QMainWindow)
 from PyQt5.QtGui import QIcon, QPixmap, QColor, QFont, QKeySequence
 from PyQt5.QtCore import Qt, pyqtSignal, QStringListModel
 from requests import get, codes, ConnectionError, Timeout
@@ -37,15 +36,10 @@ from .previews import PreviewDispatcherThread
 from .props import PropertyFile, PropertyColour, PropertyFolder, PropertyCombo, PropertyInt, PropertyText, \
     PropertyFlagLabel, PropertyFlagValue
 from .exceptions import DesignerError
-
-# load all the ui types
-intro_ui = loadUiType(join(cur_folder, "resources/templates/intro.ui"))
-base_ui = loadUiType(join(cur_folder, "resources/templates/mainframe.ui"))
-settings_ui = loadUiType(join(cur_folder, "resources/templates/settings.ui"))
-about_ui = loadUiType(join(cur_folder, "resources/templates/about.ui"))
+from .ui_templates import intro, mainframe, about, settings
 
 
-class IntroWindow(intro_ui[0], intro_ui[1]):
+class IntroWindow(QMainWindow, intro.Ui_MainWindow):
     """
     The class for the intro window. Subclassed from QDialog and created in Qt Designer.
     """
@@ -98,7 +92,7 @@ class IntroWindow(intro_ui[0], intro_ui[1]):
         self.close()
 
 
-class MainFrame(base_ui[0], base_ui[1]):
+class MainFrame(QMainWindow, mainframe.Ui_MainWindow):
     """
     The class for the main window. Subclassed from QMainWindow and created in Qt Designer.
     """
@@ -809,7 +803,7 @@ class MainFrame(base_ui[0], base_ui[1]):
             event.ignore()
 
 
-class SettingsDialog(settings_ui[0], settings_ui[1]):
+class SettingsDialog(QDialog, settings.Ui_Dialog):
     """
     The class for the settings window. Subclassed from QDialog and created in Qt Designer.
     """
@@ -924,7 +918,7 @@ class SettingsDialog(settings_ui[0], settings_ui[1]):
         self.close()
 
 
-class About(about_ui[0], about_ui[1]):
+class About(QDialog, about.Ui_Dialog):
     """
     The class for the about window. Subclassed from QDialog and created in Qt Designer.
     """

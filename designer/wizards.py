@@ -17,13 +17,15 @@
 from abc import ABCMeta, abstractmethod
 from copy import deepcopy
 from os.path import join, relpath
-from PyQt5.QtWidgets import QStackedWidget, QFileDialog
+from PyQt5.QtWidgets import QStackedWidget, QFileDialog, QWidget
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import pyqtSignal
-from PyQt5.uic import loadUi, loadUiType
 from . import cur_folder
 from .io import elem_factory
 from .exceptions import BaseInstanceException
+from .ui_templates import (wizard_files_01, wizard_files_item, wizard_depend_01, wizard_depend_depend,
+                           wizard_depend_depend_depend, wizard_depend_depend_file, wizard_depend_depend_flag,
+                           wizard_depend_depend_version, wizard_depend_file, wizard_depend_flag)
 
 
 class _WizardBase(QStackedWidget):
@@ -99,24 +101,29 @@ class WizardFiles(_WizardBase):
 
         element_result = deepcopy(self.element)
 
-        page = loadUi(join(cur_folder, "resources/templates/wizard_files_01.ui"))
+        page = QWidget()
+        page_ui = wizard_files_01.Ui_Form()
+        page_ui.setupUi(page)
 
         file_list = [elem for elem in element_result if elem.tag == "file"]
         for element in file_list:
             element_result.remove_child(element)
-            add_elem(element, page.layout_file)
+            add_elem(element, page_ui.layout_file)
 
         folder_list = [elem for elem in element_result if elem.tag == "folder"]
         for element in folder_list:
             element_result.remove_child(element)
-            add_elem(element, page.layout_folder)
+            add_elem(element, page_ui.layout_folder)
 
         # finish with connections
-        page.button_add_file.clicked.connect(lambda: add_elem(elem_factory("file", element_result), page.layout_file))
-        page.button_add_folder.clicked.connect(
-            lambda: add_elem(elem_factory("folder", element_result), page.layout_folder))
-        page.finish_button.clicked.connect(lambda: self._process_results(element_result))
-        page.cancel_button.clicked.connect(self.cancelled.emit)
+        page_ui.button_add_file.clicked.connect(
+            lambda: add_elem(elem_factory("file", element_result), page_ui.layout_file)
+        )
+        page_ui.button_add_folder.clicked.connect(
+            lambda: add_elem(elem_factory("folder", element_result), page_ui.layout_folder)
+        )
+        page_ui.finish_button.clicked.connect(lambda: self._process_results(element_result))
+        page_ui.cancel_button.clicked.connect(self.cancelled.emit)
 
         self.addWidget(page)
 
@@ -130,32 +137,34 @@ class WizardFiles(_WizardBase):
             if element.tag == "file":
                 file_path = open_dialog.getOpenFileName(self, "Select File:", self.kwargs["package_path"])
                 if file_path[0]:
-                    item.edit_source.setText(relpath(file_path[0], self.kwargs["package_path"]))
+                    item_ui.edit_source.setText(relpath(file_path[0], self.kwargs["package_path"]))
             elif element.tag == "folder":
                 folder_path = open_dialog.getExistingDirectory(self, "Select folder:", self.kwargs["package_path"])
                 if folder_path:
-                    item.edit_source.setText(relpath(folder_path, self.kwargs["package_path"]))
+                    item_ui.edit_source.setText(relpath(folder_path, self.kwargs["package_path"]))
 
         parent_element = element.getparent()
 
-        item = loadUi(join(cur_folder, "resources/templates/wizard_files_item.ui"))
+        item = QWidget()
+        item_ui = wizard_files_item.Ui_base()
+        item_ui.setupUi(item)
 
         # set initial values
-        item.edit_source.setText(element.properties["source"].value)
-        item.edit_dest.setText(element.properties["destination"].value)
-        item.button_delete.setIcon(QIcon(join(cur_folder, "resources/logos/logo_cross.png")))
+        item_ui.edit_source.setText(element.properties["source"].value)
+        item_ui.edit_dest.setText(element.properties["destination"].value)
+        item_ui.button_delete.setIcon(QIcon(join(cur_folder, "resources/logos/logo_cross.png")))
 
         # connect the signals
-        item.edit_source.textChanged.connect(element.properties["source"].set_value)
-        item.edit_source.textChanged.connect(element.write_attribs)
-        item.edit_source.textChanged.connect(lambda: self.code_changed.emit(parent_element))
-        item.edit_dest.textChanged.connect(element.properties["destination"].set_value)
-        item.edit_dest.textChanged.connect(element.write_attribs)
-        item.edit_dest.textChanged.connect(lambda: self.code_changed.emit(parent_element))
-        item.button_source.clicked.connect(button_clicked)
-        item.button_delete.clicked.connect(item.deleteLater)
-        item.button_delete.clicked.connect(lambda _: parent_element.remove_child(element))
-        item.button_delete.clicked.connect(lambda: self.code_changed.emit(parent_element))
+        item_ui.edit_source.textChanged.connect(element.properties["source"].set_value)
+        item_ui.edit_source.textChanged.connect(element.write_attribs)
+        item_ui.edit_source.textChanged.connect(lambda: self.code_changed.emit(parent_element))
+        item_ui.edit_dest.textChanged.connect(element.properties["destination"].set_value)
+        item_ui.edit_dest.textChanged.connect(element.write_attribs)
+        item_ui.edit_dest.textChanged.connect(lambda: self.code_changed.emit(parent_element))
+        item_ui.button_source.clicked.connect(button_clicked)
+        item_ui.button_delete.clicked.connect(item.deleteLater)
+        item_ui.button_delete.clicked.connect(lambda _: parent_element.remove_child(element))
+        item_ui.button_delete.clicked.connect(lambda: self.code_changed.emit(parent_element))
 
         return item
 
@@ -211,42 +220,44 @@ class WizardDepend(_WizardBase):
         element_result = copy_depend(self.element)
         self.code_changed.emit(element_result)
 
-        page = loadUi(join(cur_folder, "resources/templates/wizard_depend_01.ui"))
+        page = QWidget()
+        page_ui = wizard_depend_01.Ui_Form()
+        page_ui.setupUi(page)
 
-        page.typeComboBox.setCurrentText(element_result.get("operator"))
+        page_ui.typeComboBox.setCurrentText(element_result.get("operator"))
 
         for element in [elem for elem in element_result if elem.tag == "fileDependency"]:
-            self.add_elem(element_result, page.layout_file, element_=element)
+            self.add_elem(element_result, page_ui.layout_file, element_=element)
 
         for element in [elem for elem in element_result if elem.tag == "flagDependency"]:
-            self.add_elem(element_result, page.layout_flag, element_=element)
+            self.add_elem(element_result, page_ui.layout_flag, element_=element)
 
         for element in [elem for elem in element_result if elem.tag == "dependencies"]:
-            self.add_elem(element_result, page.layout_depend, element_=element)
+            self.add_elem(element_result, page_ui.layout_depend, element_=element)
 
         for elem in element_result:
             if elem.tag == "gameDependency":
-                page.gameVersionLineEdit.setText(elem.get("version"))
+                page_ui.gameVersionLineEdit.setText(elem.get("version"))
 
         # finish with connections
-        page.typeComboBox.currentTextChanged.connect(element_result.properties["operator"].set_value)
-        page.typeComboBox.currentTextChanged.connect(element_result.write_attribs)
-        page.typeComboBox.currentTextChanged.connect(lambda: self.code_changed.emit(element_result))
+        page_ui.typeComboBox.currentTextChanged.connect(element_result.properties["operator"].set_value)
+        page_ui.typeComboBox.currentTextChanged.connect(element_result.write_attribs)
+        page_ui.typeComboBox.currentTextChanged.connect(lambda: self.code_changed.emit(element_result))
 
-        page.gameVersionLineEdit.textChanged.connect(
+        page_ui.gameVersionLineEdit.textChanged.connect(
             lambda value, element_=element_result: self._update_version(value, element_))
 
-        page.button_file.clicked.connect(
-            lambda: self.add_elem(element_result, page.layout_file, tag="fileDependency"))
+        page_ui.button_file.clicked.connect(
+            lambda: self.add_elem(element_result, page_ui.layout_file, tag="fileDependency"))
 
-        page.button_flag.clicked.connect(
-            lambda: self.add_elem(element_result, page.layout_flag, tag="flagDependency"))
+        page_ui.button_flag.clicked.connect(
+            lambda: self.add_elem(element_result, page_ui.layout_flag, tag="flagDependency"))
 
-        page.button_sub.clicked.connect(
-            lambda: self.add_elem(element_result, page.layout_depend, tag="dependencies"))
+        page_ui.button_sub.clicked.connect(
+            lambda: self.add_elem(element_result, page_ui.layout_depend, tag="dependencies"))
 
-        page.finish_button.clicked.connect(lambda: self._process_results(element_result))
-        page.cancel_button.clicked.connect(self.cancelled.emit)
+        page_ui.finish_button.clicked.connect(lambda: self._process_results(element_result))
+        page_ui.cancel_button.clicked.connect(self.cancelled.emit)
 
         self.addWidget(page)
 
@@ -303,114 +314,126 @@ class WizardDepend(_WizardBase):
     def _create_file(self, element):
         parent_element = element.getparent()
 
-        item = loadUi(join(cur_folder, "resources/templates/wizard_depend_file.ui"))
+        item = QWidget()
+        item_ui = wizard_depend_file.Ui_Form()
+        item_ui.setupUi(item)
 
         # set initial values
-        item.edit_file.setText(element.properties["file"].value)
-        item.combo_type.setCurrentText(element.properties["state"].value)
-        item.button_delete.setIcon(QIcon(join(cur_folder, "resources/logos/logo_cross.png")))
+        item_ui.edit_file.setText(element.properties["file"].value)
+        item_ui.combo_type.setCurrentText(element.properties["state"].value)
+        item_ui.button_delete.setIcon(QIcon(join(cur_folder, "resources/logos/logo_cross.png")))
 
         # connect the signals
-        item.edit_file.textChanged.connect(element.properties["file"].set_value)
-        item.edit_file.textChanged.connect(element.write_attribs)
-        item.edit_file.textChanged.connect(lambda: self.code_changed.emit(parent_element))
+        item_ui.edit_file.textChanged.connect(element.properties["file"].set_value)
+        item_ui.edit_file.textChanged.connect(element.write_attribs)
+        item_ui.edit_file.textChanged.connect(lambda: self.code_changed.emit(parent_element))
 
-        item.combo_type.currentTextChanged.connect(element.properties["state"].set_value)
-        item.combo_type.currentTextChanged.connect(element.write_attribs)
-        item.combo_type.currentTextChanged.connect(lambda: self.code_changed.emit(parent_element))
+        item_ui.combo_type.currentTextChanged.connect(element.properties["state"].set_value)
+        item_ui.combo_type.currentTextChanged.connect(element.write_attribs)
+        item_ui.combo_type.currentTextChanged.connect(lambda: self.code_changed.emit(parent_element))
 
-        item.button_delete.clicked.connect(item.deleteLater)
-        item.button_delete.clicked.connect(lambda _: parent_element.remove_child(element))
-        item.button_delete.clicked.connect(lambda: self.code_changed.emit(parent_element))
+        item_ui.button_delete.clicked.connect(item.deleteLater)
+        item_ui.button_delete.clicked.connect(lambda _: parent_element.remove_child(element))
+        item_ui.button_delete.clicked.connect(lambda: self.code_changed.emit(parent_element))
 
         return item
 
     def _create_flag(self, element):
         parent_element = element.getparent()
 
-        item = loadUi(join(cur_folder, "resources/templates/wizard_depend_flag.ui"))
+        item = QWidget()
+        item_ui = wizard_depend_flag.Ui_Form()
+        item_ui.setupUi(item)
 
         # set initial values
-        item.edit_flag.setText(element.properties["flag"].value)
-        item.edit_value.setText(element.properties["value"].value)
-        item.button_delete.setIcon(QIcon(join(cur_folder, "resources/logos/logo_cross.png")))
+        item_ui.edit_flag.setText(element.properties["flag"].value)
+        item_ui.edit_value.setText(element.properties["value"].value)
+        item_ui.button_delete.setIcon(QIcon(join(cur_folder, "resources/logos/logo_cross.png")))
 
         # connect the signals
-        item.edit_flag.textChanged.connect(element.properties["flag"].set_value)
-        item.edit_flag.textChanged.connect(element.write_attribs)
-        item.edit_flag.textChanged.connect(lambda: self.code_changed.emit(parent_element))
+        item_ui.edit_flag.textChanged.connect(element.properties["flag"].set_value)
+        item_ui.edit_flag.textChanged.connect(element.write_attribs)
+        item_ui.edit_flag.textChanged.connect(lambda: self.code_changed.emit(parent_element))
 
-        item.edit_value.textChanged.connect(element.properties["value"].set_value)
-        item.edit_value.textChanged.connect(element.write_attribs)
-        item.edit_value.textChanged.connect(lambda: self.code_changed.emit(parent_element))
+        item_ui.edit_value.textChanged.connect(element.properties["value"].set_value)
+        item_ui.edit_value.textChanged.connect(element.write_attribs)
+        item_ui.edit_value.textChanged.connect(lambda: self.code_changed.emit(parent_element))
 
-        item.button_delete.clicked.connect(item.deleteLater)
-        item.button_delete.clicked.connect(lambda _: parent_element.remove_child(element))
-        item.button_delete.clicked.connect(lambda: self.code_changed.emit(parent_element))
+        item_ui.button_delete.clicked.connect(item.deleteLater)
+        item_ui.button_delete.clicked.connect(lambda _: parent_element.remove_child(element))
+        item_ui.button_delete.clicked.connect(lambda: self.code_changed.emit(parent_element))
 
         return item
 
     def _create_depend(self, element, depend_layout):
         parent_element = element.getparent()
 
-        item = loadUi(join(cur_folder, "resources/templates/wizard_depend_depend.ui"))
-        file = loadUiType(join(cur_folder, "resources/templates/wizard_depend_depend_file.ui"))
-        flag = loadUiType(join(cur_folder, "resources/templates/wizard_depend_depend_flag.ui"))
-        version = loadUi(join(cur_folder, "resources/templates/wizard_depend_depend_version.ui"))
-        depend = loadUi(join(cur_folder, "resources/templates/wizard_depend_depend_depend.ui"))
+        item = QWidget()
+        item_ui = wizard_depend_depend.Ui_Form()
+        item_ui.setupUi(item)
 
-        item.label_type.setText(element.properties["operator"].value)
-        item.button_less.hide()
-        item.line.hide()
-        item.scrollArea.hide()
-        item.button_delete.setIcon(QIcon(join(cur_folder, "resources/logos/logo_cross.png")))
+        file = QWidget()
+        file_ui = wizard_depend_depend_file.Ui_Form()
+        file_ui.setupUi(file)
 
-        spacer = item.layout_depend_depend.takeAt(item.layout_depend_depend.count() - 1)
+        flag = QWidget()
+        flag_ui = wizard_depend_depend_flag.Ui_Form()
+        flag_ui.setupUi(flag)
+
+        version = QWidget()
+        version_ui = wizard_depend_depend_version.Ui_Form()
+        version_ui.setupUi(version)
+
+        depend = QWidget()
+        depend_ui = wizard_depend_depend_depend.Ui_Form()
+        depend_ui.setupUi(depend)
+
+        item_ui.label_type.setText(element.properties["operator"].value)
+        item_ui.button_less.hide()
+        item_ui.line.hide()
+        item_ui.scrollArea.hide()
+        item_ui.button_delete.setIcon(QIcon(join(cur_folder, "resources/logos/logo_cross.png")))
+
+        spacer = item_ui.layout_depend_depend.takeAt(item_ui.layout_depend_depend.count() - 1)
 
         for element_ in [elem for elem in element if elem.tag == "fileDependency"]:
-            file_item = file[0]()
-            file_widget = file[1]()
-            file_item.setupUi(file_widget)
-            file_item.label_file.setText(element_.properties["file"].value)
-            file_item.label_type.setText(element_.properties["state"].value)
-            item.layout_depend_depend.addWidget(file_widget)
+            file_ui.label_file.setText(element_.properties["file"].value)
+            file_ui.label_type.setText(element_.properties["state"].value)
+            item_ui.layout_depend_depend.addWidget(file)
 
         for element_ in [elem for elem in element if elem.tag == "flagDependency"]:
-            flag_item = flag[0]()
-            flag_widget = flag[1]()
-            flag_item.setupUi(flag_widget)
-            flag_item.label_flag.setText(element_.properties["flag"].value)
-            flag_item.label_value.setText(element_.properties["value"].value)
-            item.layout_depend_depend.addWidget(flag_widget)
+            flag_ui.label_flag.setText(element_.properties["flag"].value)
+            flag_ui.label_value.setText(element_.properties["value"].value)
+            item_ui.layout_depend_depend.addWidget(flag)
 
         sub_dependencies_sum = sum(1 for elem in element if elem.tag == "dependencies")
         if sub_dependencies_sum:
-            depend.label_number.setText(str(sub_dependencies_sum))
+            depend_ui.label_number.setText(str(sub_dependencies_sum))
             if sub_dependencies_sum > 1:
-                depend.label_depend.setText("Sub-Dependencies")
-                item.layout_depend_depend.addWidget(depend)
+                depend_ui.label_depend.setText("Sub-Dependencies")
+                item_ui.layout_depend_depend.addWidget(depend)
 
         for element_ in [elem for elem in element if elem.tag == "gameDependency"]:
-            version.label_version.setText(element_.get("version"))
-            item.layout_depend_depend.addWidget(version)
+            version_ui.label_version.setText(element_.get("version"))
+            item_ui.layout_depend_depend.addWidget(version)
 
-        item.layout_depend_depend.addSpacerItem(spacer)
+        item_ui.layout_depend_depend.addSpacerItem(spacer)
 
-        item.button_more.clicked.connect(lambda: item.button_more.hide())
-        item.button_more.clicked.connect(lambda: item.button_less.show())
-        item.button_more.clicked.connect(lambda: item.line.show())
-        item.button_more.clicked.connect(lambda: item.scrollArea.show())
+        item_ui.button_more.clicked.connect(lambda: item_ui.button_more.hide())
+        item_ui.button_more.clicked.connect(lambda: item_ui.button_less.show())
+        item_ui.button_more.clicked.connect(lambda: item_ui.line.show())
+        item_ui.button_more.clicked.connect(lambda: item_ui.scrollArea.show())
 
-        item.button_less.clicked.connect(lambda: item.button_less.hide())
-        item.button_less.clicked.connect(lambda: item.button_more.show())
-        item.button_less.clicked.connect(lambda: item.line.hide())
-        item.button_less.clicked.connect(lambda: item.scrollArea.hide())
+        item_ui.button_less.clicked.connect(lambda: item_ui.button_less.hide())
+        item_ui.button_less.clicked.connect(lambda: item_ui.button_more.show())
+        item_ui.button_less.clicked.connect(lambda: item_ui.line.hide())
+        item_ui.button_less.clicked.connect(lambda: item_ui.scrollArea.hide())
 
-        item.button_edit.clicked.connect(lambda _, element__=element: self._nested_wizard(element__, depend_layout))
+        item_ui.button_edit.clicked.connect(lambda _, element__=element: self._nested_wizard(element__, depend_layout))
 
-        item.button_delete.clicked.connect(item.deleteLater)
-        item.button_delete.clicked.connect(lambda _: parent_element.remove_child(element))
-        item.button_delete.clicked.connect(lambda: self.code_changed.emit(parent_element))
+        item_ui.button_delete.clicked.connect(item.deleteLater)
+        item_ui.button_delete.clicked.connect(lambda _: parent_element.remove_child(element))
+        item_ui.button_delete.clicked.connect(lambda: self.code_changed.emit(parent_element))
 
         return item
 
