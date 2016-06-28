@@ -516,7 +516,7 @@ class NodeConfigRoot(_NodeBase):
             [
                 ("{http://www.w3.org/2001/XMLSchema-instance}noNamespaceSchemaLocation",
                  PropertyText(
-                     "xsi", "https://github.com/GandaG/fomod-designer/blob/master/resources/mod_schema.xsd", False
+                     "xsi", "http://qconsulting.ca/fo3/ModConfig5.0.xsd", False
                  ))
             ]
         )

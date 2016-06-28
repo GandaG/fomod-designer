@@ -16,13 +16,15 @@
 
 from os import makedirs
 from os.path import expanduser, normpath, basename, join, relpath, isdir
+from io import BytesIO
 from threading import Thread
 from queue import Queue
 from webbrowser import open as web_open
 from datetime import datetime
+from collections import deque
 from json import JSONDecodeError
 from jsonpickle import encode, decode, set_encoder_options
-from collections import deque
+from lxml.etree import parse, tostring
 from PyQt5.QtWidgets import (QFileDialog, QColorDialog, QMessageBox, QLabel, QHBoxLayout, QCommandLinkButton, QShortcut,
                              QFormLayout, QLineEdit, QSpinBox, QComboBox, QWidget, QPushButton, QSizePolicy, QStatusBar,
                              QCompleter, QApplication, QDialog, QMainWindow)
@@ -344,10 +346,17 @@ class MainFrame(QMainWindow, mainframe.Ui_MainWindow):
                 info_root, config_root = import_(normpath(package_path))
                 if info_root is not None and config_root is not None:
                     if self.settings_dict["Load"]["validate"]:
-                        validate_tree(config_root, join(cur_folder, "resources", "mod_schema.xsd"),
-                                      self.settings_dict["Load"]["validate_ignore"])
+                        validate_tree(
+                            parse(BytesIO(tostring(config_root, pretty_print=True))),
+                            join(cur_folder, "resources", "mod_schema.xsd"),
+                            self.settings_dict["Load"]["validate_ignore"]
+                        )
                     if self.settings_dict["Load"]["warnings"]:
-                        check_warnings(package_path, config_root, self.settings_dict["Save"]["warn_ignore"])
+                        check_warnings(
+                            package_path,
+                            config_root,
+                            self.settings_dict["Save"]["warn_ignore"]
+                        )
                 else:
                     info_root, config_root = new()
 
@@ -383,10 +392,17 @@ class MainFrame(QMainWindow, mainframe.Ui_MainWindow):
                 sort_elements(self.info_root)
                 sort_elements(self.config_root)
                 if self.settings_dict["Save"]["validate"]:
-                    validate_tree(self.config_root, join(cur_folder, "resources", "mod_schema.xsd"),
-                                  self.settings_dict["Save"]["validate_ignore"])
+                    validate_tree(
+                        parse(BytesIO(tostring(self.config_root, pretty_print=True))),
+                        join(cur_folder, "resources", "mod_schema.xsd"),
+                        self.settings_dict["Save"]["validate_ignore"]
+                    )
                 if self.settings_dict["Save"]["warnings"]:
-                    check_warnings(self.package_path, self.config_root, self.settings_dict["Save"]["warn_ignore"])
+                    check_warnings(
+                        self.package_path,
+                        self.config_root,
+                        self.settings_dict["Save"]["warn_ignore"]
+                    )
                 export(self.info_root, self.config_root, self.package_path)
                 self.fomod_modified(False)
         except ValidatorError as e:
