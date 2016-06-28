@@ -204,16 +204,19 @@ class _NodeBase(etree.ElementBase):
         else:
             self.metadata.pop("user_sort", None)
 
-        meta_comment = None
-        set_encoder_options("json", separators=(',', ':'))
-        for child in self:
-            if type(child) is NodeComment and self.metadata:
-                if child.text.split()[0] == "<designer.metadata.do.not.edit>":
-                    meta_comment = child
-                    child.text = "<designer.metadata.do.not.edit> " + encode(self.metadata)
+        if not self.allowed_children and "<node_text>" not in self.properties.keys():
+            return
+        else:
+            meta_comment = None
+            set_encoder_options("json", separators=(',', ':'))
+            for child in self:
+                if type(child) is NodeComment and self.metadata:
+                    if child.text.split()[0] == "<designer.metadata.do.not.edit>":
+                        meta_comment = child
+                        child.text = "<designer.metadata.do.not.edit> " + encode(self.metadata)
 
-        if meta_comment is None:
-            self.append(NodeComment("<designer.metadata.do.not.edit> " + encode(self.metadata)))
+            if meta_comment is None:
+                self.append(NodeComment("<designer.metadata.do.not.edit> " + encode(self.metadata)))
 
 
 class NodeStandardItem(QStandardItem):
