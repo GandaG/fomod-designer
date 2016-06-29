@@ -16,9 +16,9 @@
 
 # get pyenv - I hate messing with system python on ubuntu
 
-git clone https://github.com/yyuu/pyenv.git $HOME/.pyenv
+git clone https://github.com/yyuu/pyenv.git $HOME/.pyenv-custom
 
-export PYENV_ROOT="$HOME/.pyenv"
+export PYENV_ROOT="$HOME/.pyenv-custom"
 export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
 
@@ -26,7 +26,7 @@ eval "$(pyenv init -)"
 # get pyenv-virtualenv instead of plain old virtualenv
 
 git clone https://github.com/yyuu/pyenv-virtualenv.git \
- $HOME/.pyenv/plugins/pyenv-virtualenv
+ $HOME/.pyenv-custom/plugins/pyenv-virtualenv
 
 eval "$(pyenv virtualenv-init -)"
 
