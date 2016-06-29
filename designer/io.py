@@ -24,10 +24,10 @@ module_parser = XMLParser(remove_pis=True, remove_blank_text=True)
 
 
 class _CommentLookup(CustomElementClassLookup):
-    def lookup(self, type, doc, namespace, name):
+    def lookup(self, elem_type, doc, namespace, name):
         from .nodes import NodeComment
 
-        if type == "comment":
+        if elem_type == "comment":
             return NodeComment
         else:
             return None
@@ -205,7 +205,7 @@ def elem_factory(tag, parent):
     return parsed_list[len(parsed_list) - 1]
 
 
-def copy_elem(element_):
+def copy_element(element_):
     result = elem_factory(element_.tag, element_.getparent())
     element_.write_attribs()
     result.text = element_.text
@@ -216,7 +216,7 @@ def copy_elem(element_):
         if isinstance(child, CommentBase):
             result.append(type(child)(child.text))
         else:
-            new_child = copy_elem(child)
+            new_child = copy_element(child)
             result.add_child(new_child)
     result.load_metadata()
     return result

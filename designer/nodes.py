@@ -16,12 +16,11 @@
 
 from os import sep
 from collections import OrderedDict
-from PyQt5.QtGui import QStandardItem, QStandardItemModel
-from PyQt5.QtCore import Qt, QMimeData
+from PyQt5.QtGui import QStandardItem
+from PyQt5.QtCore import Qt
 from lxml import etree
 from jsonpickle import encode, decode, set_encoder_options
 from json import JSONDecodeError
-from .io import copy_elem
 from .wizards import WizardFiles, WizardDepend
 from .props import PropertyCombo, PropertyInt, PropertyText, PropertyFile, PropertyFolder, PropertyColour, \
     PropertyFlagLabel, PropertyFlagValue
@@ -225,9 +224,6 @@ class NodeStandardItem(QStandardItem):
         self.xml_node = node
         super().__init__()
 
-    def clone(self):
-        return NodeStandardItem(self.xml_node)
-
     def __lt__(self, other):
         self_sort = self.xml_node.sort_order + "." + self.xml_node.user_sort_order
         other_sort = other.xml_node.sort_order + "." + other.xml_node.user_sort_order
@@ -235,80 +231,6 @@ class NodeStandardItem(QStandardItem):
             return True
         else:
             return False
-
-
-class NodeStandardModel(QStandardItemModel):
-    def mimeData(self, list_of_QModelIndex):
-        if not list_of_QModelIndex:
-            return 0
-
-        mime_data = NodeMimeData()
-        new_node = copy_elem(self.itemFromIndex(list_of_QModelIndex[0]).xml_node)
-        mime_data.set_item(new_node.model_item)
-        mime_data.set_node(new_node)
-        mime_data.set_original_item(self.itemFromIndex(list_of_QModelIndex[0]))
-        return mime_data
-
-    def canDropMimeData(self, QMimeData, Qt_DropAction, row, col, QModelIndex):
-        if self.itemFromIndex(QModelIndex) and QMimeData.has_node() and QMimeData.has_item() and Qt_DropAction == 2:
-            if isinstance(self.itemFromIndex(QModelIndex).xml_node, type(QMimeData.node().getparent())):
-                return True
-            else:
-                return False
-        else:
-            return False
-
-    def dropMimeData(self, QMimeData, Qt_DropAction, row, col, QModelIndex):
-        if not self.canDropMimeData(QMimeData, Qt_DropAction, row, col, QModelIndex):
-            return False
-
-        parent = self.itemFromIndex(QModelIndex)
-        xml_node = QMimeData.node()
-        parent.insertRow(row, xml_node.model_item)
-        for row_index in range(0, parent.rowCount()):
-            if parent.child(row_index) == QMimeData.original_item():
-                continue
-            parent.child(row_index).xml_node.user_sort_order = str(parent.child(row_index).row()).zfill(7)
-            parent.child(row_index).xml_node.save_metadata()
-        return True
-
-
-class NodeMimeData(QMimeData):
-    def __init__(self):
-        super().__init__()
-        self._node = None
-        self._item = None
-        self._original_item = None
-
-    def has_node(self):
-        if self._node is None:
-            return False
-        else:
-            return True
-
-    def node(self):
-        return self._node
-
-    def set_node(self, node):
-        self._node = node
-
-    def has_item(self):
-        if self._item is None:
-            return False
-        else:
-            return True
-
-    def item(self):
-        return self._item
-
-    def set_item(self, item):
-        self._item = item
-
-    def original_item(self):
-        return self._original_item
-
-    def set_original_item(self, item):
-        self._original_item = item
 
 
 class NodeInfoRoot(_NodeBase):

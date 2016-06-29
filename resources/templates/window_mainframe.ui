@@ -61,7 +61,7 @@
        </widget>
        <widget class="QWidget" name="tabWidgetPage2">
         <attribute name="title">
-         <string>XML Code</string>
+         <string>XML Preview</string>
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout">
          <item>
@@ -118,10 +118,10 @@
     <number>2</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents">
-    <layout class="QFormLayout" name="formLayout"/>
+    <layout class="QFormLayout" name="layout_prop_editor"/>
    </widget>
   </widget>
-  <widget class="QDockWidget" name="object_tree">
+  <widget class="QDockWidget" name="node_tree">
    <property name="enabled">
     <bool>true</bool>
    </property>
@@ -144,7 +144,7 @@
     <set>Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
    </property>
    <property name="windowTitle">
-    <string>Object Tree</string>
+    <string>Node Tree</string>
    </property>
    <attribute name="dockWidgetArea">
     <number>1</number>
@@ -164,7 +164,7 @@
       <number>0</number>
      </property>
      <item>
-      <widget class="QPushButton" name="wizard_button">
+      <widget class="QPushButton" name="button_wizard">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -191,7 +191,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QTreeView" name="object_tree_view">
+      <widget class="QTreeView" name="node_tree_view">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -230,7 +230,7 @@
     </layout>
    </widget>
   </widget>
-  <widget class="QDockWidget" name="object_box">
+  <widget class="QDockWidget" name="children_box">
    <property name="minimumSize">
     <size>
      <width>250</width>
@@ -244,7 +244,7 @@
     <set>Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
    </property>
    <property name="windowTitle">
-    <string>Object Box</string>
+    <string>Children Box</string>
    </property>
    <attribute name="dockWidgetArea">
     <number>2</number>
