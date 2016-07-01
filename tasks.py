@@ -34,11 +34,6 @@ def enter():
 
 
 @task
-def preview():
-    run("python dev/pyinstaller-bootstrap.py")
-
-
-@task
 def gen_ui():
     from os import listdir, remove
     from os.path import join, isfile
@@ -52,6 +47,11 @@ def gen_ui():
     compileUiDir("resources/templates", map=lambda dir, fname: (target_dir, fname), from_imports=True)
 
 
+@task(gen_ui)
+def preview():
+    run("python dev/pyinstaller-bootstrap.py")
+
+
 @task
 def clean():
     from shutil import rmtree
@@ -61,7 +61,7 @@ def clean():
     print("Build caches cleaned.")
 
 
-@task(clean, gen_ui)
+@task(clean, )
 def build():
     from platform import system, architecture
     from shutil import copy

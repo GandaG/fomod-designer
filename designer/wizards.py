@@ -36,7 +36,7 @@ class _WizardBase(QStackedWidget):
 
     code_changed = pyqtSignal([object])
     cancelled = pyqtSignal()
-    finished = pyqtSignal()
+    finished = pyqtSignal([object])
 
     def __init__(self, parent, element, code_signal, **kwargs):
         """
@@ -76,12 +76,7 @@ class WizardFiles(_WizardBase):
     Wizard for the "files" tag.
     """
     def _process_results(self, result):
-        self.element.getparent().replace(self.element, result)
-        item_parent = self.element.model_item.parent()
-        row = self.element.model_item.row()
-        item_parent.removeRow(row)
-        item_parent.insertRow(row, result.model_item)
-        self.finished.emit()
+        self.finished.emit(result)
 
     def _setup_pages(self):
         def add_elem(element_, layout):
@@ -174,12 +169,7 @@ class WizardDepend(_WizardBase):
     Wizard for the "dependencies" tag.
     """
     def _process_results(self, result):
-        self.element.getparent().replace(self.element, result)
-        item_parent = self.element.model_item.parent()
-        row = self.element.model_item.row()
-        item_parent.removeRow(row)
-        item_parent.insertRow(row, result.model_item)
-        self.finished.emit()
+        self.finished.emit(result)
 
     def _setup_pages(self):
         """

@@ -302,10 +302,15 @@
      <property name="title">
       <string>&amp;Recent Files</string>
      </property>
+     <property name="icon">
+      <iconset>
+       <normaloff>../logos/logo_recent.png</normaloff>../logos/logo_recent.png</iconset>
+     </property>
      <addaction name="actionClear"/>
     </widget>
     <addaction name="action_Open"/>
     <addaction name="action_Save"/>
+    <addaction name="separator"/>
     <addaction name="menu_Recent_Files"/>
     <addaction name="separator"/>
     <addaction name="actionO_ptions"/>
@@ -315,9 +320,14 @@
      <string>&amp;Tools</string>
     </property>
     <addaction name="action_Refresh"/>
+    <addaction name="separator"/>
     <addaction name="action_Delete"/>
+    <addaction name="separator"/>
     <addaction name="actionCopy"/>
     <addaction name="actionPaste"/>
+    <addaction name="separator"/>
+    <addaction name="actionUndo"/>
+    <addaction name="actionRedo"/>
    </widget>
    <widget class="QMenu" name="menu_View">
     <property name="title">
@@ -531,12 +541,11 @@
     <string>Toggle the visibility of the Object Box.</string>
    </property>
   </action>
-  <action name="action">
-   <property name="text">
-    <string>1</string>
-   </property>
-  </action>
   <action name="actionClear">
+   <property name="icon">
+    <iconset>
+     <normaloff>../logos/logo_clear.png</normaloff>../logos/logo_clear.png</iconset>
+   </property>
    <property name="text">
     <string>Clear</string>
    </property>
@@ -566,6 +575,33 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+V</string>
+   </property>
+  </action>
+  <action name="actionUndo">
+   <property name="icon">
+    <iconset>
+     <normaloff>../logos/logo_undo.png</normaloff>../logos/logo_undo.png</iconset>
+   </property>
+   <property name="text">
+    <string>Undo</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Z</string>
+   </property>
+   <property name="shortcutContext">
+    <enum>Qt::WindowShortcut</enum>
+   </property>
+  </action>
+  <action name="actionRedo">
+   <property name="icon">
+    <iconset>
+     <normaloff>../logos/logo_redo.png</normaloff>../logos/logo_redo.png</iconset>
+   </property>
+   <property name="text">
+    <string>Redo</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+Z</string>
    </property>
   </action>
  </widget>

@@ -27,7 +27,7 @@ from jsonpickle import encode, decode, set_encoder_options
 from lxml.etree import parse, tostring
 from PyQt5.QtWidgets import (QFileDialog, QColorDialog, QMessageBox, QLabel, QHBoxLayout, QCommandLinkButton, QDialog,
                              QFormLayout, QLineEdit, QSpinBox, QComboBox, QWidget, QPushButton, QSizePolicy, QStatusBar,
-                             QCompleter, QApplication, QMainWindow)
+                             QCompleter, QApplication, QMainWindow, QUndoCommand, QUndoStack)
 from PyQt5.QtGui import QIcon, QPixmap, QColor, QFont, QStandardItemModel
 from PyQt5.QtCore import Qt, pyqtSignal, QStringListModel, QMimeData
 from requests import get, codes, ConnectionError, Timeout
@@ -98,6 +98,36 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
     """
     The class for the main window. Subclassed from QMainWindow and created in Qt Designer.
     """
+
+    #: Signals the xml code has changed.
+    xml_code_changed = pyqtSignal([object])
+
+    #: Signals the mo preview is updated.
+    update_mo_preview = pyqtSignal([QWidget])
+
+    #: Signals the nmm preview is updated.
+    update_nmm_preview = pyqtSignal([QWidget])
+
+    #: Signals the code preview is updated.
+    update_code_preview = pyqtSignal([str])
+
+    #: Signals there is an update available.
+    update_check_update_available = pyqtSignal()
+
+    #: Signals the app is up-to-date.
+    update_check_up_to_date = pyqtSignal()
+
+    #: Signals a connection timed out.
+    update_check_timeout = pyqtSignal()
+
+    #: Signals there was an error with the internet connection.
+    update_check_connection_error = pyqtSignal()
+
+    #: Signals a new node has been selected in the node tree.
+    select_node = pyqtSignal([object])
+
+    #: Signals the previews need to be updated.
+    update_previews = pyqtSignal([object])
 
     class NodeMimeData(QMimeData):
         def __init__(self):
@@ -174,35 +204,182 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
         def supportedDragActions(self):
             return Qt.MoveAction
 
-    #: Signals the xml code has changed.
-    xml_code_changed = pyqtSignal([object])
+    class LineEditChangeCommand(QUndoCommand):
+        def __init__(self, original_text, new_text, current_prop_widgets, widget_index, tree_model, item, select_node):
+            super().__init__("Line edit changed.")
+            self.original_text = original_text
+            self.new_text = new_text
+            self.current_prop_widgets = current_prop_widgets
+            self.widget_index = widget_index
+            self.tree_model = tree_model
+            self.item = item
+            self.select_node = select_node
 
-    #: Signals the mo preview is updated.
-    update_mo_preview = pyqtSignal([QWidget])
+        def redo(self):
+            self.select_node.emit(self.tree_model.indexFromItem(self.item))
+            self.current_prop_widgets[self.widget_index].setText(self.new_text)
 
-    #: Signals the nmm preview is updated.
-    update_nmm_preview = pyqtSignal([QWidget])
+        def undo(self):
+            self.select_node.emit(self.tree_model.indexFromItem(self.item))
+            self.current_prop_widgets[self.widget_index].setText(self.original_text)
 
-    #: Signals the code preview is updated.
-    update_code_preview = pyqtSignal([str])
+    class WidgetLineEditChangeCommand(QUndoCommand):
+        def __init__(self, original_text, new_text, current_prop_widgets, widget_index, tree_model, item, select_node):
+            super().__init__("Widget with line edit changed.")
+            self.original_text = original_text
+            self.new_text = new_text
+            self.current_prop_widgets = current_prop_widgets
+            self.widget_index = widget_index
+            self.tree_model = tree_model
+            self.item = item
+            self.select_node = select_node
 
-    #: Signals there is an update available.
-    update_check_update_available = pyqtSignal()
+        def redo(self):
+            self.select_node.emit(self.tree_model.indexFromItem(self.item))
+            line_edit = None
+            for index in range(self.current_prop_widgets[self.widget_index].layout().count()):
+                widget = self.current_prop_widgets[self.widget_index].layout().itemAt(index).widget()
+                if isinstance(widget, QLineEdit):
+                    line_edit = widget
+            line_edit.setText(self.new_text)
 
-    #: Signals the app is up-to-date.
-    update_check_up_to_date = pyqtSignal()
+        def undo(self):
+            self.select_node.emit(self.tree_model.indexFromItem(self.item))
+            line_edit = None
+            for index in range(self.current_prop_widgets[self.widget_index].layout().count()):
+                widget = self.current_prop_widgets[self.widget_index].layout().itemAt(index).widget()
+                if isinstance(widget, QLineEdit):
+                    line_edit = widget
+            line_edit.setText(self.original_text)
 
-    #: Signals a connection timed out.
-    update_check_timeout = pyqtSignal()
+    class ComboBoxChangeCommand(QUndoCommand):
+        def __init__(self, original_text, new_text, current_prop_widgets, widget_index, tree_model, item, select_node):
+            super().__init__("Combo box changed.")
+            self.original_text = original_text
+            self.new_text = new_text
+            self.current_prop_widgets = current_prop_widgets
+            self.widget_index = widget_index
+            self.tree_model = tree_model
+            self.item = item
+            self.select_node = select_node
 
-    #: Signals there was an error with the internet connection.
-    update_check_connection_error = pyqtSignal()
+        def redo(self):
+            self.select_node.emit(self.tree_model.indexFromItem(self.item))
+            self.current_prop_widgets[self.widget_index].setCurrentText(self.new_text)
 
-    #: Signals a new node has been selected in the node tree.
-    node_selected = pyqtSignal([object])
+        def undo(self):
+            self.select_node.emit(self.tree_model.indexFromItem(self.item))
+            self.current_prop_widgets[self.widget_index].setCurrentText(self.original_text)
 
-    #: Signals the previews need to be updated.
-    update_previews = pyqtSignal([object])
+    class SpinBoxChangeCommand(QUndoCommand):
+        def __init__(self, original_int, new_int, current_prop_widgets, widget_index, tree_model, item, select_node):
+            super().__init__("Spin box changed.")
+            self.original_int = original_int
+            self.new_int = new_int
+            self.current_prop_widgets = current_prop_widgets
+            self.widget_index = widget_index
+            self.tree_model = tree_model
+            self.item = item
+            self.select_node = select_node
+
+        def redo(self):
+            self.select_node.emit(self.tree_model.indexFromItem(self.item))
+            self.current_prop_widgets[self.widget_index].setValue(self.new_int)
+
+        def undo(self):
+            self.select_node.emit(self.tree_model.indexFromItem(self.item))
+            self.current_prop_widgets[self.widget_index].setValue(self.original_int)
+
+    class RunWizardCommand(QUndoCommand):
+        def __init__(self, parent_node, original_node, modified_node, tree_model, select_node_signal):
+            super().__init__("Wizard was run on this node.")
+            self.parent_node = parent_node
+            self.original_node = original_node
+            self.modified_node = modified_node
+            self.tree_model = tree_model
+            self.select_node_signal = select_node_signal
+
+        def redo(self):
+            self.parent_node.remove_child(self.original_node)
+            self.parent_node.add_child(self.modified_node)
+            self.parent_node.model_item.sortChildren(0)
+            self.select_node_signal.emit(self.tree_model.indexFromItem(self.modified_node.model_item))
+
+        def undo(self):
+            self.parent_node.remove_child(self.modified_node)
+            self.parent_node.add_child(self.original_node)
+            self.parent_node.model_item.sortChildren(0)
+            self.select_node_signal.emit(self.tree_model.indexFromItem(self.original_node.model_item))
+
+    class DeleteCommand(QUndoCommand):
+        def __init__(self, node_to_delete, tree_model, select_node_signal):
+            super().__init__("Node deleted.")
+            self.node_to_delete = node_to_delete
+            self.parent_node = node_to_delete.getparent()
+            self.tree_model = tree_model
+            self.select_node_signal = select_node_signal
+
+        def redo(self):
+            object_to_delete = self.node_to_delete
+            new_index = self.tree_model.indexFromItem(self.parent_node.model_item)
+            self.parent_node.remove_child(object_to_delete)
+            self.select_node_signal.emit(new_index)
+
+        def undo(self):
+            self.parent_node.add_child(self.node_to_delete)
+            self.select_node_signal.emit(self.tree_model.indexFromItem(self.node_to_delete.model_item))
+            self.tree_model.sort(0)
+
+    class AddChildCommand(QUndoCommand):
+        def __init__(self, child_tag, parent_node, tree_model, settings_dict, select_node_signal):
+            super().__init__("Child added.")
+            self.child_tag = child_tag
+            self.parent_node = parent_node
+            self.tree_model = tree_model
+            self.settings_dict = settings_dict
+            self.select_node_signal = select_node_signal
+            self.new_child_node = None
+
+        def redo(self):
+            if self.new_child_node is None:
+                self.new_child_node = elem_factory(self.child_tag, self.parent_node)
+                defaults_dict = self.settings_dict["Defaults"]
+                if self.child_tag in defaults_dict and defaults_dict[self.child_tag].enabled():
+                    self.new_child_node.properties[defaults_dict[self.child_tag].key()].set_value(
+                        defaults_dict[self.child_tag].value()
+                    )
+            self.parent_node.add_child(self.new_child_node)
+            self.tree_model.sort(0)
+
+            # select the new item
+            self.select_node_signal.emit(self.tree_model.indexFromItem(self.new_child_node.model_item))
+
+        def undo(self):
+            self.parent_node.remove_child(self.new_child_node)
+
+            # select the parent after removing
+            self.select_node_signal.emit(self.tree_model.indexFromItem(self.parent_node.model_item))
+
+    class PasteCommand(QUndoCommand):
+        def __init__(self, parent_item, status_bar, tree_model, select_node_signal):
+            super().__init__("Node pasted.")
+            self.parent_item = parent_item
+            self.status_bar = status_bar
+            self.tree_model = tree_model
+            self.select_node_signal = select_node_signal
+            self.pasted_node = None
+
+        def redo(self):
+            self.pasted_node = copy_element(QApplication.clipboard().mimeData().node())
+            self.parent_item.xml_node.append(self.pasted_node)
+            self.parent_item.appendRow(self.pasted_node.model_item)
+            self.parent_item.sortChildren(0)
+
+        def undo(self):
+            self.parent_item.xml_node.remove_child(self.pasted_node)
+
+            # select the parent after removing
+            self.select_node_signal.emit(self.tree_model.indexFromItem(self.parent_item.xml_node.model_item))
 
     def __init__(self):
         super().__init__()
@@ -219,6 +396,16 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
         self.actionHe_lp.setIcon(QIcon(join(cur_folder, "resources/logos/logo_info.png")))
         self.actionCopy.setIcon(QIcon(join(cur_folder, "resources/logos/logo_copy.png")))
         self.actionPaste.setIcon(QIcon(join(cur_folder, "resources/logos/logo_paste.png")))
+        self.actionRedo.setIcon(QIcon(join(cur_folder, "resources/logos/logo_redo.png")))
+        self.actionUndo.setIcon(QIcon(join(cur_folder, "resources/logos/logo_undo.png")))
+        self.actionClear.setIcon(QIcon(join(cur_folder, "resources/logos/logo_clear.png")))
+        self.menu_Recent_Files.setIcon(QIcon(join(cur_folder, "resources/logos/logo_recent.png")))
+
+        # manage undo and redo
+        self.undo_stack = QUndoStack(self)
+        self.undo_stack.setUndoLimit(25)
+        self.actionRedo.triggered.connect(self.undo_stack.redo)
+        self.actionUndo.triggered.connect(self.undo_stack.undo)
 
         # manage node tree model
         self.node_tree_model = self.NodeStandardModel()
@@ -236,21 +423,11 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
         self.action_About.triggered.connect(lambda _, self_=self: self.about(self_))
         self.actionClear.triggered.connect(self.clear_recent_files)
         self.actionCopy.triggered.connect(
-            lambda: self.copy_item_to_clipboard(
-                self.node_tree_model.itemFromIndex(
-                    self.node_tree_view.selectedIndexes()[0]
-                ),
-                self.node_tree_model
-            )
+            lambda: self.copy_item_to_clipboard()
             if self.node_tree_view.selectedIndexes() else None
         )
         self.actionPaste.triggered.connect(
-            lambda: self.paste_item_from_clipboard(
-                self.node_tree_model.itemFromIndex(
-                    self.node_tree_view.selectedIndexes()[0]
-                ),
-                self.statusBar()
-            )
+            lambda: self.paste_item_from_clipboard()
             if self.node_tree_view.selectedIndexes() else None
         )
 
@@ -262,18 +439,17 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
         self.children_box.visibilityChanged.connect(self.actionObject_Box.setChecked)
         self.property_editor.visibilityChanged.connect(self.action_Property_Editor.setChecked)
 
-        self.node_tree_view.clicked.connect(self.node_selected.emit)
-        self.node_tree_view.activated.connect(self.node_selected.emit)
+        self.node_tree_view.clicked.connect(self.select_node.emit)
+        self.node_tree_view.activated.connect(self.select_node.emit)
 
-        self.fomod_changed = False
         self.original_title = self.windowTitle()
         self.package_path = ""
         self.package_name = ""
         self.settings_dict = read_settings()
         self.info_root = None
         self.config_root = None
-        self.current_node = None
-        self.current_prop_list = []
+        self._current_prop_list = []
+        self.original_prop_value_list = {}
 
         # start the preview threads
         self.preview_queue = Queue()
@@ -301,44 +477,66 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
         self.flag_value_completer.setModel(self.flag_value_model)
 
         # connect node selected signal
-        self.node_selected.connect(
+        self.current_node = None
+        self.select_node.connect(
             lambda index: self.set_current_node(self.node_tree_model.itemFromIndex(index).xml_node)
         )
-        self.node_selected.connect(lambda index: self.node_tree_view.setCurrentIndex(index))
-        self.node_selected.connect(
+        self.select_node.connect(lambda index: self.node_tree_view.setCurrentIndex(index))
+        self.select_node.connect(
             lambda: self.update_previews.emit(self.current_node)
             if self.settings_dict["General"]["code_refresh"] >= 2 else None
         )
-        self.node_selected.connect(self.update_children_box)
-        self.node_selected.connect(self.update_props_list)
-        self.node_selected.connect(
+        self.select_node.connect(self.update_children_box)
+        self.select_node.connect(self.update_props_list)
+        self.select_node.connect(
             lambda: self.button_wizard.setEnabled(False)
             if self.current_node.wizard is None else self.button_wizard.setEnabled(True)
         )
 
         # manage code changed signal
-        self.xml_code_changed.connect(lambda: self.fomod_modified(True))
         self.xml_code_changed.connect(self.update_previews.emit)
+
+        # manage clean/dirty states
+        self.undo_stack.cleanChanged.connect(
+            lambda clean: self.setWindowTitle(self.package_name + " - " + self.original_title)
+            if clean
+            else self.setWindowTitle("*" + self.package_name + " - " + self.original_title)
+        )
+        self.undo_stack.cleanChanged.connect(
+            lambda clean: self.action_Save.setEnabled(not clean)
+        )
 
         self.update_recent_files()
         self.check_updates()
 
-    def set_current_node(self, node_):
-        self.current_node = node_
+        # disable the wizards until they're up-to-date
+        self.button_wizard.hide()
 
-    @staticmethod
-    def copy_item_to_clipboard(item, model):
-        QApplication.clipboard().setMimeData(model.mimeData([model.indexFromItem(item)]))
+    def set_current_node(self, selected_node):
+        self.current_node = selected_node
 
-    @staticmethod
-    def paste_item_from_clipboard(parent_item, status_bar):
+    @property
+    def current_prop_list(self):
+        return self._current_prop_list
+
+    def copy_item_to_clipboard(self):
+        item = self.node_tree_model.itemFromIndex(self.node_tree_view.selectedIndexes()[0])
+        QApplication.clipboard().setMimeData(self.node_tree_model.mimeData([self.node_tree_model.indexFromItem(item)]))
+
+    def paste_item_from_clipboard(self):
+        parent_item = self.node_tree_model.itemFromIndex(self.node_tree_view.selectedIndexes()[0])
         new_node = copy_element(QApplication.clipboard().mimeData().node())
         if not parent_item.xml_node.can_add_child(new_node):
-            status_bar.showMessage("This parent is not valid!")
+            self.statusBar().showMessage("This parent is not valid!")
         else:
-            parent_item.xml_node.append(new_node)
-            parent_item.appendRow(new_node.model_item)
-            parent_item.sortChildren(0)
+            self.undo_stack.push(
+                self.PasteCommand(
+                    parent_item,
+                    self.statusBar(),
+                    self.node_tree_model,
+                    self.select_node
+                )
+            )
 
     @staticmethod
     def update_flag_label_completer(label_model, elem_root):
@@ -455,7 +653,9 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                 self.package_name = basename(normpath(self.package_path))
                 self.current_node = None
                 self.xml_code_changed.emit(self.current_node)
-                self.fomod_modified(False)
+                self.undo_stack.setClean()
+                self.undo_stack.cleanChanged.emit(True)
+                self.undo_stack.clear()
                 self.update_recent_files(self.package_path)
                 self.clear_prop_list()
                 self.button_wizard.setEnabled(False)
@@ -488,7 +688,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                         self.settings_dict["Save"]["warn_ignore"]
                     )
                 export(self.info_root, self.config_root, self.package_path)
-                self.fomod_modified(False)
+                self.undo_stack.setClean()
         except ValidatorError as e:
             generic_errorbox(e.title, str(e))
             return
@@ -513,14 +713,16 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
         Deletes the current node in the tree. No effect when using the Basic View.
         """
         try:
-            if self.current_node is not None:
-                object_to_delete = self.current_node
-                new_index = self.node_tree_model.indexFromItem(self.current_node.getparent().model_item)
-                object_to_delete.getparent().remove_child(object_to_delete)
-                self.fomod_modified(True)
-                self.node_selected.emit(new_index)
+            if self.current_node is None:
+                self.statusBar().showMessage("Can't delete nothing.")
+            else:
+                self.undo_stack.push(self.DeleteCommand(
+                    self.current_node,
+                    self.node_tree_model,
+                    self.select_node
+                ))
         except AttributeError:
-            generic_errorbox("You can't do that...", "You can't delete root objects!")
+            self.statusBar().showMessage("Can't delete root nodes.")
 
     @staticmethod
     def help():
@@ -606,54 +808,41 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
             child_button.setMaximumSize(5000, 30)
             child_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
             child_button.setStatusTip("A possible child node.")
-            child_button.clicked.connect(lambda _, tag_=new_object.tag: self.child_selected(tag_))
+            child_button.clicked.connect(
+                lambda _,
+                tag_=new_object.tag,
+                parent_node=self.current_node,
+                tree_model=self.node_tree_model,
+                settings_dict=self.settings_dict,
+                : self.undo_stack.push(self.AddChildCommand(
+                    tag_,
+                    parent_node,
+                    tree_model,
+                    settings_dict,
+                    self.select_node
+                ))
+            )
             if not self.current_node.can_add_child(new_object):
                 child_button.setEnabled(False)
             if child in self.current_node.required_children:
-                child_button.setStyleSheet("background-color: " + QColor("#ba4d0e").name())#FFD9D9
+                child_button.setStyleSheet("background-color: " + QColor("#ba4d0e").name())
                 child_button.setStatusTip("A red button indicates that at least one of this node is required.")
             if child in self.current_node.either_children_group:
                 child_button.setStyleSheet("background-color: " + QColor("#ffaa7f").name())
                 child_button.setStatusTip("An orange button indicates that only one of these buttons must be used.")
             if child in self.current_node.at_least_one_children_group:
-                child_button.setStyleSheet("background-color: " + QColor("#d0d02e").name())#FFFFD9
+                child_button.setStyleSheet("background-color: " + QColor("#d0d02e").name())
                 child_button.setStatusTip(
                     "A yellow button indicates that from all the yellow buttons, at least one is required."
                 )
             self.layout_box.addWidget(child_button)
         self.layout_box.addSpacerItem(spacer)
 
-    def child_selected(self, tag):
-        """
-        Called when the user selects a possible child in the Object Box.
-
-        Adds the child corresponding to the tag and updates the possible children list.
-
-        :param tag: The tag of the child to add.
-        """
-        new_child = elem_factory(tag, self.current_node)
-        defaults_dict = self.settings_dict["Defaults"]
-        if tag in defaults_dict and defaults_dict[tag].enabled():
-            new_child.properties[defaults_dict[tag].key()].set_value(defaults_dict[tag].value())
-        self.current_node.add_child(new_child)
-        self.node_tree_model.sort(0)
-
-        # expand the parent
-        current_index = self.node_tree_model.indexFromItem(self.current_node.model_item)
-        self.node_tree_view.expand(current_index)
-
-        # select the new item
-        self.node_tree_view.setCurrentIndex(self.node_tree_model.indexFromItem(new_child.model_item))
-        self.node_selected.emit(self.node_tree_model.indexFromItem(new_child.model_item))
-
-        # reload the object box
-        self.update_children_box()
-
     def clear_prop_list(self):
         """
         Deletes all the properties from the Property Editor
         """
-        self.current_prop_list.clear()
+        self._current_prop_list.clear()
         for index in reversed(range(self.layout_prop_editor.count())):
             widget = self.layout_prop_editor.takeAt(index).widget()
             if widget is not None:
@@ -667,7 +856,8 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
         self.clear_prop_list()
 
         prop_index = 0
-        prop_list = self.current_prop_list
+        og_values = self.original_prop_value_list
+        prop_list = self._current_prop_list
         props = self.current_node.properties
 
         for key in props:
@@ -680,17 +870,36 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
             self.layout_prop_editor.setWidget(prop_index, QFormLayout.LabelRole, label)
 
             if type(props[key]) is PropertyText:
+                og_values[prop_index] = props[key].value
                 prop_list.append(QLineEdit(self.dockWidgetContents))
                 prop_list[prop_index].setText(props[key].value)
-                prop_list[prop_index].textEdited[str].connect(props[key].set_value)
-                prop_list[prop_index].textEdited[str].connect(self.current_node.write_attribs)
-                prop_list[prop_index].textEdited[str].connect(self.current_node.update_item_name)
-                prop_list[prop_index].textEdited[str].connect(
+                prop_list[prop_index].textChanged[str].connect(props[key].set_value)
+                prop_list[prop_index].textChanged[str].connect(self.current_node.write_attribs)
+                prop_list[prop_index].textChanged[str].connect(self.current_node.update_item_name)
+                prop_list[prop_index].textChanged[str].connect(
                     lambda: self.xml_code_changed.emit(self.current_node)
                     if self.settings_dict["General"]["code_refresh"] >= 3 else None
                 )
+                prop_list[prop_index].editingFinished.connect(
+                    lambda index=prop_index: self.undo_stack.push(
+                        self.LineEditChangeCommand(
+                            og_values[index],
+                            prop_list[index].text(),
+                            self.current_prop_list,
+                            index,
+                            self.node_tree_model,
+                            self.current_node.model_item,
+                            self.select_node
+                        )
+                    )
+                    if og_values[index] != prop_list[index].text() else None
+                )
+                prop_list[prop_index].editingFinished.connect(
+                    lambda index=prop_index: og_values.update({index: prop_list[index].text()})
+                )
 
             if type(props[key]) is PropertyFlagLabel:
+                og_values[prop_index] = props[key].value
                 prop_list.append(QLineEdit(self.dockWidgetContents))
                 self.update_flag_label_completer(self.flag_label_model, self.config_root)
                 self.flag_label_completer.activated[str].connect(prop_list[prop_index].setText)
@@ -706,8 +915,26 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                     lambda: self.xml_code_changed.emit(self.current_node)
                     if self.settings_dict["General"]["code_refresh"] >= 3 else None
                 )
+                prop_list[prop_index].editingFinished.connect(
+                    lambda index=prop_index: self.undo_stack.push(
+                        self.LineEditChangeCommand(
+                            og_values[index],
+                            prop_list[index].text(),
+                            self.current_prop_list,
+                            index,
+                            self.node_tree_model,
+                            self.current_node.model_item,
+                            self.select_node
+                        )
+                    )
+                    if og_values[index] != prop_list[index].text() else None
+                )
+                prop_list[prop_index].editingFinished.connect(
+                    lambda index=prop_index: og_values.update({index: prop_list[index].text()})
+                )
 
             if type(props[key]) is PropertyFlagValue:
+                og_values[prop_index] = props[key].value
                 prop_list.append(QLineEdit(self.dockWidgetContents))
                 prop_list[prop_index].setCompleter(self.flag_value_completer)
                 self.flag_value_completer.activated[str].connect(prop_list[prop_index].setText)
@@ -719,8 +946,26 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                     lambda: self.xml_code_changed.emit(self.current_node)
                     if self.settings_dict["General"]["code_refresh"] >= 3 else None
                 )
+                prop_list[prop_index].editingFinished.connect(
+                    lambda index=prop_index: self.undo_stack.push(
+                        self.LineEditChangeCommand(
+                            og_values[index],
+                            prop_list[index].text(),
+                            self.current_prop_list,
+                            index,
+                            self.node_tree_model,
+                            self.current_node.model_item,
+                            self.select_node
+                        )
+                    )
+                    if og_values[index] != prop_list[index].text() else None
+                )
+                prop_list[prop_index].editingFinished.connect(
+                    lambda index=prop_index: og_values.update({index: prop_list[index].text()})
+                )
 
             elif type(props[key]) is PropertyInt:
+                og_values[prop_index] = props[key].value
                 prop_list.append(QSpinBox(self.dockWidgetContents))
                 prop_list[prop_index].setValue(int(props[key].value))
                 prop_list[prop_index].setMinimum(props[key].min)
@@ -731,17 +976,51 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                     lambda: self.xml_code_changed.emit(self.current_node)
                     if self.settings_dict["General"]["code_refresh"] >= 3 else None
                 )
+                prop_list[prop_index].valueChanged.connect(
+                    lambda new_value, index=prop_index: self.undo_stack.push(
+                        self.SpinBoxChangeCommand(
+                            og_values[index],
+                            new_value,
+                            self.current_prop_list,
+                            index,
+                            self.node_tree_model,
+                            self.current_node.model_item,
+                            self.select_node
+                        )
+                    )
+                    if og_values[index] != new_value else None
+                )
+                prop_list[prop_index].valueChanged.connect(
+                    lambda new_value, index=prop_index: og_values.update({index: new_value})
+                )
 
             elif type(props[key]) is PropertyCombo:
+                og_values[prop_index] = props[key].value
                 prop_list.append(QComboBox(self.dockWidgetContents))
                 prop_list[prop_index].insertItems(0, props[key].values)
                 prop_list[prop_index].setCurrentIndex(props[key].values.index(props[key].value))
-                prop_list[prop_index].activated[str].connect(props[key].set_value)
-                prop_list[prop_index].activated[str].connect(self.current_node.write_attribs)
-                prop_list[prop_index].activated[str].connect(self.current_node.update_item_name)
-                prop_list[prop_index].activated[str].connect(
+                prop_list[prop_index].currentTextChanged.connect(props[key].set_value)
+                prop_list[prop_index].currentTextChanged.connect(self.current_node.write_attribs)
+                prop_list[prop_index].currentTextChanged.connect(self.current_node.update_item_name)
+                prop_list[prop_index].currentTextChanged.connect(
                     lambda: self.xml_code_changed.emit(self.current_node)
                     if self.settings_dict["General"]["code_refresh"] >= 3 else None
+                )
+                prop_list[prop_index].activated[str].connect(
+                    lambda new_value, index=prop_index: self.undo_stack.push(
+                        self.ComboBoxChangeCommand(
+                            og_values[index],
+                            new_value,
+                            self.current_prop_list,
+                            index,
+                            self.node_tree_model,
+                            self.current_node.model_item,
+                            self.select_node
+                        )
+                    )
+                )
+                prop_list[prop_index].activated[str].connect(
+                    lambda new_value, index=prop_index: og_values.update({index: new_value})
                 )
 
             elif type(props[key]) is PropertyFile:
@@ -751,6 +1030,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                     if file_path[0]:
                         line_edit.setText(relpath(file_path[0], self.package_path))
 
+                og_values[prop_index] = props[key].value
                 prop_list.append(QWidget(self.dockWidgetContents))
                 layout = QHBoxLayout(prop_list[prop_index])
                 line_edit = QLineEdit(prop_list[prop_index])
@@ -768,6 +1048,23 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                     if self.settings_dict["General"]["code_refresh"] >= 3 else None
                 )
                 path_button.clicked.connect(button_clicked)
+                line_edit.editingFinished.connect(
+                    lambda index=prop_index: self.undo_stack.push(
+                        self.WidgetLineEditChangeCommand(
+                            og_values[index],
+                            line_edit.text(),
+                            self.current_prop_list,
+                            index,
+                            self.node_tree_model,
+                            self.current_node.model_item,
+                            self.select_node
+                        )
+                    )
+                    if og_values[index] != line_edit.text() else None
+                )
+                line_edit.editingFinished.connect(
+                    lambda index=prop_index: og_values.update({index: line_edit.text()})
+                )
 
             elif type(props[key]) is PropertyFolder:
                 def button_clicked():
@@ -776,6 +1073,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                     if folder_path:
                         line_edit.setText(relpath(folder_path, self.package_path))
 
+                og_values[prop_index] = props[key].value
                 prop_list.append(QWidget(self.dockWidgetContents))
                 layout = QHBoxLayout(prop_list[prop_index])
                 line_edit = QLineEdit(prop_list[prop_index])
@@ -793,6 +1091,24 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                     if self.settings_dict["General"]["code_refresh"] >= 3 else None
                 )
                 path_button.clicked.connect(button_clicked)
+                path_button.clicked.connect(button_clicked)
+                line_edit.editingFinished.connect(
+                    lambda index=prop_index: self.undo_stack.push(
+                        self.WidgetLineEditChangeCommand(
+                            og_values[index],
+                            line_edit.text(),
+                            self.current_prop_list,
+                            index,
+                            self.node_tree_model,
+                            self.current_node.model_item,
+                            self.select_node
+                        )
+                    )
+                    if og_values[index] != line_edit.text() else None
+                )
+                line_edit.editingFinished.connect(
+                    lambda index=prop_index: og_values.update({index: line_edit.text()})
+                )
 
             elif type(props[key]) is PropertyColour:
                 def button_clicked():
@@ -814,6 +1130,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                                        QIcon.Normal, QIcon.Off)
                         path_button.setIcon(icon)
 
+                og_values[prop_index] = props[key].value
                 prop_list.append(QWidget(self.dockWidgetContents))
                 layout = QHBoxLayout(prop_list[prop_index])
                 line_edit = QLineEdit(prop_list[prop_index])
@@ -832,6 +1149,24 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                     if self.settings_dict["General"]["code_refresh"] >= 3 else None
                 )
                 path_button.clicked.connect(button_clicked)
+                path_button.clicked.connect(button_clicked)
+                line_edit.editingFinished.connect(
+                    lambda index=prop_index: self.undo_stack.push(
+                        self.WidgetLineEditChangeCommand(
+                            og_values[index],
+                            line_edit.text(),
+                            self.current_prop_list,
+                            index,
+                            self.node_tree_model,
+                            self.current_node.model_item,
+                            self.select_node
+                        )
+                    )
+                    if og_values[index] != line_edit.text() else None
+                )
+                line_edit.editingFinished.connect(
+                    lambda index=prop_index: og_values.update({index: line_edit.text()})
+                )
 
             self.layout_prop_editor.setWidget(prop_index, QFormLayout.FieldRole, prop_list[prop_index])
             prop_list[prop_index].setObjectName(str(prop_index))
@@ -863,31 +1198,34 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
         self.menu_Tools.setEnabled(False)
         self.menu_View.setEnabled(False)
 
+        parent_node = self.current_node.getparent()
+        original_node = self.current_node
+
         kwargs = {"package_path": self.package_path}
         wizard = self.current_node.wizard(self, self.current_node, self.xml_code_changed, **kwargs)
         self.splitter.insertWidget(0, wizard)
 
         wizard.cancelled.connect(close)
-        wizard.cancelled.connect(lambda: self.node_selected.emit(current_index))
+        wizard.cancelled.connect(lambda: self.select_node.emit(current_index))
         wizard.finished.connect(close)
-        wizard.finished.connect(lambda: self.node_selected.emit(current_index))
-
-    def fomod_modified(self, changed):
-        """
-        Changes the modified state of the installer, according to the parameter.
-        """
-        if changed is False:
-            self.fomod_changed = False
-            self.setWindowTitle(self.package_name + " - " + self.original_title)
-        else:
-            self.fomod_changed = True
-            self.setWindowTitle("*" + self.package_name + " - " + self.original_title)
+        wizard.finished.connect(
+            lambda result: self.undo_stack.push(
+                self.RunWizardCommand(
+                    parent_node,
+                    original_node,
+                    result,
+                    self.node_tree_model,
+                    self.select_node
+                )
+            )
+        )
+        wizard.finished.connect(lambda: self.select_node.emit(current_index))
 
     def check_fomod_state(self):
         """
         Checks whether the installer has unsaved changes.
         """
-        if self.fomod_changed:
+        if not self.undo_stack.isClean():
             msg_box = QMessageBox()
             msg_box.setWindowTitle("The installer has been modified.")
             msg_box.setText("Do you want to save your changes?")
