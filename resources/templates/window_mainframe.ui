@@ -319,6 +319,9 @@
     <property name="title">
      <string>&amp;Tools</string>
     </property>
+    <addaction name="actionExpand_All"/>
+    <addaction name="actionCollapse_All"/>
+    <addaction name="separator"/>
     <addaction name="action_Refresh"/>
     <addaction name="separator"/>
     <addaction name="action_Delete"/>
@@ -437,6 +440,9 @@
    </property>
   </action>
   <action name="action_Delete">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset>
      <normaloff>../logos/logo_cross.png</normaloff>../logos/logo_cross.png</iconset>
@@ -566,6 +572,9 @@
    </property>
   </action>
   <action name="actionPaste">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset>
      <normaloff>../logos/logo_paste.png</normaloff>../logos/logo_paste.png</iconset>
@@ -578,6 +587,9 @@
    </property>
   </action>
   <action name="actionUndo">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset>
      <normaloff>../logos/logo_undo.png</normaloff>../logos/logo_undo.png</iconset>
@@ -593,6 +605,9 @@
    </property>
   </action>
   <action name="actionRedo">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset>
      <normaloff>../logos/logo_redo.png</normaloff>../logos/logo_redo.png</iconset>
@@ -602,6 +617,30 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+Z</string>
+   </property>
+  </action>
+  <action name="actionExpand_All">
+   <property name="icon">
+    <iconset>
+     <normaloff>../logos/logo_expand.png</normaloff>../logos/logo_expand.png</iconset>
+   </property>
+   <property name="text">
+    <string>Expand All</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+*</string>
+   </property>
+  </action>
+  <action name="actionCollapse_All">
+   <property name="icon">
+    <iconset>
+     <normaloff>../logos/logo_collapse.png</normaloff>../logos/logo_collapse.png</iconset>
+   </property>
+   <property name="text">
+    <string>Collapse All</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+.</string>
    </property>
   </action>
  </widget>

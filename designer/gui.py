@@ -27,7 +27,7 @@ from jsonpickle import encode, decode, set_encoder_options
 from lxml.etree import parse, tostring
 from PyQt5.QtWidgets import (QFileDialog, QColorDialog, QMessageBox, QLabel, QHBoxLayout, QCommandLinkButton, QDialog,
                              QFormLayout, QLineEdit, QSpinBox, QComboBox, QWidget, QPushButton, QSizePolicy, QStatusBar,
-                             QCompleter, QApplication, QMainWindow, QUndoCommand, QUndoStack)
+                             QCompleter, QApplication, QMainWindow, QUndoCommand, QUndoStack, QMenu)
 from PyQt5.QtGui import QIcon, QPixmap, QColor, QFont, QStandardItemModel
 from PyQt5.QtCore import Qt, pyqtSignal, QStringListModel, QMimeData
 from requests import get, codes, ConnectionError, Timeout
@@ -400,12 +400,22 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
         self.actionUndo.setIcon(QIcon(join(cur_folder, "resources/logos/logo_undo.png")))
         self.actionClear.setIcon(QIcon(join(cur_folder, "resources/logos/logo_clear.png")))
         self.menu_Recent_Files.setIcon(QIcon(join(cur_folder, "resources/logos/logo_recent.png")))
+        self.actionExpand_All.setIcon(QIcon(join(cur_folder, "resources/logos/logo_expand.png")))
+        self.actionCollapse_All.setIcon(QIcon(join(cur_folder, "resources/logos/logo_collapse.png")))
 
         # manage undo and redo
         self.undo_stack = QUndoStack(self)
         self.undo_stack.setUndoLimit(25)
+        self.undo_stack.canRedoChanged.connect(self.actionRedo.setEnabled)
+        self.undo_stack.canUndoChanged.connect(self.actionUndo.setEnabled)
         self.actionRedo.triggered.connect(self.undo_stack.redo)
         self.actionUndo.triggered.connect(self.undo_stack.undo)
+
+        # manage the node tree view
+        self.node_tree_view.clicked.connect(self.select_node.emit)
+        self.node_tree_view.activated.connect(self.select_node.emit)
+        self.node_tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.node_tree_view.customContextMenuRequested.connect(self.on_custom_context_menu)
 
         # manage node tree model
         self.node_tree_model = self.NodeStandardModel()
@@ -413,7 +423,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
         self.node_tree_model.itemChanged.connect(lambda item: item.xml_node.save_metadata())
         self.node_tree_model.itemChanged.connect(lambda item: self.xml_code_changed.emit(item.xml_node))
 
-        # setup any additional info left from designer
+        # connect actions to the respective methods
         self.action_Open.triggered.connect(self.open)
         self.action_Save.triggered.connect(self.save)
         self.actionO_ptions.triggered.connect(self.settings)
@@ -430,18 +440,16 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
             lambda: self.paste_item_from_clipboard()
             if self.node_tree_view.selectedIndexes() else None
         )
-
+        self.actionExpand_All.triggered.connect(self.node_tree_view.expandAll)
+        self.actionCollapse_All.triggered.connect(self.node_tree_view.collapseAll)
         self.action_Object_Tree.toggled.connect(self.node_tree.setVisible)
         self.actionObject_Box.toggled.connect(self.children_box.setVisible)
         self.action_Property_Editor.toggled.connect(self.property_editor.setVisible)
-
         self.node_tree.visibilityChanged.connect(self.action_Object_Tree.setChecked)
         self.children_box.visibilityChanged.connect(self.actionObject_Box.setChecked)
         self.property_editor.visibilityChanged.connect(self.action_Property_Editor.setChecked)
 
-        self.node_tree_view.clicked.connect(self.select_node.emit)
-        self.node_tree_view.activated.connect(self.select_node.emit)
-
+        # setup any necessary variables
         self.original_title = self.windowTitle()
         self.package_path = ""
         self.package_name = ""
@@ -488,6 +496,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
         )
         self.select_node.connect(self.update_children_box)
         self.select_node.connect(self.update_props_list)
+        self.select_node.connect(lambda: self.action_Delete.setEnabled(True))
         self.select_node.connect(
             lambda: self.button_wizard.setEnabled(False)
             if self.current_node.wizard is None else self.button_wizard.setEnabled(True)
@@ -512,6 +521,23 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
         # disable the wizards until they're up-to-date
         self.button_wizard.hide()
 
+    def on_custom_context_menu(self, position):
+        index = self.node_tree_view.indexAt(position)
+        node_tree_context_menu = QMenu(self.node_tree_view)
+        node_tree_context_menu.addActions([self.actionExpand_All, self.actionCollapse_All])
+
+        if index.isValid():
+            self.select_node.emit(index)
+            node_tree_context_menu.addSeparator()
+            node_tree_context_menu.addAction(self.action_Delete)
+            node_tree_context_menu.addSeparator()
+            node_tree_context_menu.addActions([self.actionCopy, self.actionPaste])
+            node_tree_context_menu.addSeparator()
+            node_tree_context_menu.addActions([self.actionUndo, self.actionRedo])
+
+        node_tree_context_menu.move(self.node_tree_view.mapToGlobal(position))
+        node_tree_context_menu.exec_()
+
     def set_current_node(self, selected_node):
         self.current_node = selected_node
 
@@ -522,6 +548,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
     def copy_item_to_clipboard(self):
         item = self.node_tree_model.itemFromIndex(self.node_tree_view.selectedIndexes()[0])
         QApplication.clipboard().setMimeData(self.node_tree_model.mimeData([self.node_tree_model.indexFromItem(item)]))
+        self.actionPaste.setEnabled(True)
 
     def paste_item_from_clipboard(self):
         parent_item = self.node_tree_model.itemFromIndex(self.node_tree_view.selectedIndexes()[0])
@@ -656,6 +683,9 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                 self.undo_stack.setClean()
                 self.undo_stack.cleanChanged.emit(True)
                 self.undo_stack.clear()
+                QApplication.clipboard().clear()
+                self.actionPaste.setEnabled(False)
+                self.action_Delete.setEnabled(False)
                 self.update_recent_files(self.package_path)
                 self.clear_prop_list()
                 self.button_wizard.setEnabled(False)
