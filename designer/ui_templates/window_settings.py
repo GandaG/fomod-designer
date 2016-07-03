@@ -581,7 +581,7 @@ class Ui_Dialog(object):
         self.verticalLayout_8.addWidget(self.buttonBox)
 
         self.retranslateUi(Dialog)
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
     def retranslateUi(self, Dialog):
@@ -606,7 +606,7 @@ class Ui_Dialog(object):
         self.combo_style.setItemText(0, _translate("Dialog", "Default"))
         self.combo_style.setItemText(1, _translate("Dialog", "Windows"))
         self.combo_style.setItemText(2, _translate("Dialog", "Fusion"))
-        self.label_13.setText(_translate("Dialog", "This settings requires a restart to take effect."))
+        self.label_13.setText(_translate("Dialog", "This setting requires a restart to take effect."))
         self.label_16.setText(_translate("Dialog", "Palette"))
         self.combo_palette.setItemText(0, _translate("Dialog", "Default"))
         self.combo_palette.setItemText(1, _translate("Dialog", "aliceblue"))
@@ -750,7 +750,7 @@ class Ui_Dialog(object):
         self.combo_palette.setItemText(139, _translate("Dialog", "whitesmoke"))
         self.combo_palette.setItemText(140, _translate("Dialog", "yellow"))
         self.combo_palette.setItemText(141, _translate("Dialog", "yellowgreen"))
-        self.label_15.setText(_translate("Dialog", "This settings requires a restart to take effect."))
+        self.label_15.setText(_translate("Dialog", "This setting requires a restart to take effect."))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_5), _translate("Dialog", "Appearance"))
         self.check_valid_load.setText(_translate("Dialog", "Validate installer."))
         self.check_valid_load_ignore.setText(_translate("Dialog", "Ignore errors and continue loading."))

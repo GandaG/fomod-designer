@@ -1345,7 +1345,7 @@ class SettingsDialog(QDialog, window_settings.Ui_Dialog):
             )
         )
         self.button_colour_reset_required.clicked.connect(
-            lambda: self.button_colour_required.setStyleSheet("background-color: #ba4d0e")
+            lambda: self.button_colour_required.setStyleSheet("background-color: #d90027")
         )
         self.button_colour_reset_atleastone.clicked.connect(
             lambda: self.button_colour_atleastone.setStyleSheet("background-color: #d0d02e")
@@ -1560,7 +1560,7 @@ def read_settings():
             "atleastone_colour": "#d0d02e",
             "either_colour": "#ffaa7f",
             "style": "",
-            "palette": "aliceblue"
+            "palette": ""
         },
         "Defaults": {
             "installSteps": DefaultsSettings("order", True, "Explicit"),

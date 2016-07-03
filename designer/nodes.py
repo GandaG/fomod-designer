@@ -907,7 +907,7 @@ class NodeConfigOptGroups(_NodeBase):
         self.init(
             "Option Group",
             type(self).tag,
-            0,
+            1,
             allowed_children=allowed_children,
             properties=properties,
             sort_order="2",
@@ -969,7 +969,7 @@ class NodeConfigPlugins(_NodeBase):
         self.init(
             "Plugins",
             type(self).tag,
-            0,
+            1,
             allowed_children=allowed_children,
             properties=properties,
             required_children=required
