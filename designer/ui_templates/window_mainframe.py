@@ -101,6 +101,7 @@ class Ui_MainWindow(object):
         self.node_tree_view.setDragEnabled(True)
         self.node_tree_view.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
         self.node_tree_view.setDefaultDropAction(QtCore.Qt.MoveAction)
+        self.node_tree_view.setAlternatingRowColors(True)
         self.node_tree_view.setIndentation(10)
         self.node_tree_view.setHeaderHidden(True)
         self.node_tree_view.setObjectName("node_tree_view")

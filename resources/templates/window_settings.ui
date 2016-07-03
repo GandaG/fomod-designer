@@ -13,7 +13,7 @@
     <x>0</x>
     <y>0</y>
     <width>565</width>
-    <height>317</height>
+    <height>396</height>
    </rect>
   </property>
   <property name="focusPolicy">
@@ -30,544 +30,1708 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_8">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_9">
-     <item>
-      <widget class="QGroupBox" name="groupBox_3">
-       <property name="title">
-        <string>General</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-       </property>
-       <property name="flat">
-        <bool>false</bool>
-       </property>
-       <property name="checkable">
-        <bool>false</bool>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout_7">
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_7">
-          <item>
-           <widget class="QCheckBox" name="check_intro">
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="tabPosition">
+      <enum>QTabWidget::North</enum>
+     </property>
+     <property name="tabShape">
+      <enum>QTabWidget::Rounded</enum>
+     </property>
+     <property name="currentIndex">
+      <number>1</number>
+     </property>
+     <property name="elideMode">
+      <enum>Qt::ElideNone</enum>
+     </property>
+     <property name="tabBarAutoHide">
+      <bool>false</bool>
+     </property>
+     <widget class="QWidget" name="tab">
+      <attribute name="title">
+       <string>General</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_7">
+       <item>
+        <widget class="QCheckBox" name="check_intro">
+         <property name="text">
+          <string>Show intro window at statup.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="Line" name="line">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="check_advanced">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string>Show the Advanced View at startup.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="Line" name="line_2">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_6">
+         <item>
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>Preview Refresh Rate</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="combo_code_refresh">
+           <item>
             <property name="text">
-             <string>Show intro window at statup.</string>
+             <string>Never</string>
             </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_8">
+           </item>
+           <item>
+            <property name="text">
+             <string>On Refresh</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>On Node Select</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>On Property Editing</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_7">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+      <zorder>check_intro</zorder>
+      <zorder>check_advanced</zorder>
+      <zorder>verticalSpacer_7</zorder>
+      <zorder>line</zorder>
+      <zorder>line_2</zorder>
+     </widget>
+     <widget class="QWidget" name="tab_5">
+      <attribute name="title">
+       <string>Appearance</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_10">
+       <item>
+        <widget class="QLabel" name="label_9">
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Special Button Colours</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_7">
+         <item>
+          <widget class="QLabel" name="label_10">
+           <property name="text">
+            <string>Required</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="button_colour_required">
+           <property name="maximumSize">
+            <size>
+             <width>40</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="button_colour_reset_required">
+           <property name="text">
+            <string>Reset to Default</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_8">
+         <item>
+          <widget class="QLabel" name="label_11">
+           <property name="text">
+            <string>At Least One</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="button_colour_atleastone">
+           <property name="maximumSize">
+            <size>
+             <width>40</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="button_colour_reset_atleastone">
+           <property name="text">
+            <string>Reset to Default</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_9">
+         <item>
+          <widget class="QLabel" name="label_12">
+           <property name="text">
+            <string>Either</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="button_colour_either">
+           <property name="maximumSize">
+            <size>
+             <width>40</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="button_colour_reset_either">
+           <property name="text">
+            <string>Reset to Default</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="Line" name="line_9">
+         <property name="midLineWidth">
+          <number>0</number>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_14">
+         <item>
+          <widget class="QLabel" name="label_14">
+           <property name="midLineWidth">
+            <number>0</number>
+           </property>
+           <property name="text">
+            <string>Style</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="combo_style">
+           <item>
+            <property name="text">
+             <string>Default</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Windows</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Fusion</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QWidget" name="widget_warning_style" native="true">
+         <layout class="QHBoxLayout" name="horizontalLayout_16">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
           <item>
-           <widget class="QCheckBox" name="check_advanced">
-            <property name="enabled">
+           <spacer name="horizontalSpacer_5">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_warning_style">
+            <property name="maximumSize">
+             <size>
+              <width>20</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="pixmap">
+             <pixmap>../logos/logo_danger.png</pixmap>
+            </property>
+            <property name="scaledContents">
+             <bool>true</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="wordWrap">
              <bool>false</bool>
             </property>
-            <property name="text">
-             <string>Show the Advanced View at startup.</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_6">
-          <item>
-           <widget class="QLabel" name="label">
-            <property name="text">
-             <string>Preview Refresh Rate</string>
-            </property>
            </widget>
           </item>
           <item>
-           <widget class="QComboBox" name="combo_code_refresh">
-            <item>
-             <property name="text">
-              <string>Never</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>On Refresh</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>On Node Select</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>On Property Editing</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item>
-      <widget class="QGroupBox" name="groupBox_4">
-       <property name="title">
-        <string>Defaults</string>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout_9">
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_10">
-          <item>
-           <widget class="QCheckBox" name="check_installSteps">
+           <widget class="QLabel" name="label_13">
             <property name="text">
-             <string>Installation Steps</string>
+             <string>This settings requires a restart to take effect.</string>
             </property>
-            <property name="checked">
+            <property name="scaledContents">
              <bool>true</bool>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QComboBox" name="combo_installSteps">
-            <item>
-             <property name="text">
-              <string>Explicit</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Ascending</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Descending</string>
-             </property>
-            </item>
-           </widget>
+           <spacer name="horizontalSpacer_6">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_11">
-          <item>
-           <widget class="QCheckBox" name="check_optionalFileGroups">
+        </widget>
+       </item>
+       <item>
+        <widget class="Line" name="line_15">
+         <property name="midLineWidth">
+          <number>0</number>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_15">
+         <item>
+          <widget class="QLabel" name="label_16">
+           <property name="text">
+            <string>Palette</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="combo_palette">
+           <item>
             <property name="text">
-             <string>Option Group</string>
+             <string>Default</string>
             </property>
-            <property name="checked">
+           </item>
+           <item>
+            <property name="text">
+             <string>aliceblue</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>antiquewhite</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>aqua</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>aquamarine</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>azure</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>beige</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>bisque</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>black</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>blanchedalmond</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>blue</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>blueviolet</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>brown</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>burlywood</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>cadetblue</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>chartreuse</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>chocolate</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>coral</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>cornflowerblue</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>cornsilk</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>crimson</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>cyan</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>darkblue</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>darkcyan</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>darkgoldenrod</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>darkgray</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>darkgreen</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>darkgrey</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>darkkhaki</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>darkmagenta</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>darkolivegreen</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>darkorange</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>darkorchid</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>darkred</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>darksalmon</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>darkseagreen</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>darkslateblue</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>darkslategray</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>darkturquoise</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>darkviolet</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>deeppink</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>deepskyblue</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>dimgray</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>dodgerblue</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>firebrick</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>floralwhite</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>forestgreen</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>fuchsia</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>gainsboro</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ghostwhite</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>gold</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>goldenrod</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>gray</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>green</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>greenyellow</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>honeydew</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>hotpink</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>indianred</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>indigo</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ivory</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>khaki</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>lavender</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>lavenderblush</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>lawngreen</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>lemonchiffon</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>lightblue</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>lightcoral</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>lightcyan</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>lightgoldenrodyellow</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>lightgray</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>lightgreen</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>lightpink</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>lightsalmon</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>lightseagreen</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>lightskyblue</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>lightslategray</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>lightsteelblue</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>lightyellow</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>lime</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>limegreen</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>linen</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>magenta</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>maroon</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>mediumaquamarine</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>mediumblue</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>mediumorchid</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>mediumpurple</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>mediumseagreen</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>mediumslateblue</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>mediumspringgreen</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>mediumturquoise</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>mediumvioletred</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>midnightblue</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>mintcream</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>mistyrose</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>moccasin</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>navajowhite</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>navy</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>oldlace</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>olive</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>olivedrab</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>orange</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>orangered</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>orchid</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>palegoldenrod</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>palegreen</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>paleturquoise</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>palevioletred</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>papayawhip</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>peachpuff</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>peru</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>pink</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>plum</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>powderblue</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>purple</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>red</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>rosybrown</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>royalblue</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>saddlebrown</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>salmon</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>sandybrown</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>seagreen</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>seashell</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>sienna</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>silver</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>skyblue</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>slateblue</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>slategray</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>snow</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>springgreen</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>steelblue</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>tan</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>teal</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>thistle</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>tomato</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>turquoise</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>violet</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>wheat</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>white</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>whitesmoke</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>yellow</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>yellowgreen</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QWidget" name="widget_warning_palette" native="true">
+         <layout class="QHBoxLayout" name="horizontalLayout_17">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <spacer name="horizontalSpacer_7">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_warning_palette">
+            <property name="maximumSize">
+             <size>
+              <width>20</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="pixmap">
+             <pixmap>../logos/logo_danger.png</pixmap>
+            </property>
+            <property name="scaledContents">
+             <bool>true</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="wordWrap">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_15">
+            <property name="text">
+             <string>This settings requires a restart to take effect.</string>
+            </property>
+            <property name="scaledContents">
              <bool>true</bool>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QComboBox" name="combo_optionalFileGroups">
-            <item>
-             <property name="text">
-              <string>Explicit</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Ascending</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Descending</string>
-             </property>
-            </item>
-           </widget>
+           <spacer name="horizontalSpacer_8">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_12">
-          <item>
-           <widget class="QCheckBox" name="check_type">
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_3">
+      <attribute name="title">
+       <string>Loading</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_6">
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <widget class="QCheckBox" name="check_valid_load">
+           <property name="text">
+            <string>Validate installer.</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="0,9">
+           <item>
+            <spacer name="horizontalSpacer_3">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Preferred</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="check_valid_load_ignore">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="text">
+              <string>Ignore errors and continue loading.</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="Line" name="line_7">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <widget class="QCheckBox" name="check_warn_load">
+           <property name="text">
+            <string>Check installer for common errors.</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,9">
+           <item>
+            <spacer name="horizontalSpacer_4">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Preferred</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="check_warn_load_ignore">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="text">
+              <string>Ignore errors and continue loading.</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_4">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_4">
+      <attribute name="title">
+       <string>Saving</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_5">
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_4" stretch="0,0">
+         <property name="sizeConstraint">
+          <enum>QLayout::SetMinimumSize</enum>
+         </property>
+         <item>
+          <widget class="QCheckBox" name="check_valid_save">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Validate installer.</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,9">
+           <property name="spacing">
+            <number>6</number>
+           </property>
+           <property name="sizeConstraint">
+            <enum>QLayout::SetMinimumSize</enum>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <spacer name="horizontalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Preferred</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="check_valid_save_ignore">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Ignore errors and continue saving.</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="Line" name="line_8">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_3">
+         <item>
+          <widget class="QCheckBox" name="check_warn_save">
+           <property name="text">
+            <string>Check installer for common errors.</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,9">
+           <item>
+            <spacer name="horizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Preferred</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="check_warn_save_ignore">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="text">
+              <string>Ignore errors and continue saving.</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_2">
+      <attribute name="title">
+       <string>Defaults</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_9">
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QLabel" name="label_4">
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Node Name</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_3">
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Property Name</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_5">
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Default Value</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="Line" name="line_3">
+         <property name="lineWidth">
+          <number>1</number>
+         </property>
+         <property name="midLineWidth">
+          <number>1</number>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_10">
+         <item>
+          <widget class="QCheckBox" name="check_installSteps">
+           <property name="text">
+            <string>Installation Steps</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Order</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="combo_installSteps">
+           <item>
             <property name="text">
-             <string>Type</string>
+             <string>Explicit</string>
             </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QComboBox" name="combo_type">
-            <item>
-             <property name="text">
-              <string>Optional</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Required</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Recommended</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>CouldBeUsable</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>NotUsable</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_13">
-          <item>
-           <widget class="QCheckBox" name="check_defaultType">
+           </item>
+           <item>
             <property name="text">
-             <string>Default Type</string>
+             <string>Ascending</string>
             </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QComboBox" name="combo_defaultType">
-            <item>
-             <property name="text">
-              <string>Optional</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Required</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Recommended</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>CouldBeUsable</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>NotUsable</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QGroupBox" name="groupBox">
-       <property name="title">
-        <string>At Loading</string>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout_6">
-        <item>
-         <spacer name="verticalSpacer_6">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <layout class="QVBoxLayout" name="verticalLayout">
-          <item>
-           <widget class="QCheckBox" name="check_valid_load">
+           </item>
+           <item>
             <property name="text">
-             <string>Validate installer.</string>
+             <string>Descending</string>
             </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="0,9">
-            <item>
-             <spacer name="horizontalSpacer_3">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeType">
-               <enum>QSizePolicy::Preferred</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
-             <widget class="QCheckBox" name="check_valid_load_ignore">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
-              <property name="text">
-               <string>Ignore errors and continue loading.</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <spacer name="verticalSpacer_5">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <layout class="QVBoxLayout" name="verticalLayout_2">
-          <item>
-           <widget class="QCheckBox" name="check_warn_load">
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="Line" name="line_4">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_11">
+         <item>
+          <widget class="QCheckBox" name="check_optionalFileGroups">
+           <property name="text">
+            <string>Option Group</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>Order</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="combo_optionalFileGroups">
+           <item>
             <property name="text">
-             <string>Check installer for common errors.</string>
+             <string>Explicit</string>
             </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,9">
-            <item>
-             <spacer name="horizontalSpacer_4">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeType">
-               <enum>QSizePolicy::Preferred</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
-             <widget class="QCheckBox" name="check_warn_load_ignore">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
-              <property name="text">
-               <string>Ignore errors and continue loading.</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <spacer name="verticalSpacer_4">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item>
-      <widget class="QGroupBox" name="groupBox_2">
-       <property name="title">
-        <string>At Saving</string>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout_5" stretch="0,1,0,1,0">
-        <item>
-         <spacer name="verticalSpacer_2">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <layout class="QVBoxLayout" name="verticalLayout_4" stretch="1,1">
-          <property name="sizeConstraint">
-           <enum>QLayout::SetMinimumSize</enum>
-          </property>
-          <item>
-           <widget class="QCheckBox" name="check_valid_save">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
+           </item>
+           <item>
             <property name="text">
-             <string>Validate installer.</string>
+             <string>Ascending</string>
             </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,9">
-            <property name="spacing">
-             <number>6</number>
-            </property>
-            <property name="sizeConstraint">
-             <enum>QLayout::SetMinimumSize</enum>
-            </property>
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <spacer name="horizontalSpacer_2">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeType">
-               <enum>QSizePolicy::Preferred</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
-             <widget class="QCheckBox" name="check_valid_save_ignore">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>Ignore errors and continue saving.</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <spacer name="verticalSpacer">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <layout class="QVBoxLayout" name="verticalLayout_3">
-          <item>
-           <widget class="QCheckBox" name="check_warn_save">
+           </item>
+           <item>
             <property name="text">
-             <string>Check installer for common errors.</string>
+             <string>Descending</string>
             </property>
-            <property name="checked">
-             <bool>true</bool>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="Line" name="line_5">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_12">
+         <item>
+          <widget class="QCheckBox" name="check_type">
+           <property name="text">
+            <string>Type</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_7">
+           <property name="text">
+            <string>Type</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="combo_type">
+           <item>
+            <property name="text">
+             <string>Optional</string>
             </property>
-           </widget>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,9">
-            <item>
-             <spacer name="horizontalSpacer">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeType">
-               <enum>QSizePolicy::Preferred</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
-             <widget class="QCheckBox" name="check_warn_save_ignore">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
-              <property name="text">
-               <string>Ignore errors and continue saving.</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <spacer name="verticalSpacer_3">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-      </widget>
-     </item>
-    </layout>
+           </item>
+           <item>
+            <property name="text">
+             <string>Required</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Recommended</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>CouldBeUsable</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>NotUsable</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="Line" name="line_6">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_13">
+         <item>
+          <widget class="QCheckBox" name="check_defaultType">
+           <property name="text">
+            <string>Default Type</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_8">
+           <property name="text">
+            <string>Type</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="combo_defaultType">
+           <item>
+            <property name="text">
+             <string>Optional</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Required</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Recommended</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>CouldBeUsable</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>NotUsable</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_8">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </widget>
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">

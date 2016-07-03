@@ -15,15 +15,21 @@
 # limitations under the License.
 
 import sys
-from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtGui import QPalette, QColor
 from .exceptions import excepthook
-from .gui import IntroWindow
+from .gui import IntroWindow, read_settings
 
 
 def main():
     sys.excepthook = excepthook
 
-    app = QtWidgets.QApplication(sys.argv)
+    settings = read_settings()
+    if settings["Appearance"]["style"]:
+        QApplication.setStyle(settings["Appearance"]["style"])
+    app = QApplication(sys.argv)
+    if settings["Appearance"]["palette"]:
+        app.setPalette(QPalette(QColor(settings["Appearance"]["palette"])))
     IntroWindow()
     sys.exit(app.exec_())
 

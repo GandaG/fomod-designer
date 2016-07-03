@@ -28,7 +28,7 @@ from lxml.etree import parse, tostring
 from PyQt5.QtWidgets import (QFileDialog, QColorDialog, QMessageBox, QLabel, QHBoxLayout, QCommandLinkButton, QDialog,
                              QFormLayout, QLineEdit, QSpinBox, QComboBox, QWidget, QPushButton, QSizePolicy, QStatusBar,
                              QCompleter, QApplication, QMainWindow, QUndoCommand, QUndoStack, QMenu)
-from PyQt5.QtGui import QIcon, QPixmap, QColor, QFont, QStandardItemModel
+from PyQt5.QtGui import QIcon, QPixmap, QColor, QFont, QStandardItemModel, QPalette
 from PyQt5.QtCore import Qt, pyqtSignal, QStringListModel, QMimeData
 from requests import get, codes, ConnectionError, Timeout
 from validator import validate_tree, check_warnings, ValidatorError
@@ -855,15 +855,25 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
             if not self.current_node.can_add_child(new_object):
                 child_button.setEnabled(False)
             if child in self.current_node.required_children:
-                child_button.setStyleSheet("background-color: " + QColor("#ba4d0e").name())
-                child_button.setStatusTip("A red button indicates that at least one of this node is required.")
-            if child in self.current_node.either_children_group:
-                child_button.setStyleSheet("background-color: " + QColor("#ffaa7f").name())
-                child_button.setStatusTip("An orange button indicates that only one of these buttons must be used.")
-            if child in self.current_node.at_least_one_children_group:
-                child_button.setStyleSheet("background-color: " + QColor("#d0d02e").name())
+                child_button.setStyleSheet(
+                    "background-color: " + QColor(self.settings_dict["Appearance"]["required_colour"]).name()
+                )
                 child_button.setStatusTip(
-                    "A yellow button indicates that from all the yellow buttons, at least one is required."
+                    "A button of this colour indicates that at least one of this node is required."
+                )
+            if child in self.current_node.either_children_group:
+                child_button.setStyleSheet(
+                    "background-color: " + QColor(self.settings_dict["Appearance"]["either_colour"]).name()
+                )
+                child_button.setStatusTip(
+                    "A button of this colour indicates that only one of these buttons must be used."
+                )
+            if child in self.current_node.at_least_one_children_group:
+                child_button.setStyleSheet(
+                    "background-color: " + QColor(self.settings_dict["Appearance"]["atleastone_colour"]).name()
+                )
+                child_button.setStatusTip(
+                    "A button of this colour indicates that from all of these buttons, at least one is required."
                 )
             self.layout_box.addWidget(child_button)
         self.layout_box.addSpacerItem(spacer)
@@ -1064,10 +1074,10 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                 prop_list.append(QWidget(self.dockWidgetContents))
                 layout = QHBoxLayout(prop_list[prop_index])
                 line_edit = QLineEdit(prop_list[prop_index])
-                path_button = QPushButton(prop_list[prop_index])
-                path_button.setText("...")
+                push_button = QPushButton(prop_list[prop_index])
+                push_button.setText("...")
                 layout.addWidget(line_edit)
-                layout.addWidget(path_button)
+                layout.addWidget(push_button)
                 layout.setContentsMargins(0, 0, 0, 0)
                 line_edit.setText(props[key].value)
                 line_edit.textChanged.connect(props[key].set_value)
@@ -1077,7 +1087,6 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                     lambda: self.xml_code_changed.emit(self.current_node)
                     if self.settings_dict["General"]["code_refresh"] >= 3 else None
                 )
-                path_button.clicked.connect(button_clicked)
                 line_edit.editingFinished.connect(
                     lambda index=prop_index: self.undo_stack.push(
                         self.WidgetLineEditChangeCommand(
@@ -1095,6 +1104,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                 line_edit.editingFinished.connect(
                     lambda index=prop_index: og_values.update({index: line_edit.text()})
                 )
+                push_button.clicked.connect(button_clicked)
 
             elif type(props[key]) is PropertyFolder:
                 def button_clicked():
@@ -1107,10 +1117,10 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                 prop_list.append(QWidget(self.dockWidgetContents))
                 layout = QHBoxLayout(prop_list[prop_index])
                 line_edit = QLineEdit(prop_list[prop_index])
-                path_button = QPushButton(prop_list[prop_index])
-                path_button.setText("...")
+                push_button = QPushButton(prop_list[prop_index])
+                push_button.setText("...")
                 layout.addWidget(line_edit)
-                layout.addWidget(path_button)
+                layout.addWidget(push_button)
                 layout.setContentsMargins(0, 0, 0, 0)
                 line_edit.setText(props[key].value)
                 line_edit.textChanged.connect(props[key].set_value)
@@ -1120,8 +1130,6 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                     lambda: self.xml_code_changed.emit(self.current_node)
                     if self.settings_dict["General"]["code_refresh"] >= 3 else None
                 )
-                path_button.clicked.connect(button_clicked)
-                path_button.clicked.connect(button_clicked)
                 line_edit.editingFinished.connect(
                     lambda index=prop_index: self.undo_stack.push(
                         self.WidgetLineEditChangeCommand(
@@ -1139,6 +1147,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                 line_edit.editingFinished.connect(
                     lambda index=prop_index: og_values.update({index: line_edit.text()})
                 )
+                push_button.clicked.connect(button_clicked)
 
             elif type(props[key]) is PropertyColour:
                 def button_clicked():
@@ -1151,23 +1160,23 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                 def update_button_colour(text):
                     colour = QColor("#" + text)
                     if colour.isValid() and len(text) == 6:
-                        path_button.setStyleSheet("background-color: " + colour.name())
-                        path_button.setIcon(QIcon())
+                        push_button.setStyleSheet("background-color: " + colour.name())
+                        push_button.setIcon(QIcon())
                     else:
-                        path_button.setStyleSheet("background-color: #ffffff")
+                        push_button.setStyleSheet("background-color: #ffffff")
                         icon = QIcon()
                         icon.addPixmap(QPixmap(join(cur_folder, "resources/logos/logo_danger.png")),
                                        QIcon.Normal, QIcon.Off)
-                        path_button.setIcon(icon)
+                        push_button.setIcon(icon)
 
                 og_values[prop_index] = props[key].value
                 prop_list.append(QWidget(self.dockWidgetContents))
                 layout = QHBoxLayout(prop_list[prop_index])
                 line_edit = QLineEdit(prop_list[prop_index])
                 line_edit.setMaxLength(6)
-                path_button = QPushButton(prop_list[prop_index])
+                push_button = QPushButton(prop_list[prop_index])
                 layout.addWidget(line_edit)
-                layout.addWidget(path_button)
+                layout.addWidget(push_button)
                 layout.setContentsMargins(0, 0, 0, 0)
                 line_edit.setText(props[key].value)
                 update_button_colour(line_edit.text())
@@ -1178,8 +1187,6 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                     lambda: self.xml_code_changed.emit(self.current_node)
                     if self.settings_dict["General"]["code_refresh"] >= 3 else None
                 )
-                path_button.clicked.connect(button_clicked)
-                path_button.clicked.connect(button_clicked)
                 line_edit.editingFinished.connect(
                     lambda index=prop_index: self.undo_stack.push(
                         self.WidgetLineEditChangeCommand(
@@ -1197,6 +1204,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                 line_edit.editingFinished.connect(
                     lambda index=prop_index: og_values.update({index: line_edit.text()})
                 )
+                push_button.clicked.connect(button_clicked)
 
             self.layout_prop_editor.setWidget(prop_index, QFormLayout.FieldRole, prop_list[prop_index])
             prop_list[prop_index].setObjectName(str(prop_index))
@@ -1290,6 +1298,11 @@ class SettingsDialog(QDialog, window_settings.Ui_Dialog):
         self.setupUi(self)
 
         self.setWindowFlags(Qt.WindowSystemMenuHint | Qt.WindowTitleHint | Qt.Dialog)
+        self.label_warning_palette.setPixmap(QPixmap(join(cur_folder, "resources/logos/logo_danger.png")))
+        self.label_warning_style.setPixmap(QPixmap(join(cur_folder, "resources/logos/logo_danger.png")))
+        self.widget_warning_palette.hide()
+        self.widget_warning_style.hide()
+        self.settings_dict = read_settings()
 
         self.buttonBox.accepted.connect(self.accepted)
         self.buttonBox.rejected.connect(self.close)
@@ -1304,7 +1317,53 @@ class SettingsDialog(QDialog, window_settings.Ui_Dialog):
         self.check_type.stateChanged.connect(self.combo_type.setEnabled)
         self.check_defaultType.stateChanged.connect(self.combo_defaultType.setEnabled)
 
-        self.settings_dict = read_settings()
+        self.button_colour_required.clicked.connect(
+            lambda: self.button_colour_required.setStyleSheet(
+                "background-color: " + QColorDialog().getColor(
+                    QColor(self.button_colour_required.styleSheet().split()[1]),
+                    self,
+                    "Choose Colour:"
+                ).name()
+            )
+        )
+        self.button_colour_atleastone.clicked.connect(
+            lambda: self.button_colour_atleastone.setStyleSheet(
+                "background-color: " + QColorDialog().getColor(
+                    QColor(self.button_colour_atleastone.styleSheet().split()[1]),
+                    self,
+                    "Choose Colour:"
+                ).name()
+            )
+        )
+        self.button_colour_either.clicked.connect(
+            lambda: self.button_colour_either.setStyleSheet(
+                "background-color: " + QColorDialog().getColor(
+                    QColor(self.button_colour_either.styleSheet().split()[1]),
+                    self,
+                    "Choose Colour:"
+                ).name()
+            )
+        )
+        self.button_colour_reset_required.clicked.connect(
+            lambda: self.button_colour_required.setStyleSheet("background-color: #ba4d0e")
+        )
+        self.button_colour_reset_atleastone.clicked.connect(
+            lambda: self.button_colour_atleastone.setStyleSheet("background-color: #d0d02e")
+        )
+        self.button_colour_reset_either.clicked.connect(
+            lambda: self.button_colour_either.setStyleSheet("background-color: #ffaa7f")
+        )
+        self.combo_style.currentTextChanged.connect(
+            lambda text: self.widget_warning_style.show()
+            if text != self.settings_dict["Appearance"]["style"]
+            else self.widget_warning_style.hide()
+        )
+        self.combo_palette.currentTextChanged.connect(
+            lambda text: self.widget_warning_palette.show()
+            if text != self.settings_dict["Appearance"]["palette"]
+            else self.widget_warning_palette.hide()
+        )
+
         self.combo_code_refresh.setCurrentIndex(self.settings_dict["General"]["code_refresh"])
         self.check_intro.setChecked(self.settings_dict["General"]["show_intro"])
         self.check_advanced.setChecked(self.settings_dict["General"]["show_advanced"])
@@ -1332,6 +1391,24 @@ class SettingsDialog(QDialog, window_settings.Ui_Dialog):
         self.combo_defaultType.setEnabled(self.settings_dict["Defaults"]["defaultType"].enabled())
         self.combo_defaultType.setCurrentText(self.settings_dict["Defaults"]["defaultType"].value())
 
+        self.button_colour_required.setStyleSheet(
+            "background-color: " + self.settings_dict["Appearance"]["required_colour"]
+        )
+        self.button_colour_atleastone.setStyleSheet(
+            "background-color: " + self.settings_dict["Appearance"]["atleastone_colour"]
+        )
+        self.button_colour_either.setStyleSheet(
+            "background-color: " + self.settings_dict["Appearance"]["either_colour"]
+        )
+        if self.settings_dict["Appearance"]["style"]:
+            self.combo_style.setCurrentText(self.settings_dict["Appearance"]["style"])
+        else:
+            self.combo_style.setCurrentText("Default")
+        if self.settings_dict["Appearance"]["palette"]:
+            self.combo_palette.setCurrentText(self.settings_dict["Appearance"]["palette"])
+        else:
+            self.combo_palette.setCurrentText("Default")
+
     def accepted(self):
         self.settings_dict["General"]["code_refresh"] = self.combo_code_refresh.currentIndex()
         self.settings_dict["General"]["show_intro"] = self.check_intro.isChecked()
@@ -1358,6 +1435,18 @@ class SettingsDialog(QDialog, window_settings.Ui_Dialog):
 
         self.settings_dict["Defaults"]["defaultType"].set_enabled(self.check_defaultType.isChecked())
         self.settings_dict["Defaults"]["defaultType"].set_value(self.combo_defaultType.currentText())
+
+        self.settings_dict["Appearance"]["required_colour"] = self.button_colour_required.styleSheet().split()[1]
+        self.settings_dict["Appearance"]["atleastone_colour"] = self.button_colour_atleastone.styleSheet().split()[1]
+        self.settings_dict["Appearance"]["either_colour"] = self.button_colour_either.styleSheet().split()[1]
+        if self.combo_style.currentText() != "Default":
+            self.settings_dict["Appearance"]["style"] = self.combo_style.currentText()
+        else:
+            self.settings_dict["Appearance"]["style"] = ""
+        if self.combo_palette.currentText() != "Default":
+            self.settings_dict["Appearance"]["palette"] = self.combo_palette.currentText()
+        else:
+            self.settings_dict["Appearance"]["palette"] = ""
 
         makedirs(join(expanduser("~"), ".fomod"), exist_ok=True)
         with open(join(expanduser("~"), ".fomod", ".designer"), "w") as configfile:
@@ -1415,7 +1504,7 @@ def generic_errorbox(title, text, detail=""):
 def read_settings():
     """
     Reads the settings from the ~/.fomod/.designer file. If such a file does not exist it uses the default settings.
-    The settings are processed to be ready to be used in Python code (p.e. "option=1" translates to True).
+    The settings are processed to be ready to be used in Python code.
 
     :return: The processed settings.
     """
@@ -1465,6 +1554,13 @@ def read_settings():
             "code_refresh": 3,
             "show_intro": True,
             "show_advanced": False
+        },
+        "Appearance": {
+            "required_colour": "#ba4d0e",
+            "atleastone_colour": "#d0d02e",
+            "either_colour": "#ffaa7f",
+            "style": "",
+            "palette": "aliceblue"
         },
         "Defaults": {
             "installSteps": DefaultsSettings("order", True, "Explicit"),
