@@ -28,7 +28,7 @@ from lxml.etree import parse, tostring
 from PyQt5.QtWidgets import (QFileDialog, QColorDialog, QMessageBox, QLabel, QHBoxLayout, QCommandLinkButton, QDialog,
                              QFormLayout, QLineEdit, QSpinBox, QComboBox, QWidget, QPushButton, QSizePolicy, QStatusBar,
                              QCompleter, QApplication, QMainWindow, QUndoCommand, QUndoStack, QMenu)
-from PyQt5.QtGui import QIcon, QPixmap, QColor, QFont, QStandardItemModel, QPalette
+from PyQt5.QtGui import QIcon, QPixmap, QColor, QFont, QStandardItemModel
 from PyQt5.QtCore import Qt, pyqtSignal, QStringListModel, QMimeData
 from requests import get, codes, ConnectionError, Timeout
 from validator import validate_tree, check_warnings, ValidatorError
@@ -36,9 +36,10 @@ from . import cur_folder, __version__
 from .io import import_, new, export, sort_elements, elem_factory, copy_element
 from .previews import PreviewDispatcherThread
 from .props import PropertyFile, PropertyColour, PropertyFolder, PropertyCombo, PropertyInt, PropertyText, \
-    PropertyFlagLabel, PropertyFlagValue
+    PropertyFlagLabel, PropertyFlagValue, PropertyHTML
 from .exceptions import DesignerError
-from .ui_templates import window_intro, window_mainframe, window_about, window_settings
+from .ui_templates import window_intro, window_mainframe, window_about, window_settings, window_texteditor, \
+    window_plaintexteditor
 
 
 class IntroWindow(QMainWindow, window_intro.Ui_MainWindow):
@@ -910,21 +911,39 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
             self.layout_prop_editor.setWidget(prop_index, QFormLayout.LabelRole, label)
 
             if type(props[key]) is PropertyText:
+                def open_plain_editor(line_edit_):
+                    dialog_ui = window_plaintexteditor.Ui_Dialog()
+                    dialog = QDialog(self)
+                    dialog_ui.setupUi(dialog)
+                    dialog_ui.edit_text.setPlainText(line_edit_.text())
+                    dialog_ui.buttonBox.accepted.connect(dialog.close)
+                    dialog_ui.buttonBox.accepted.connect(lambda: line_edit_.setText(dialog_ui.edit_text.toPlainText()))
+                    dialog_ui.buttonBox.accepted.connect(line_edit_.editingFinished.emit)
+                    dialog.exec_()
+
                 og_values[prop_index] = props[key].value
-                prop_list.append(QLineEdit(self.dockWidgetContents))
-                prop_list[prop_index].setText(props[key].value)
-                prop_list[prop_index].textChanged[str].connect(props[key].set_value)
-                prop_list[prop_index].textChanged[str].connect(self.current_node.write_attribs)
-                prop_list[prop_index].textChanged[str].connect(self.current_node.update_item_name)
-                prop_list[prop_index].textChanged[str].connect(
+                prop_list.append(QWidget(self.dockWidgetContents))
+                layout = QHBoxLayout(prop_list[prop_index])
+                text_edit = QLineEdit(prop_list[prop_index])
+                text_button = QPushButton(prop_list[prop_index])
+                text_button.setText("...")
+                text_button.setMaximumWidth(30)
+                layout.addWidget(text_edit)
+                layout.addWidget(text_button)
+                layout.setContentsMargins(0, 0, 0, 0)
+                text_edit.setText(props[key].value)
+                text_edit.textChanged.connect(props[key].set_value)
+                text_edit.textChanged[str].connect(self.current_node.write_attribs)
+                text_edit.textChanged[str].connect(self.current_node.update_item_name)
+                text_edit.textChanged[str].connect(
                     lambda: self.xml_code_changed.emit(self.current_node)
                     if self.settings_dict["General"]["code_refresh"] >= 3 else None
                 )
-                prop_list[prop_index].editingFinished.connect(
+                text_edit.editingFinished.connect(
                     lambda index=prop_index: self.undo_stack.push(
-                        self.LineEditChangeCommand(
+                        self.WidgetLineEditChangeCommand(
                             og_values[index],
-                            prop_list[index].text(),
+                            text_edit.text(),
                             self.current_prop_list,
                             index,
                             self.node_tree_model,
@@ -932,11 +951,113 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                             self.select_node
                         )
                     )
-                    if og_values[index] != prop_list[index].text() else None
+                    if og_values[index] != text_edit.text() else None
                 )
-                prop_list[prop_index].editingFinished.connect(
-                    lambda index=prop_index: og_values.update({index: prop_list[index].text()})
+                text_edit.editingFinished.connect(
+                    lambda index=prop_index: og_values.update({index: text_edit.text()})
                 )
+                text_button.clicked.connect(lambda _, line_edit_=text_edit: open_plain_editor(line_edit_))
+
+            if type(props[key]) is PropertyHTML:
+                def open_plain_editor(line_edit_):
+                    dialog_ui = window_texteditor.Ui_Dialog()
+                    dialog = QDialog(self)
+                    dialog_ui.setupUi(dialog)
+
+                    dialog_ui.radio_html.toggled.connect(dialog_ui.widget_warning.setVisible)
+                    dialog_ui.button_colour.clicked.connect(
+                        lambda: dialog_ui.edit_text.setTextColor(QColorDialog.getColor())
+                    )
+                    dialog_ui.button_bold.clicked.connect(
+                        lambda: dialog_ui.edit_text.setFontWeight(QFont.Bold)
+                        if dialog_ui.edit_text.fontWeight() == QFont.Normal
+                        else dialog_ui.edit_text.setFontWeight(QFont.Normal)
+                    )
+                    dialog_ui.button_italic.clicked.connect(
+                        lambda: dialog_ui.edit_text.setFontItalic(not dialog_ui.edit_text.fontItalic())
+                    )
+                    dialog_ui.button_underline.clicked.connect(
+                        lambda: dialog_ui.edit_text.setFontUnderline(not dialog_ui.edit_text.fontUnderline())
+                    )
+                    dialog_ui.button_align_left.clicked.connect(
+                        lambda: dialog_ui.edit_text.setAlignment(Qt.AlignLeft)
+                    )
+                    dialog_ui.button_align_center.clicked.connect(
+                        lambda: dialog_ui.edit_text.setAlignment(Qt.AlignCenter)
+                    )
+                    dialog_ui.button_align_right.clicked.connect(
+                        lambda: dialog_ui.edit_text.setAlignment(Qt.AlignRight)
+                    )
+                    dialog_ui.button_align_justify.clicked.connect(
+                        lambda: dialog_ui.edit_text.setAlignment(Qt.AlignJustify)
+                    )
+                    dialog_ui.buttonBox.accepted.connect(dialog.close)
+                    dialog_ui.buttonBox.accepted.connect(
+                        lambda: line_edit_.setText(dialog_ui.edit_text.toPlainText())
+                        if dialog_ui.radio_plain.isChecked()
+                        else line_edit_.setText(dialog_ui.edit_text.toHtml())
+                    )
+                    dialog_ui.buttonBox.accepted.connect(line_edit_.editingFinished.emit)
+
+                    dialog_ui.widget_warning.hide()
+                    dialog_ui.label_warning.setPixmap(QPixmap(join(cur_folder, "resources/logos/logo_danger.png")))
+                    dialog_ui.button_colour.setIcon(QIcon(join(cur_folder, "resources/logos/logo_font_colour.png")))
+                    dialog_ui.button_bold.setIcon(QIcon(join(cur_folder, "resources/logos/logo_font_bold.png")))
+                    dialog_ui.button_italic.setIcon(QIcon(join(cur_folder, "resources/logos/logo_font_italic.png")))
+                    dialog_ui.button_underline.setIcon(QIcon(
+                        join(cur_folder, "resources/logos/logo_font_underline.png")
+                    ))
+                    dialog_ui.button_align_left.setIcon(QIcon(
+                        join(cur_folder, "resources/logos/logo_font_align_left.png")
+                    ))
+                    dialog_ui.button_align_center.setIcon(QIcon(
+                        join(cur_folder, "resources/logos/logo_font_align_center.png")
+                    ))
+                    dialog_ui.button_align_right.setIcon(QIcon(
+                        join(cur_folder, "resources/logos/logo_font_align_right.png")
+                    ))
+                    dialog_ui.button_align_justify.setIcon(QIcon(
+                        join(cur_folder, "resources/logos/logo_font_align_justify.png")
+                    ))
+                    dialog_ui.edit_text.setText(line_edit_.text())
+                    dialog.exec_()
+
+                og_values[prop_index] = props[key].value
+                prop_list.append(QWidget(self.dockWidgetContents))
+                layout = QHBoxLayout(prop_list[prop_index])
+                text_edit = QLineEdit(prop_list[prop_index])
+                text_button = QPushButton(prop_list[prop_index])
+                text_button.setText("...")
+                text_button.setMaximumWidth(30)
+                layout.addWidget(text_edit)
+                layout.addWidget(text_button)
+                layout.setContentsMargins(0, 0, 0, 0)
+                text_edit.setText(props[key].value)
+                text_edit.textChanged.connect(props[key].set_value)
+                text_edit.textChanged[str].connect(self.current_node.write_attribs)
+                text_edit.textChanged[str].connect(self.current_node.update_item_name)
+                text_edit.textChanged[str].connect(
+                    lambda: self.xml_code_changed.emit(self.current_node)
+                    if self.settings_dict["General"]["code_refresh"] >= 3 else None
+                )
+                text_edit.editingFinished.connect(
+                    lambda index=prop_index: self.undo_stack.push(
+                        self.WidgetLineEditChangeCommand(
+                            og_values[index],
+                            text_edit.text(),
+                            self.current_prop_list,
+                            index,
+                            self.node_tree_model,
+                            self.current_node.model_item,
+                            self.select_node
+                        )
+                    )
+                    if og_values[index] != text_edit.text() else None
+                )
+                text_edit.editingFinished.connect(
+                    lambda index=prop_index: og_values.update({index: text_edit.text()})
+                )
+                text_button.clicked.connect(lambda _, line_edit_=text_edit: open_plain_editor(line_edit_))
 
             if type(props[key]) is PropertyFlagLabel:
                 og_values[prop_index] = props[key].value
@@ -1076,6 +1197,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                 line_edit = QLineEdit(prop_list[prop_index])
                 push_button = QPushButton(prop_list[prop_index])
                 push_button.setText("...")
+                push_button.setMaximumWidth(30)
                 layout.addWidget(line_edit)
                 layout.addWidget(push_button)
                 layout.setContentsMargins(0, 0, 0, 0)
@@ -1119,6 +1241,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                 line_edit = QLineEdit(prop_list[prop_index])
                 push_button = QPushButton(prop_list[prop_index])
                 push_button.setText("...")
+                push_button.setMaximumWidth(30)
                 layout.addWidget(line_edit)
                 layout.addWidget(push_button)
                 layout.setContentsMargins(0, 0, 0, 0)
@@ -1175,6 +1298,10 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                 line_edit = QLineEdit(prop_list[prop_index])
                 line_edit.setMaxLength(6)
                 push_button = QPushButton(prop_list[prop_index])
+                push_button.setMinimumHeight(21)
+                push_button.setMinimumWidth(30)
+                push_button.setMaximumHeight(21)
+                push_button.setMaximumWidth(30)
                 layout.addWidget(line_edit)
                 layout.addWidget(push_button)
                 layout.setContentsMargins(0, 0, 0, 0)

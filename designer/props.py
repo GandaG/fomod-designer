@@ -125,3 +125,10 @@ class PropertyFlagValue(PropertyText):
     A property that holds a flag's value.
     """
     pass
+
+
+class PropertyHTML(PropertyText):
+    """
+    A property that allows html text. Used for plugin descriptions.
+    """
+    pass

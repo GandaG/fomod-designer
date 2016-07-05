@@ -23,7 +23,7 @@ from jsonpickle import encode, decode, set_encoder_options
 from json import JSONDecodeError
 from .wizards import WizardFiles, WizardDepend
 from .props import PropertyCombo, PropertyInt, PropertyText, PropertyFile, PropertyFolder, PropertyColour, \
-    PropertyFlagLabel, PropertyFlagValue
+    PropertyFlagLabel, PropertyFlagValue, PropertyHTML
 from .exceptions import BaseInstanceException
 
 
@@ -1021,7 +1021,7 @@ class NodeConfigPluginDescription(_NodeBase):
 
     def _init(self):
         properties = OrderedDict([
-            ("<node_text>", PropertyText("Description"))
+            ("<node_text>", PropertyHTML("Description"))
         ])
         self.init(
             "Description",
