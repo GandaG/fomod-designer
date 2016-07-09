@@ -34,7 +34,7 @@ from requests import get, codes, ConnectionError, Timeout
 from validator import validate_tree, check_warnings, ValidatorError
 from . import cur_folder, __version__
 from .io import import_, new, export, sort_elements, elem_factory, copy_element
-from .previews import PreviewDispatcherThread
+from .previews import PreviewDispatcherThread, PreviewMoGui
 from .props import PropertyFile, PropertyColour, PropertyFolder, PropertyCombo, PropertyInt, PropertyText, \
     PropertyFlagLabel, PropertyFlagValue, PropertyHTML
 from .exceptions import DesignerError
@@ -102,12 +102,6 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
 
     #: Signals the xml code has changed.
     xml_code_changed = pyqtSignal([object])
-
-    #: Signals the mo preview is updated.
-    update_mo_preview = pyqtSignal([QWidget])
-
-    #: Signals the nmm preview is updated.
-    update_nmm_preview = pyqtSignal([QWidget])
 
     #: Signals the code preview is updated.
     update_code_preview = pyqtSignal([str])
@@ -192,7 +186,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
             if not self.canDropMimeData(mime_data, drop_action, row, col, parent_index):
                 return False
 
-            parent = self.itemFromIndex(drop_action)
+            parent = self.itemFromIndex(parent_index)
             xml_node = mime_data.node()
             parent.insertRow(row, xml_node.model_item)
             for row_index in range(0, parent.rowCount()):
@@ -452,23 +446,28 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
 
         # setup any necessary variables
         self.original_title = self.windowTitle()
-        self.package_path = ""
+        self._package_path = ""
         self.package_name = ""
         self.settings_dict = read_settings()
-        self.info_root = None
-        self.config_root = None
+        self._info_root = None
+        self._config_root = None
         self._current_prop_list = []
         self.original_prop_value_list = {}
 
         # start the preview threads
         self.preview_queue = Queue()
+        self.preview_gui_worker = PreviewMoGui(self.layout_mo)
         self.update_previews.connect(self.preview_queue.put)
         self.update_code_preview.connect(self.xml_code_browser.setHtml)
         self.preview_thread = PreviewDispatcherThread(
             self.preview_queue,
-            self.update_mo_preview,
-            self.update_nmm_preview,
-            self.update_code_preview
+            self.update_code_preview,
+            **{
+                "package_path": self.package_path,
+                "info_root": self.info_root,
+                "config_root": self.config_root,
+                "gui_worker": self.preview_gui_worker
+            }
         )
         self.preview_thread.start()
 
@@ -545,6 +544,15 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
     @property
     def current_prop_list(self):
         return self._current_prop_list
+
+    def info_root(self):
+        return self._info_root
+
+    def config_root(self):
+        return self._config_root
+
+    def package_path(self):
+        return self._package_path
 
     def copy_item_to_clipboard(self):
         item = self.node_tree_model.itemFromIndex(self.node_tree_view.selectedIndexes()[0])
@@ -670,15 +678,15 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                 else:
                     info_root, config_root = new()
 
-                self.package_path = package_path
-                self.info_root, self.config_root = info_root, config_root
+                self._package_path = package_path
+                self._info_root, self._config_root = info_root, config_root
 
                 self.node_tree_model.clear()
 
-                self.node_tree_model.appendRow(self.info_root.model_item)
-                self.node_tree_model.appendRow(self.config_root.model_item)
+                self.node_tree_model.appendRow(self._info_root.model_item)
+                self.node_tree_model.appendRow(self._config_root.model_item)
 
-                self.package_name = basename(normpath(self.package_path))
+                self.package_name = basename(normpath(self._package_path))
                 self.current_node = None
                 self.xml_code_changed.emit(self.current_node)
                 self.undo_stack.setClean()
@@ -687,7 +695,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                 QApplication.clipboard().clear()
                 self.actionPaste.setEnabled(False)
                 self.action_Delete.setEnabled(False)
-                self.update_recent_files(self.package_path)
+                self.update_recent_files(self._package_path)
                 self.clear_prop_list()
                 self.button_wizard.setEnabled(False)
         except (DesignerError, ValidatorError) as p:
@@ -701,24 +709,24 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
         If enabled in the Settings the installer is also validated and checked for common errors.
         """
         try:
-            if self.info_root is None and self.config_root is None:
+            if self._info_root is None and self._config_root is None:
                 return
-            elif self.fomod_changed:
-                sort_elements(self.info_root)
-                sort_elements(self.config_root)
+            elif not self.undo_stack.isClean():
+                sort_elements(self._info_root)
+                sort_elements(self._config_root)
                 if self.settings_dict["Save"]["validate"]:
                     validate_tree(
-                        parse(BytesIO(tostring(self.config_root, pretty_print=True))),
+                        parse(BytesIO(tostring(self._config_root, pretty_print=True))),
                         join(cur_folder, "resources", "mod_schema.xsd"),
                         self.settings_dict["Save"]["validate_ignore"]
                     )
                 if self.settings_dict["Save"]["warnings"]:
                     check_warnings(
-                        self.package_path,
-                        self.config_root,
+                        self._package_path,
+                        self._config_root,
                         self.settings_dict["Save"]["warn_ignore"]
                     )
-                export(self.info_root, self.config_root, self.package_path)
+                export(self._info_root, self._config_root, self._package_path)
                 self.undo_stack.setClean()
         except ValidatorError as e:
             generic_errorbox(e.title, str(e))
@@ -1062,11 +1070,11 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
             if type(props[key]) is PropertyFlagLabel:
                 og_values[prop_index] = props[key].value
                 prop_list.append(QLineEdit(self.dockWidgetContents))
-                self.update_flag_label_completer(self.flag_label_model, self.config_root)
+                self.update_flag_label_completer(self.flag_label_model, self._config_root)
                 self.flag_label_completer.activated[str].connect(prop_list[prop_index].setText)
                 prop_list[prop_index].setCompleter(self.flag_label_completer)
                 prop_list[prop_index].textChanged[str].connect(
-                    lambda text: self.update_flag_value_completer(self.flag_value_model, self.config_root, text)
+                    lambda text: self.update_flag_value_completer(self.flag_value_model, self._config_root, text)
                 )
                 prop_list[prop_index].setText(props[key].value)
                 prop_list[prop_index].textChanged[str].connect(props[key].set_value)
@@ -1187,9 +1195,9 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
             elif type(props[key]) is PropertyFile:
                 def button_clicked():
                     open_dialog = QFileDialog()
-                    file_path = open_dialog.getOpenFileName(self, "Select File:", self.package_path)
+                    file_path = open_dialog.getOpenFileName(self, "Select File:", self._package_path)
                     if file_path[0]:
-                        line_edit.setText(relpath(file_path[0], self.package_path))
+                        line_edit.setText(relpath(file_path[0], self._package_path))
 
                 og_values[prop_index] = props[key].value
                 prop_list.append(QWidget(self.dockWidgetContents))
@@ -1231,9 +1239,9 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
             elif type(props[key]) is PropertyFolder:
                 def button_clicked():
                     open_dialog = QFileDialog()
-                    folder_path = open_dialog.getExistingDirectory(self, "Select folder:", self.package_path)
+                    folder_path = open_dialog.getExistingDirectory(self, "Select folder:", self._package_path)
                     if folder_path:
-                        line_edit.setText(relpath(folder_path, self.package_path))
+                        line_edit.setText(relpath(folder_path, self._package_path))
 
                 og_values[prop_index] = props[key].value
                 prop_list.append(QWidget(self.dockWidgetContents))
@@ -1366,7 +1374,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
         parent_node = self.current_node.getparent()
         original_node = self.current_node
 
-        kwargs = {"package_path": self.package_path}
+        kwargs = {"package_path": self._package_path}
         wizard = self.current_node.wizard(self, self.current_node, self.xml_code_changed, **kwargs)
         self.splitter.insertWidget(0, wizard)
 

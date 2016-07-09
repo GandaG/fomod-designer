@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(800, 563)
+        MainWindow.resize(1115, 659)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout(self.centralwidget)
@@ -25,13 +25,8 @@ class Ui_MainWindow(object):
         self.tabWidget.setObjectName("tabWidget")
         self.tabWidgetPage1 = QtWidgets.QWidget()
         self.tabWidgetPage1.setObjectName("tabWidgetPage1")
-        self.horizontalLayout_4 = QtWidgets.QHBoxLayout(self.tabWidgetPage1)
-        self.horizontalLayout_4.setObjectName("horizontalLayout_4")
-        self.preview_label = QtWidgets.QLabel(self.tabWidgetPage1)
-        self.preview_label.setAlignment(QtCore.Qt.AlignCenter)
-        self.preview_label.setWordWrap(True)
-        self.preview_label.setObjectName("preview_label")
-        self.horizontalLayout_4.addWidget(self.preview_label)
+        self.layout_mo = QtWidgets.QHBoxLayout(self.tabWidgetPage1)
+        self.layout_mo.setObjectName("layout_mo")
         self.tabWidget.addTab(self.tabWidgetPage1, "")
         self.tabWidgetPage2 = QtWidgets.QWidget()
         self.tabWidgetPage2.setObjectName("tabWidgetPage2")
@@ -123,7 +118,7 @@ class Ui_MainWindow(object):
         self.children_box.setWidget(self.dockWidgetContents_3)
         MainWindow.addDockWidget(QtCore.Qt.DockWidgetArea(2), self.children_box)
         self.menuBar = QtWidgets.QMenuBar(MainWindow)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 800, 21))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1115, 21))
         self.menuBar.setObjectName("menuBar")
         self.menu_File = QtWidgets.QMenu(self.menuBar)
         self.menu_File.setObjectName("menu_File")
@@ -266,13 +261,12 @@ class Ui_MainWindow(object):
         self.menuBar.addAction(self.menu_Help.menuAction())
 
         self.retranslateUi(MainWindow)
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "FOMOD Designer"))
-        self.preview_label.setText(_translate("MainWindow", "<html><head/><body><p>The preview is not ready yet!</p><p>Meanwhile, try to install your mod using NMM or MO to check if everything is ok.</p></body></html>"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabWidgetPage1), _translate("MainWindow", "Preview"))
         self.label.setText(_translate("MainWindow", "Generated XML Code"))
         self.xml_code_browser.setPlaceholderText(_translate("MainWindow", "Click a node to see the generated XML code here."))

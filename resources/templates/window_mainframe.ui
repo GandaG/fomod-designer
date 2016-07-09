@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>563</height>
+    <width>1115</width>
+    <height>659</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -37,27 +37,13 @@
       </property>
       <widget class="QTabWidget" name="tabWidget">
        <property name="currentIndex">
-        <number>1</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="tabWidgetPage1">
         <attribute name="title">
          <string>Preview</string>
         </attribute>
-        <layout class="QHBoxLayout" name="horizontalLayout_4">
-         <item>
-          <widget class="QLabel" name="preview_label">
-           <property name="text">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The preview is not ready yet!&lt;/p&gt;&lt;p&gt;Meanwhile, try to install your mod using NMM or MO to check if everything is ok.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-           <property name="wordWrap">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-        </layout>
+        <layout class="QHBoxLayout" name="layout_mo"/>
        </widget>
        <widget class="QWidget" name="tabWidgetPage2">
         <attribute name="title">
@@ -290,7 +276,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>1115</width>
      <height>21</height>
     </rect>
    </property>
