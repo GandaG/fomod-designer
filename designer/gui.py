@@ -1193,11 +1193,12 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                 )
 
             elif type(props[key]) is PropertyFile:
-                def button_clicked():
+                def button_clicked(line_edit_):
                     open_dialog = QFileDialog()
                     file_path = open_dialog.getOpenFileName(self, "Select File:", self._package_path)
                     if file_path[0]:
                         line_edit.setText(relpath(file_path[0], self._package_path))
+                    line_edit_.editingFinished.emit()
 
                 og_values[prop_index] = props[key].value
                 prop_list.append(QWidget(self.dockWidgetContents))
@@ -1234,14 +1235,15 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                 line_edit.editingFinished.connect(
                     lambda index=prop_index: og_values.update({index: line_edit.text()})
                 )
-                push_button.clicked.connect(button_clicked)
+                push_button.clicked.connect(lambda _, line_edit_=line_edit: button_clicked(line_edit_))
 
             elif type(props[key]) is PropertyFolder:
-                def button_clicked():
+                def button_clicked(line_edit_):
                     open_dialog = QFileDialog()
                     folder_path = open_dialog.getExistingDirectory(self, "Select folder:", self._package_path)
                     if folder_path:
                         line_edit.setText(relpath(folder_path, self._package_path))
+                    line_edit_.editingFinished.emit()
 
                 og_values[prop_index] = props[key].value
                 prop_list.append(QWidget(self.dockWidgetContents))
@@ -1278,15 +1280,16 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                 line_edit.editingFinished.connect(
                     lambda index=prop_index: og_values.update({index: line_edit.text()})
                 )
-                push_button.clicked.connect(button_clicked)
+                push_button.clicked.connect(lambda _, line_edit_=line_edit: button_clicked(line_edit_))
 
             elif type(props[key]) is PropertyColour:
-                def button_clicked():
+                def button_clicked(line_edit_):
                     init_colour = QColor("#" + props[key].value)
                     colour_dialog = QColorDialog()
                     colour = colour_dialog.getColor(init_colour, self, "Choose Colour:")
                     if colour.isValid():
                         line_edit.setText(colour.name()[1:])
+                    line_edit_.editingFinished.emit()
 
                 def update_button_colour(text):
                     colour = QColor("#" + text)
@@ -1339,7 +1342,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                 line_edit.editingFinished.connect(
                     lambda index=prop_index: og_values.update({index: line_edit.text()})
                 )
-                push_button.clicked.connect(button_clicked)
+                push_button.clicked.connect(lambda _, line_edit_=line_edit: button_clicked(line_edit_))
 
             self.layout_prop_editor.setWidget(prop_index, QFormLayout.FieldRole, prop_list[prop_index])
             prop_list[prop_index].setObjectName(str(prop_index))
@@ -1688,14 +1691,14 @@ def read_settings():
         "General": {
             "code_refresh": 3,
             "show_intro": True,
-            "show_advanced": False
+            "show_advanced": False,
         },
         "Appearance": {
             "required_colour": "#ba4d0e",
             "atleastone_colour": "#d0d02e",
             "either_colour": "#ffaa7f",
             "style": "",
-            "palette": ""
+            "palette": "",
         },
         "Defaults": {
             "installSteps": DefaultsSettings("order", True, "Explicit"),
@@ -1707,15 +1710,15 @@ def read_settings():
             "validate": True,
             "validate_ignore": False,
             "warnings": True,
-            "warn_ignore": True
+            "warn_ignore": True,
         },
         "Save": {
             "validate": True,
             "validate_ignore": False,
             "warnings": True,
-            "warn_ignore": True
+            "warn_ignore": True,
         },
-        "Recent Files": deque(maxlen=5)
+        "Recent Files": deque(maxlen=5),
     }
 
     try:
