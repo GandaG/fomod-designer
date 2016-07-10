@@ -19,19 +19,6 @@
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <widget class="QPushButton" name="button_exit">
-   <property name="geometry">
-    <rect>
-     <x>270</x>
-     <y>640</y>
-     <width>581</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Continue</string>
-   </property>
-  </widget>
   <widget class="QFrame" name="frame_node">
    <property name="geometry">
     <rect>
@@ -69,7 +56,7 @@
      <x>270</x>
      <y>230</y>
      <width>551</width>
-     <height>111</height>
+     <height>251</height>
     </rect>
    </property>
    <property name="frameShape">
@@ -92,6 +79,13 @@
       </property>
       <property name="wordWrap">
        <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="button_exit">
+      <property name="text">
+       <string>Continue</string>
       </property>
      </widget>
     </item>
