@@ -640,7 +640,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
             update_button = QPushButton("New Version Available!")
             update_button.setFlat(True)
             update_button.clicked.connect(lambda: web_open("https://github.com/GandaG/fomod-designer/releases/latest"))
-            self.statusBar().addWidget(update_button)
+            self.statusBar().addPermanentWidget(update_button)
 
         def check_remote():
             try:
@@ -655,19 +655,21 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                 self.update_check_connection_error.emit()
 
         self.update_check_up_to_date.connect(lambda: self.setStatusBar(QStatusBar()))
-        self.update_check_up_to_date.connect(lambda: self.statusBar().addWidget(QLabel("Everything is up-to-date.")))
+        self.update_check_up_to_date.connect(
+            lambda: self.statusBar().addPermanentWidget(QLabel("Everything is up-to-date."))
+        )
         self.update_check_update_available.connect(lambda: self.setStatusBar(QStatusBar()))
         self.update_check_update_available.connect(update_available_button)
         self.update_check_timeout.connect(lambda: self.setStatusBar(QStatusBar()))
-        self.update_check_timeout.connect(lambda: self.statusBar().addWidget(QLabel("Connection timed out.")))
+        self.update_check_timeout.connect(lambda: self.statusBar().addPermanentWidget(QLabel("Connection timed out.")))
         self.update_check_connection_error.connect(lambda: self.setStatusBar(QStatusBar()))
         self.update_check_connection_error.connect(
-            lambda: self.statusBar().addWidget(QLabel(
+            lambda: self.statusBar().addPermanentWidget(QLabel(
                 "Could not connect to remote server, check your internet connection."
             ))
         )
 
-        self.statusBar().addWidget(QLabel("Checking for updates..."))
+        self.statusBar().addPermanentWidget(QLabel("Checking for updates..."))
 
         Thread(target=check_remote).start()
 
