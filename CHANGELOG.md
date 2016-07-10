@@ -1,5 +1,38 @@
 # Changelog
 
+0.7.0 (2016-07-10)
+
+* Fixed rare bug with the validator.
+* Added Dependencies Wizard.
+* Children box now lists invalid child nodes greyed out instead of deleting them.
+* Fixed issues with saving.
+* Nodes should now be properly sorted.
+* Added specialized child nodes with colours.
+* Added auto-completion for flag labels and their values.
+* Fixed recent files issues.
+* Properties are now ordered.
+* Added node-specific metadata.
+* Pattern node's names are now editable.
+* Improved Setting's dialog.
+* Added Defaults section to settings.
+* Added Appearance tab to settings dialog.
+* Fixed rare bug with xml preview.
+* Disabled Wizards.
+* Added user-defined noe sorting with drag and drop.
+* Improved logos.
+* Added copy and paste functionality. 
+* Added undo and redo functionality.
+* Loading ui should now be slightly faster - ui is now pre-compiled.
+* Full keyboard navigation is now supported on the node tree.
+* Added context menu to the node tree.
+* Actions should now be properly disabled/enabled when appropriate.
+* All nodes should now be correct on their allowed number.
+* Added plain text editor to most simple text properties and html editor to plugin's description text.
+* Added install step ui preview.
+* Added tutorial at startup. Added setting to re-enable the tutorial.
+
+----------------------------------
+
 0.6.0 (2016-06-13)
 
 * Added check for updates at startup.

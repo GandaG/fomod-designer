@@ -92,28 +92,43 @@ class PropertyInt(_PropertyBase):
             super().set_value(value)
 
 
-class PropertyFolder(_PropertyBase):
+class PropertyFolder(PropertyText):
     """
     A property that holds the path to a folder.
     """
-    def __init__(self, name, text="", editable=True):
-        super().__init__(name, (), editable)
-        self.value = text
+    pass
 
 
-class PropertyFile(_PropertyBase):
+class PropertyFile(PropertyText):
     """
     A property that holds the path to a file.
     """
-    def __init__(self, name, text="", editable=True):
-        super().__init__(name, (), editable)
-        self.value = text
+    pass
 
 
-class PropertyColour(_PropertyBase):
+class PropertyColour(PropertyText):
     """
     A property that holds a colour hex value.
     """
-    def __init__(self, name, text="", editable=True):
-        super().__init__(name, (), editable)
-        self.value = text
+    pass
+
+
+class PropertyFlagLabel(PropertyText):
+    """
+    A property that holds a flag's label.
+    """
+    pass
+
+
+class PropertyFlagValue(PropertyText):
+    """
+    A property that holds a flag's value.
+    """
+    pass
+
+
+class PropertyHTML(PropertyText):
+    """
+    A property that allows html text. Used for plugin descriptions.
+    """
+    pass

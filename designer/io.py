@@ -16,14 +16,24 @@
 
 from os import listdir, makedirs
 from os.path import join
-from lxml.etree import (PythonElementClassLookup, XMLParser, tostring, fromstring,
-                        Element, SubElement, parse, ParseError, ElementTree)
+from lxml.etree import (PythonElementClassLookup, XMLParser, tostring, fromstring, CommentBase,
+                        Element, SubElement, parse, ParseError, ElementTree, CustomElementClassLookup)
 from .exceptions import MissingFileError, ParserError, TagNotFound
 
-module_parser = XMLParser(remove_comments=True, remove_pis=True, remove_blank_text=True)
+module_parser = XMLParser(remove_pis=True, remove_blank_text=True)
 
 
-class _NodeLookup(PythonElementClassLookup):
+class _CommentLookup(CustomElementClassLookup):
+    def lookup(self, elem_type, doc, namespace, name):
+        from .nodes import NodeComment
+
+        if elem_type == "comment":
+            return NodeComment
+        else:
+            return None
+
+
+class _NodeClassLookup(PythonElementClassLookup):
     """
     Class that handles the custom lookup for the element factories.
     """
@@ -86,7 +96,9 @@ class _NodeLookup(PythonElementClassLookup):
         elif element.tag == "files":
             return nodes.NodeConfigFiles
         elif element.tag == "dependencies":
-            if element.getparent().tag == "dependencies":
+            if element.getparent().tag == "dependencies" or \
+                    element.getparent().tag == "moduleDependencies" or \
+                    element.getparent().tag == "visible":
                 return nodes.NodeConfigNestedDependencies
             else:
                 return nodes.NodeConfigDependencies
@@ -123,7 +135,7 @@ class _NodeLookup(PythonElementClassLookup):
             raise TagNotFound(element)
 
 
-module_parser.set_element_class_lookup(_NodeLookup())
+module_parser.set_element_class_lookup(_CommentLookup(_NodeClassLookup()))
 
 
 def _check_file(base_path, file_):
@@ -193,6 +205,23 @@ def elem_factory(tag, parent):
     return parsed_list[len(parsed_list) - 1]
 
 
+def copy_element(element_):
+    result = elem_factory(element_.tag, element_.getparent())
+    element_.write_attribs()
+    result.text = element_.text
+    for key in element_.keys():
+        result.set(key, element_.get(key))
+    result.parse_attribs()
+    for child in element_:
+        if isinstance(child, CommentBase):
+            result.append(type(child)(child.text))
+        else:
+            new_child = copy_element(child)
+            result.add_child(new_child)
+    result.load_metadata()
+    return result
+
+
 def import_(package_path):
     """
     Function used to import an existing installer from *package_path*.
@@ -216,15 +245,17 @@ def import_(package_path):
         config_root = parse(config_path, parser=module_parser).getroot()
 
         for root in (info_root, config_root):
-            for element in root.iter():
+            for element in root.iter(tag=Element):
                 element.parse_attribs()
 
                 for elem in element:
-                    element.model_item.appendRow(elem.model_item)
-                    if not _validate_child(elem):
-                        element.remove_child(elem)
+                    if not isinstance(elem, CommentBase):
+                        element.model_item.appendRow(elem.model_item)
+                        if not _validate_child(elem):
+                            element.remove_child(elem)
 
                 element.write_attribs()
+                element.load_metadata()
 
     except ParseError as e:
         raise ParserError(str(e))
@@ -284,13 +315,14 @@ def export(info_root, config_root, package_path):
         config_tree.write(configfile, pretty_print=True)
 
 
-def sort_elements(info_root, config_root):
+def sort_elements(root_element):
     """
     Sorts the xml elements according to their sort_order member.
 
-    :param info_root: The root element of the info.xml file.
-    :param config_root: The root element of the moduleconfig.xml file.
+    :param root_element: The root element of xml tree.
     """
-    for root in (info_root, config_root):
-        for parent in root.xpath('//*[./*]'):
-            parent[:] = sorted(parent, key=lambda x: x.sort_order)
+    for parent in root_element.xpath('//*[./*]'):
+        parent[:] = sorted(
+            parent,
+            key=lambda x: x.sort_order + "." + x.user_sort_order if not isinstance(x, CommentBase) else "0"
+        )

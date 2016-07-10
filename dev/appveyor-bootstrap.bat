@@ -1,6 +1,6 @@
 @echo off
 
-set PATH=C:\Miniconda-x64;C:\Miniconda-x64\Scripts;%PATH%
+set PATH=C:\Miniconda-x64;C:\Miniconda-x64\Scripts;
 
 conda create -y -n fomod-designer^
  -c https://conda.anaconda.org/mmcauliffe^

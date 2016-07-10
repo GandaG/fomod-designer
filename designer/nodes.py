@@ -15,11 +15,20 @@
 # limitations under the License.
 
 from os import sep
+from collections import OrderedDict
 from PyQt5.QtGui import QStandardItem
+from PyQt5.QtCore import Qt
 from lxml import etree
-from .wizards import WizardFiles
-from .props import PropertyCombo, PropertyInt, PropertyText, PropertyFile, PropertyFolder, PropertyColour
+from jsonpickle import encode, decode, set_encoder_options
+from json import JSONDecodeError
+from .wizards import WizardFiles, WizardDepend
+from .props import PropertyCombo, PropertyInt, PropertyText, PropertyFile, PropertyFolder, PropertyColour, \
+    PropertyFlagLabel, PropertyFlagValue, PropertyHTML
 from .exceptions import BaseInstanceException
+
+
+class NodeComment(etree.CommentBase):
+    pass
 
 
 class _NodeBase(etree.ElementBase):
@@ -31,26 +40,52 @@ class _NodeBase(etree.ElementBase):
             raise BaseInstanceException(self)
         super()._init()
 
-    def init(self, name, tag, allowed_instances, sort_order=0, allow_text=False, allowed_children=None, properties=None,
-             wizard=None):
+    def init(
+        self,
+        name,
+        tag,
+        allowed_instances,
+        sort_order="0",
+        allowed_children=None,
+        properties=None,
+        wizard=None,
+        required_children=None,
+        either_children_group=None,
+        at_least_one_children_group=None,
+        name_editable=False,
+    ):
 
         if not properties:
-            properties = {}
+            properties = OrderedDict()
         if not allowed_children:
             allowed_children = ()
+        if not required_children:
+            required_children = ()
+        if not either_children_group:
+            either_children_group = ()
+        if not at_least_one_children_group:
+            at_least_one_children_group = ()
 
         self.name = name
         self.tag = tag
         self.sort_order = sort_order
         self.properties = properties
         self.allowed_children = allowed_children
-        self.allow_text = allow_text
+        self.required_children = required_children
+        self.either_children_group = either_children_group
+        self.at_least_one_children_group = at_least_one_children_group
         self.allowed_instances = allowed_instances
         self.wizard = wizard
+        self.metadata = {}
+        self.user_sort_order = "0"
 
         self.model_item = NodeStandardItem(self)
         self.model_item.setText(self.name)
-        self.model_item.setEditable(False)
+        if allowed_instances > 1 or not allowed_instances:
+            self.model_item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsEnabled | Qt.ItemIsEditable)
+        else:
+            self.model_item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsDropEnabled | Qt.ItemIsEnabled | Qt.ItemIsEditable)
+        self.model_item.setEditable(name_editable)
 
     def can_add_child(self, child):
         """
@@ -80,6 +115,7 @@ class _NodeBase(etree.ElementBase):
             self.append(child)
             self.model_item.appendRow(child.model_item)
             child.write_attribs()
+            child.load_metadata()
 
     def remove_child(self, child):
         """
@@ -96,6 +132,9 @@ class _NodeBase(etree.ElementBase):
         Reads the values from the BaseElement's attrib dictionary into the node's properties.
         """
         for key in self.properties:
+            if key == "<node_text>":
+                self.properties[key].set_value(self.text)
+                continue
             if key not in self.attrib.keys():
                 continue
             self.properties[key].set_value(self.attrib[key])
@@ -107,6 +146,9 @@ class _NodeBase(etree.ElementBase):
         """
         self.attrib.clear()
         for key in self.properties:
+            if key == "<node_text>":
+                self.text = self.properties[key].value
+                continue
             self.set(key, str(self.properties[key].value))
 
     def update_item_name(self):
@@ -119,25 +161,61 @@ class _NodeBase(etree.ElementBase):
         if "name" in self.properties:
             if not self.properties["name"].value:
                 self.model_item.setText(self.name)
-                return
+                return self.name
             self.model_item.setText(self.properties["name"].value)
+            return self.properties["name"].value
         elif "source" in self.properties:
             if not self.properties["source"].value:
                 self.model_item.setText(self.name)
-                return
+                return self.name
             split_name = self.properties["source"].value.split(sep)
             self.model_item.setText(split_name[len(split_name) - 1])
+            return split_name[len(split_name) - 1]
         else:
             self.model_item.setText(self.name)
+            return self.name
 
-    def set_text(self, text):
+    def load_metadata(self):
         """
-        Method used to set the node's text, if allowed.
+        Loads this node's metadata which is stored in a child comment encoded in json.
+        """
+        for child in self:
+            if type(child) is NodeComment:
+                if child.text.split()[0] == "<designer.metadata.do.not.edit>":
+                    try:
+                        self.metadata = decode(child.text.split(maxsplit=1)[1])
+                    except JSONDecodeError:
+                        continue
 
-        :param text: The text to set.
+        self.model_item.setText(self.metadata.get("name", self.update_item_name()))
+        self.user_sort_order = self.metadata.get("user_sort", "0".zfill(7))
+
+    def save_metadata(self):
         """
-        if self.allow_text:
-            self.text = text
+        Saves this node's metadata.
+        """
+        if self.model_item.text() != self.name:
+            self.metadata["name"] = self.model_item.text()
+        else:
+            self.metadata.pop("name", None)
+        if self.user_sort_order:
+            self.metadata["user_sort"] = self.user_sort_order
+        else:
+            self.metadata.pop("user_sort", None)
+
+        if not self.allowed_children and "<node_text>" not in self.properties.keys():
+            return
+        else:
+            meta_comment = None
+            set_encoder_options("json", separators=(',', ':'))
+            for child in self:
+                if type(child) is NodeComment and self.metadata:
+                    if child.text.split()[0] == "<designer.metadata.do.not.edit>":
+                        meta_comment = child
+                        child.text = "<designer.metadata.do.not.edit> " + encode(self.metadata)
+
+            if meta_comment is None:
+                self.append(NodeComment("<designer.metadata.do.not.edit> " + encode(self.metadata)))
 
 
 class NodeStandardItem(QStandardItem):
@@ -145,6 +223,14 @@ class NodeStandardItem(QStandardItem):
     def __init__(self, node):
         self.xml_node = node
         super().__init__()
+
+    def __lt__(self, other):
+        self_sort = self.xml_node.sort_order + "." + self.xml_node.user_sort_order
+        other_sort = other.xml_node.sort_order + "." + other.xml_node.user_sort_order
+        if self_sort < other_sort:
+            return True
+        else:
+            return False
 
 
 class NodeInfoRoot(_NodeBase):
@@ -154,9 +240,21 @@ class NodeInfoRoot(_NodeBase):
     tag = "fomod"
 
     def _init(self):
-        allowed_children = (NodeInfoName, NodeInfoAuthor, NodeInfoDescription,
-                            NodeInfoID, NodeInfoGroup, NodeInfoVersion, NodeInfoWebsite)
-        self.init("Info", type(self).tag, 1, allow_text=False, allowed_children=allowed_children)
+        allowed_children = (
+            NodeInfoName,
+            NodeInfoAuthor,
+            NodeInfoDescription,
+            NodeInfoID,
+            NodeInfoGroup,
+            NodeInfoVersion,
+            NodeInfoWebsite
+        )
+        self.init(
+            "Info",
+            type(self).tag,
+            1,
+            allowed_children=allowed_children
+        )
         super()._init()
 
 
@@ -167,7 +265,15 @@ class NodeInfoName(_NodeBase):
     tag = "Name"
 
     def _init(self):
-        self.init("Name", type(self).tag, 1, allow_text=True)
+        properties = OrderedDict([
+            ("<node_text>", PropertyText("Name"))
+        ])
+        self.init(
+            "Name",
+            type(self).tag,
+            1,
+            properties=properties
+        )
         super()._init()
 
 
@@ -178,7 +284,15 @@ class NodeInfoAuthor(_NodeBase):
     tag = "Author"
 
     def _init(self):
-        self.init("Author", type(self).tag, 1, allow_text=True)
+        properties = OrderedDict([
+            ("<node_text>", PropertyText("Author"))
+        ])
+        self.init(
+            "Author",
+            type(self).tag,
+            1,
+            properties=properties
+        )
         super()._init()
 
 
@@ -189,7 +303,15 @@ class NodeInfoVersion(_NodeBase):
     tag = "Version"
 
     def _init(self):
-        self.init("Version", type(self).tag, 1, allow_text=True)
+        properties = OrderedDict([
+            ("<node_text>", PropertyText("Version"))
+        ])
+        self.init(
+            "Version",
+            type(self).tag,
+            1,
+            properties=properties
+        )
         super()._init()
 
 
@@ -200,7 +322,15 @@ class NodeInfoID(_NodeBase):
     tag = "Id"
 
     def _init(self):
-        self.init("ID", type(self).tag, 1, allow_text=True)
+        properties = OrderedDict([
+            ("<node_text>", PropertyText("ID"))
+        ])
+        self.init(
+            "ID",
+            type(self).tag,
+            1,
+            properties=properties
+        )
         super()._init()
 
 
@@ -211,7 +341,15 @@ class NodeInfoWebsite(_NodeBase):
     tag = "Website"
 
     def _init(self):
-        self.init("Website", type(self).tag, 1, allow_text=True)
+        properties = OrderedDict([
+            ("<node_text>", PropertyText("Website"))
+        ])
+        self.init(
+            "Website",
+            type(self).tag,
+            1,
+            properties=properties
+        )
         super()._init()
 
 
@@ -222,7 +360,15 @@ class NodeInfoDescription(_NodeBase):
     tag = "Description"
 
     def _init(self):
-        self.init("Description", type(self).tag, 1, allow_text=True)
+        properties = OrderedDict([
+            ("<node_text>", PropertyText("Description"))
+        ])
+        self.init(
+            "Description",
+            type(self).tag,
+            1,
+            properties=properties
+        )
         super()._init()
 
 
@@ -233,8 +379,15 @@ class NodeInfoGroup(_NodeBase):
     tag = "Groups"
 
     def _init(self):
-        allowed_child = (NodeInfoElement,)
-        self.init("Categories Group", type(self).tag, 1, allowed_children=allowed_child)
+        allowed_child = (
+            NodeInfoElement,
+        )
+        self.init(
+            "Categories Group",
+            type(self).tag,
+            1,
+            allowed_children=allowed_child
+        )
         super()._init()
 
 
@@ -245,7 +398,15 @@ class NodeInfoElement(_NodeBase):
     tag = "element"
 
     def _init(self):
-        self.init("Category", type(self).tag, 0, allow_text=True)
+        properties = OrderedDict([
+            ("<node_text>", PropertyText("Category"))
+        ])
+        self.init(
+            "Category",
+            type(self).tag,
+            0,
+            properties=properties
+        )
         super()._init()
 
 
@@ -256,11 +417,40 @@ class NodeConfigRoot(_NodeBase):
     tag = "config"
 
     def _init(self):
-        allowed_children = (NodeConfigModName, NodeConfigModImage, NodeConfigModDepend,
-                            NodeConfigInstallSteps, NodeConfigReqFiles, NodeConfigCondInstall)
-        properties = {"{http://www.w3.org/2001/XMLSchema-instance}noNamespaceSchemaLocation":
-                      PropertyText("xsi", "http://qconsulting.ca/fo3/ModConfig5.0.xsd", False)}
-        self.init("Config", type(self).tag, 1, allowed_children=allowed_children, properties=properties)
+        allowed_children = (
+            NodeConfigModName,
+            NodeConfigModImage,
+            NodeConfigModDepend,
+            NodeConfigInstallSteps,
+            NodeConfigReqFiles,
+            NodeConfigCondInstall
+        )
+        required = (
+            NodeConfigModName,
+        )
+        at_least_one = (
+            NodeConfigModDepend,
+            NodeConfigInstallSteps,
+            NodeConfigReqFiles,
+            NodeConfigCondInstall
+        )
+        properties = OrderedDict(
+            [
+                ("{http://www.w3.org/2001/XMLSchema-instance}noNamespaceSchemaLocation",
+                 PropertyText(
+                     "xsi", "http://qconsulting.ca/fo3/ModConfig5.0.xsd", False
+                 ))
+            ]
+        )
+        self.init(
+            "Config",
+            type(self).tag,
+            1,
+            allowed_children=allowed_children,
+            properties=properties,
+            required_children=required,
+            at_least_one_children_group=at_least_one
+        )
         super()._init()
 
 
@@ -271,9 +461,18 @@ class NodeConfigModName(_NodeBase):
     tag = "moduleName"
 
     def _init(self):
-        properties = {"position": PropertyCombo("Position", ("Left", "Right", "RightOfImage")),
-                      "colour": PropertyColour("Colour", "000000")}
-        self.init("Name", type(self).tag, 1, allow_text=True, properties=properties, sort_order=1)
+        properties = OrderedDict([
+            ("<node_text>", PropertyText("Name")),
+            ("position", PropertyCombo("Position", ("Left", "Right", "RightOfImage"))),
+            ("colour", PropertyColour("Colour", "000000"))
+        ])
+        self.init(
+            "Name",
+            type(self).tag,
+            1,
+            properties=properties,
+            sort_order="1"
+        )
         super()._init()
 
 
@@ -284,10 +483,19 @@ class NodeConfigModImage(_NodeBase):
     tag = "moduleImage"
 
     def _init(self):
-        properties = {"path": PropertyFile("Path"), "showImage": PropertyCombo("Show Image", ("true", "false")),
-                      "showFade": PropertyCombo("Show Fade", ("true", "false")),
-                      "height": PropertyInt("Height", -1, 9999, -1)}
-        self.init("Image", "moduleImage", 1, properties=properties, sort_order=2)
+        properties = OrderedDict([
+            ("path", PropertyFile("Path")),
+            ("showImage", PropertyCombo("Show Image", ("true", "false"))),
+            ("showFade", PropertyCombo("Show Fade", ("true", "false"))),
+            ("height", PropertyInt("Height", -1, 9999, -1))
+        ])
+        self.init(
+            "Image",
+            "moduleImage",
+            1,
+            properties=properties,
+            sort_order="2"
+        )
         super()._init()
 
 
@@ -298,10 +506,24 @@ class NodeConfigModDepend(_NodeBase):
     tag = "moduleDependencies"
 
     def _init(self):
-        allowed_children = (NodeConfigDependFile, NodeConfigDependFlag, NodeConfigDependGame)
-        properties = {"operator": PropertyCombo("Type", ["And", "Or"])}
-        self.init("Mod Dependencies", type(self).tag, 1, allowed_children=allowed_children,
-                  properties=properties, sort_order=3)
+        allowed_children = (
+            NodeConfigDependFile,
+            NodeConfigDependFlag,
+            NodeConfigDependGame,
+            NodeConfigNestedDependencies
+        )
+        properties = OrderedDict([
+            ("operator", PropertyCombo("Type", ["And", "Or"]))
+        ])
+        self.init(
+            "Mod Dependencies",
+            type(self).tag,
+            1,
+            allowed_children=allowed_children,
+            properties=properties,
+            sort_order="3",
+            wizard=WizardDepend
+        )
         super()._init()
 
 
@@ -312,9 +534,18 @@ class NodeConfigReqFiles(_NodeBase):
     tag = "requiredInstallFiles"
 
     def _init(self):
-        allowed_children = (NodeConfigFile, NodeConfigFolder)
-        self.init("Mod Requirements", type(self).tag, 1, allowed_children=allowed_children,
-                  sort_order=4, wizard=WizardFiles)
+        allowed_children = (
+            NodeConfigFile,
+            NodeConfigFolder
+        )
+        self.init(
+            "Mod Requirements",
+            type(self).tag,
+            1,
+            allowed_children=allowed_children,
+            sort_order="4",
+            wizard=WizardFiles
+        )
         super()._init()
 
 
@@ -325,10 +556,24 @@ class NodeConfigInstallSteps(_NodeBase):
     tag = "installSteps"
 
     def _init(self):
-        allowed_children = (NodeConfigInstallStep,)
-        properties = {"order": PropertyCombo("Order", ["Ascending", "Descending", "Explicit"])}
-        self.init("Installation Steps", type(self).tag, 1, allowed_children=allowed_children,
-                  properties=properties, sort_order=5)
+        allowed_children = (
+            NodeConfigInstallStep,
+        )
+        required = (
+            NodeConfigInstallStep,
+        )
+        properties = OrderedDict([
+            ("order", PropertyCombo("Order", ["Ascending", "Descending", "Explicit"]))
+        ])
+        self.init(
+            "Installation Steps",
+            type(self).tag,
+            1,
+            allowed_children=allowed_children,
+            properties=properties,
+            sort_order="5",
+            required_children=required
+        )
         super()._init()
 
 
@@ -339,8 +584,20 @@ class NodeConfigCondInstall(_NodeBase):
     tag = "conditionalFileInstalls"
 
     def _init(self):
-        allowed_children = (NodeConfigPatterns,)
-        self.init("Conditional Installation", type(self).tag, 1, allowed_children=allowed_children, sort_order=6)
+        allowed_children = (
+            NodeConfigPatterns,
+        )
+        required = (
+            NodeConfigPatterns,
+        )
+        self.init(
+            "Conditional Installation",
+            type(self).tag,
+            1,
+            allowed_children=allowed_children,
+            sort_order="6",
+            required_children=required
+        )
         super()._init()
 
 
@@ -351,9 +608,16 @@ class NodeConfigDependFile(_NodeBase):
     tag = "fileDependency"
 
     def _init(self):
-        properties = {"file": PropertyText("File"),
-                      "state": PropertyCombo("State", ("Active", "Inactive", "Missing"))}
-        self.init("File Dependency", type(self).tag, 0, properties=properties)
+        properties = OrderedDict([
+            ("file", PropertyText("File")),
+            ("state", PropertyCombo("State", ("Active", "Inactive", "Missing")))
+        ])
+        self.init(
+            "File Dependency",
+            type(self).tag,
+            0,
+            properties=properties
+        )
         super()._init()
 
 
@@ -364,8 +628,16 @@ class NodeConfigDependFlag(_NodeBase):
     tag = "flagDependency"
 
     def _init(self):
-        properties = {"flag": PropertyText("Flag"), "value": PropertyText("Value")}
-        self.init("Flag Dependency", type(self).tag, 0, properties=properties)
+        properties = OrderedDict([
+            ("flag", PropertyFlagLabel("Label")),
+            ("value", PropertyFlagValue("Value"))
+        ])
+        self.init(
+            "Flag Dependency",
+            type(self).tag,
+            0,
+            properties=properties
+        )
         super()._init()
 
 
@@ -376,8 +648,15 @@ class NodeConfigDependGame(_NodeBase):
     tag = "gameDependency"
 
     def _init(self):
-        properties = {"version": PropertyText("Version")}
-        self.init("Game Dependency", "gameDependency", 1, properties=properties)
+        properties = OrderedDict([
+            ("version", PropertyText("Version"))
+        ])
+        self.init(
+            "Game Dependency",
+            "gameDependency",
+            1,
+            properties=properties
+        )
         super()._init()
 
 
@@ -388,12 +667,19 @@ class NodeConfigFile(_NodeBase):
     tag = "file"
 
     def _init(self):
-        properties = {"source": PropertyFile("Source"),
-                      "destination": PropertyText("Destination"),
-                      "priority": PropertyInt("Priority", 0, 99, 0),
-                      "alwaysInstall": PropertyCombo("Always Install", ("false", "true")),
-                      "installIfUsable": PropertyCombo("Install If Usable", ("false", "true"))}
-        self.init("File", type(self).tag, 0, properties=properties)
+        properties = OrderedDict([
+            ("source", PropertyFile("Source")),
+            ("destination", PropertyText("Destination")),
+            ("priority", PropertyInt("Priority", 0, 99, 0)),
+            ("alwaysInstall", PropertyCombo("Always Install", ("false", "true"))),
+            ("installIfUsable", PropertyCombo("Install If Usable", ("false", "true")))
+        ])
+        self.init(
+            "File",
+            type(self).tag,
+            0,
+            properties=properties
+        )
         super()._init()
 
 
@@ -404,12 +690,19 @@ class NodeConfigFolder(_NodeBase):
     tag = "folder"
 
     def _init(self):
-        properties = {"source": PropertyFolder("Source"),
-                      "destination": PropertyText("Destination"),
-                      "priority": PropertyInt("Priority", 0, 99, 0),
-                      "alwaysInstall": PropertyCombo("Always Install", ("false", "true")),
-                      "installIfUsable": PropertyCombo("Install If Usable", ("false", "true"))}
-        self.init("Folder", type(self).tag, 0, properties=properties)
+        properties = OrderedDict([
+            ("source", PropertyFolder("Source")),
+            ("destination", PropertyText("Destination")),
+            ("priority", PropertyInt("Priority", 0, 99, 0)),
+            ("alwaysInstall", PropertyCombo("Always Install", ("false", "true"))),
+            ("installIfUsable", PropertyCombo("Install If Usable", ("false", "true")))
+        ])
+        self.init(
+            "Folder",
+            type(self).tag,
+            0,
+            properties=properties
+        )
         super()._init()
 
 
@@ -420,8 +713,19 @@ class NodeConfigPatterns(_NodeBase):
     tag = "patterns"
 
     def _init(self):
-        allowed_children = (NodeConfigPattern,)
-        self.init("Patterns", type(self).tag, 1, allowed_children=allowed_children)
+        allowed_children = (
+            NodeConfigPattern,
+        )
+        required = (
+            NodeConfigPattern,
+        )
+        self.init(
+            "Patterns",
+            type(self).tag,
+            1,
+            allowed_children=allowed_children,
+            required_children=required
+        )
         super()._init()
 
 
@@ -432,8 +736,22 @@ class NodeConfigPattern(_NodeBase):
     tag = "pattern"
 
     def _init(self):
-        allowed_children = (NodeConfigFiles, NodeConfigDependencies)
-        self.init("Pattern", type(self).tag, 0, allowed_children=allowed_children)
+        allowed_children = (
+            NodeConfigFiles,
+            NodeConfigDependencies
+        )
+        required = (
+            NodeConfigFiles,
+            NodeConfigDependencies
+        )
+        self.init(
+            "Pattern",
+            type(self).tag,
+            0,
+            allowed_children=allowed_children,
+            required_children=required,
+            name_editable=True
+        )
         super()._init()
 
 
@@ -444,8 +762,18 @@ class NodeConfigFiles(_NodeBase):
     tag = "files"
 
     def _init(self):
-        allowed_children = (NodeConfigFile, NodeConfigFolder)
-        self.init("Files", type(self).tag, 1, allowed_children=allowed_children, sort_order=3, wizard=WizardFiles)
+        allowed_children = (
+            NodeConfigFile,
+            NodeConfigFolder
+        )
+        self.init(
+            "Files",
+            type(self).tag,
+            1,
+            allowed_children=allowed_children,
+            sort_order="3",
+            wizard=WizardFiles
+        )
         super()._init()
 
 
@@ -456,11 +784,24 @@ class NodeConfigDependencies(_NodeBase):
     tag = "dependencies"
 
     def _init(self):
-        allowed_children = (NodeConfigDependFile, NodeConfigDependFlag,
-                            NodeConfigDependGame, NodeConfigNestedDependencies)
-        properties = {"operator": PropertyCombo("Type", ["And", "Or"])}
-        self.init("Dependencies", type(self).tag, 1, allowed_children=allowed_children,
-                  properties=properties, sort_order=1)
+        allowed_children = (
+            NodeConfigDependFile,
+            NodeConfigDependFlag,
+            NodeConfigDependGame,
+            NodeConfigNestedDependencies
+        )
+        properties = OrderedDict([
+            ("operator", PropertyCombo("Type", ["And", "Or"]))
+        ])
+        self.init(
+            "Dependencies",
+            type(self).tag,
+            1,
+            allowed_children=allowed_children,
+            properties=properties,
+            sort_order="1",
+            wizard=WizardDepend
+        )
         super()._init()
 
 
@@ -471,10 +812,23 @@ class NodeConfigNestedDependencies(_NodeBase):
     tag = "dependencies"
 
     def _init(self):
-        allowed_children = (NodeConfigDependFile, NodeConfigDependFlag,
-                            NodeConfigDependGame, NodeConfigNestedDependencies)
-        properties = {"operator": PropertyCombo("Type", ["And", "Or"])}
-        self.init("Dependencies", type(self).tag, 0, allowed_children=allowed_children, properties=properties)
+        allowed_children = (
+            NodeConfigDependFile,
+            NodeConfigDependFlag,
+            NodeConfigDependGame,
+            NodeConfigNestedDependencies
+        )
+        properties = OrderedDict([
+            ("operator", PropertyCombo("Type", ["And", "Or"]))
+        ])
+        self.init(
+            "Dependencies",
+            type(self).tag,
+            0,
+            allowed_children=allowed_children,
+            properties=properties,
+            wizard=WizardDepend
+        )
         super()._init()
 
 
@@ -485,9 +839,24 @@ class NodeConfigInstallStep(_NodeBase):
     tag = "installStep"
 
     def _init(self):
-        allowed_children = (NodeConfigVisible, NodeConfigOptGroups)
-        properties = {"name": PropertyText("Name")}
-        self.init("Install Step", type(self).tag, 0, allowed_children=allowed_children, properties=properties)
+        allowed_children = (
+            NodeConfigVisible,
+            NodeConfigOptGroups
+        )
+        required = (
+            NodeConfigOptGroups,
+        )
+        properties = OrderedDict([
+            ("name", PropertyText("Name"))
+        ])
+        self.init(
+            "Install Step",
+            type(self).tag,
+            0,
+            allowed_children=allowed_children,
+            properties=properties,
+            required_children=required
+        )
         super()._init()
 
 
@@ -498,8 +867,24 @@ class NodeConfigVisible(_NodeBase):
     tag = "visible"
 
     def _init(self):
-        allowed_children = (NodeConfigDependFile, NodeConfigDependFlag, NodeConfigDependGame, NodeConfigDependencies)
-        self.init("Visibility", type(self).tag, 1, allowed_children=allowed_children, sort_order=1)
+        allowed_children = (
+            NodeConfigDependFile,
+            NodeConfigDependFlag,
+            NodeConfigDependGame,
+            NodeConfigNestedDependencies
+        )
+        properties = OrderedDict([
+            ("operator", PropertyCombo("Type", ["And", "Or"]))
+        ])
+        self.init(
+            "Visibility",
+            type(self).tag,
+            1,
+            allowed_children=allowed_children,
+            sort_order="1",
+            wizard=WizardDepend,
+            properties=properties
+        )
         super()._init()
 
 
@@ -510,10 +895,24 @@ class NodeConfigOptGroups(_NodeBase):
     tag = "optionalFileGroups"
 
     def _init(self):
-        allowed_children = (NodeConfigGroup,)
-        properties = {"order": PropertyCombo("Order", ["Ascending", "Descending", "Explicit"])}
-        self.init("Option Group", type(self).tag, 0, allowed_children=allowed_children,
-                  properties=properties, sort_order=2)
+        allowed_children = (
+            NodeConfigGroup,
+        )
+        required = (
+            NodeConfigGroup,
+        )
+        properties = OrderedDict([
+            ("order", PropertyCombo("Order", ["Ascending", "Descending", "Explicit"]))
+        ])
+        self.init(
+            "Option Group",
+            type(self).tag,
+            1,
+            allowed_children=allowed_children,
+            properties=properties,
+            sort_order="2",
+            required_children=required
+        )
         super()._init()
 
 
@@ -524,11 +923,30 @@ class NodeConfigGroup(_NodeBase):
     tag = "group"
 
     def _init(self):
-        allowed_children = (NodeConfigPlugins,)
-        properties = {"name": PropertyText("Name"),
-                      "type": PropertyCombo("Type", ["SelectAny", "SelectAtMostOne",
-                                                     "SelectExactlyOne", "SelectAll", "SelectAtLeastOne"])}
-        self.init("Group", type(self).tag, 0, allowed_children=allowed_children, properties=properties)
+        allowed_children = (
+            NodeConfigPlugins,
+        )
+        required = (
+            NodeConfigPlugins,
+        )
+        properties = OrderedDict([
+            ("name", PropertyText("Name")),
+            ("type", PropertyCombo("Type", [
+                "SelectAny",
+                "SelectAtMostOne",
+                "SelectExactlyOne",
+                "SelectAll",
+                "SelectAtLeastOne"
+            ]))
+        ])
+        self.init(
+            "Group",
+            type(self).tag,
+            0,
+            allowed_children=allowed_children,
+            properties=properties,
+            required_children=required
+        )
         super()._init()
 
 
@@ -539,9 +957,23 @@ class NodeConfigPlugins(_NodeBase):
     tag = "plugins"
 
     def _init(self):
-        allowed_children = (NodeConfigPlugin,)
-        properties = {"order": PropertyCombo("Order", ["Ascending", "Descending", "Explicit"])}
-        self.init("Plugins", type(self).tag, 0, allowed_children=allowed_children, properties=properties)
+        allowed_children = (
+            NodeConfigPlugin,
+        )
+        required = (
+            NodeConfigPlugin,
+        )
+        properties = OrderedDict([
+            ("order", PropertyCombo("Order", ["Ascending", "Descending", "Explicit"]))
+        ])
+        self.init(
+            "Plugins",
+            type(self).tag,
+            1,
+            allowed_children=allowed_children,
+            properties=properties,
+            required_children=required
+        )
         super()._init()
 
 
@@ -552,10 +984,32 @@ class NodeConfigPlugin(_NodeBase):
     tag = "plugin"
 
     def _init(self):
-        allowed_children = (NodeConfigPluginDescription, NodeConfigImage, NodeConfigFiles,
-                            NodeConfigConditionFlags, NodeConfigTypeDesc)
-        properties = {"name": PropertyText("Name")}
-        self.init("Plugin", type(self).tag, 0, allowed_children=allowed_children, properties=properties)
+        allowed_children = (
+            NodeConfigPluginDescription,
+            NodeConfigImage,
+            NodeConfigFiles,
+            NodeConfigConditionFlags,
+            NodeConfigTypeDesc
+        )
+        required = (
+            NodeConfigPluginDescription,
+        )
+        at_least_one_child = (
+            NodeConfigFiles,
+            NodeConfigConditionFlags
+        )
+        properties = OrderedDict([
+            ("name", PropertyText("Name"))
+        ])
+        self.init(
+            "Plugin",
+            type(self).tag,
+            0,
+            allowed_children=allowed_children,
+            properties=properties,
+            at_least_one_children_group=at_least_one_child,
+            required_children=required
+        )
         super()._init()
 
 
@@ -566,7 +1020,16 @@ class NodeConfigPluginDescription(_NodeBase):
     tag = "description"
 
     def _init(self):
-        self.init("Description", type(self).tag, 1, allow_text=True, sort_order=1)
+        properties = OrderedDict([
+            ("<node_text>", PropertyHTML("Description"))
+        ])
+        self.init(
+            "Description",
+            type(self).tag,
+            1,
+            properties=properties,
+            sort_order="1"
+        )
         super()._init()
 
 
@@ -577,8 +1040,16 @@ class NodeConfigImage(_NodeBase):
     tag = "image"
 
     def _init(self):
-        properties = {"path": PropertyFile("Path")}
-        self.init("Image", type(self).tag, 1, properties=properties, sort_order=2)
+        properties = OrderedDict([
+            ("path", PropertyFile("Path"))
+        ])
+        self.init(
+            "Image",
+            type(self).tag,
+            1,
+            properties=properties,
+            sort_order="2"
+        )
         super()._init()
 
 
@@ -589,8 +1060,20 @@ class NodeConfigConditionFlags(_NodeBase):
     tag = "conditionFlags"
 
     def _init(self):
-        allowed_children = (NodeConfigFlag,)
-        self.init("Flags", type(self).tag, 1, allowed_children=allowed_children, sort_order=3)
+        allowed_children = (
+            NodeConfigFlag,
+        )
+        required = (
+            NodeConfigFlag,
+        )
+        self.init(
+            "Flags",
+            type(self).tag,
+            1,
+            allowed_children=allowed_children,
+            sort_order="3",
+            required_children=required
+        )
         super()._init()
 
 
@@ -601,8 +1084,22 @@ class NodeConfigTypeDesc(_NodeBase):
     tag = "typeDescriptor"
 
     def _init(self):
-        allowed_children = (NodeConfigDependencyType, NodeConfigType)
-        self.init("Type Descriptor", type(self).tag, 1, allowed_children=allowed_children, sort_order=4)
+        allowed_children = (
+            NodeConfigDependencyType,
+            NodeConfigType
+        )
+        either_children = (
+            NodeConfigDependencyType,
+            NodeConfigType
+        )
+        self.init(
+            "Type Descriptor",
+            type(self).tag,
+            1,
+            allowed_children=allowed_children,
+            sort_order="4",
+            either_children_group=either_children
+        )
         super()._init()
 
     def can_add_child(self, child):
@@ -619,8 +1116,16 @@ class NodeConfigFlag(_NodeBase):
     tag = "flag"
 
     def _init(self):
-        properties = {"name": PropertyText("Name")}
-        self.init("Flag", type(self).tag, 0, properties=properties, allow_text=True)
+        properties = OrderedDict([
+            ("name", PropertyFlagLabel("Label")),
+            ("<node_text>", PropertyText("Value")),
+        ])
+        self.init(
+            "Flag",
+            type(self).tag,
+            0,
+            properties=properties,
+        )
         super()._init()
 
 
@@ -631,8 +1136,21 @@ class NodeConfigDependencyType(_NodeBase):
     tag = "dependencyType"
 
     def _init(self):
-        allowed_children = (NodeConfigInstallPatterns, NodeConfigDefaultType)
-        self.init("Dependency Type", type(self).tag, 1, allowed_children=allowed_children)
+        allowed_children = (
+            NodeConfigInstallPatterns,
+            NodeConfigDefaultType
+        )
+        required = (
+            NodeConfigInstallPatterns,
+            NodeConfigDefaultType
+        )
+        self.init(
+            "Dependency Type",
+            type(self).tag,
+            1,
+            allowed_children=allowed_children,
+            required_children=required
+        )
         super()._init()
 
 
@@ -643,9 +1161,16 @@ class NodeConfigDefaultType(_NodeBase):
     tag = "defaultType"
 
     def _init(self):
-        properties = {"name": PropertyCombo("Name",
-                                            ["Required", "Recommended", "Optional", "CouldBeUsable", "NotUsable"])}
-        self.init("Default Type", type(self).tag, 1, properties=properties, sort_order=1)
+        properties = OrderedDict([
+            ("name", PropertyCombo("Type", ["Required", "Recommended", "Optional", "CouldBeUsable", "NotUsable"]))
+        ])
+        self.init(
+            "Default Type",
+            type(self).tag,
+            1,
+            properties=properties,
+            sort_order="1"
+        )
         super()._init()
 
 
@@ -656,9 +1181,16 @@ class NodeConfigType(_NodeBase):
     tag = "type"
 
     def _init(self):
-        properties = {"name": PropertyCombo("Name",
-                                            ["Required", "Recommended", "Optional", "CouldBeUsable", "NotUsable"])}
-        self.init("Type", type(self).tag, 1, properties=properties, sort_order=2)
+        properties = OrderedDict([
+            ("name", PropertyCombo("Type", ["Required", "Recommended", "Optional", "CouldBeUsable", "NotUsable"]))
+        ])
+        self.init(
+            "Type",
+            type(self).tag,
+            1,
+            properties=properties,
+            sort_order="2"
+        )
         super()._init()
 
 
@@ -669,8 +1201,20 @@ class NodeConfigInstallPatterns(_NodeBase):
     tag = "patterns"
 
     def _init(self):
-        allowed_children = (NodeConfigInstallPattern,)
-        self.init("Patterns", type(self).tag, 1, allowed_children=allowed_children, sort_order=2)
+        allowed_children = (
+            NodeConfigInstallPattern,
+        )
+        required = (
+            NodeConfigInstallPattern,
+        )
+        self.init(
+            "Patterns",
+            type(self).tag,
+            1,
+            allowed_children=allowed_children,
+            sort_order="2",
+            required_children=required
+        )
         super()._init()
 
 
@@ -681,6 +1225,20 @@ class NodeConfigInstallPattern(_NodeBase):
     tag = "pattern"
 
     def _init(self):
-        allowed_children = (NodeConfigType, NodeConfigDependencies)
-        self.init("Pattern", type(self).tag, 0, allowed_children=allowed_children)
+        allowed_children = (
+            NodeConfigType,
+            NodeConfigDependencies
+        )
+        required = (
+            NodeConfigType,
+            NodeConfigDependencies
+        )
+        self.init(
+            "Pattern",
+            type(self).tag,
+            0,
+            allowed_children=allowed_children,
+            required_children=required,
+            name_editable=True
+        )
         super()._init()

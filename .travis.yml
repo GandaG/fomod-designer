@@ -1,4 +1,6 @@
 language: python
+sudo: required
+dist: trusty
 
 install:
   - chmod +x ./dev/travis-bootstrap.sh

@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>334</width>
+    <width>340</width>
     <height>355</height>
    </rect>
   </property>
@@ -21,13 +21,13 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>334</width>
+    <width>340</width>
     <height>355</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>334</width>
+    <width>340</width>
     <height>355</height>
    </size>
   </property>
@@ -101,7 +101,7 @@
    <item>
     <widget class="QLabel" name="label_2">
      <property name="text">
-      <string>Special Thanks to Hishutup.</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Special Thanks to &lt;a href=&quot;http://forum.step-project.com/user/3928-hishutup/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Hishutup&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
