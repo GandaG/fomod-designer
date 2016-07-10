@@ -221,6 +221,8 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
 
             parent = self.itemFromIndex(parent_index)
             xml_node = mime_data.node()
+            parent.xml_node.remove(mime_data.original_item().xml_node)
+            parent.xml_node.append(mime_data.node())
             parent.insertRow(row, xml_node.model_item)
             for row_index in range(0, parent.rowCount()):
                 if parent.child(row_index) == mime_data.original_item():

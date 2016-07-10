@@ -440,10 +440,6 @@ class PreviewMoGui(QWidget, preview_mo.Ui_Form):
         self.clear_tab()
         self.label_missing.show()
 
-    def installer_page(self):
-        self.clear_tab()
-        self.show()
-
     def set_labels(self, name, author, version, website):
         self.label_name.setText(name)
         self.label_author.setText(author)
@@ -456,6 +452,7 @@ class PreviewMoGui(QWidget, preview_mo.Ui_Form):
         layout_step = QVBoxLayout()
         group_step.setLayout(layout_step)
 
+        check_first_radio = True
         for group in page_data.group_list:
             group_group = QGroupBox(group.name)
             layout_group = QVBoxLayout()
@@ -482,6 +479,9 @@ class PreviewMoGui(QWidget, preview_mo.Ui_Form):
 
                 elif group.type in ["SelectExactlyOne", "SelectAtMostOne"]:
                     button_plugin = QRadioButton(plugin.name, self)
+                    if check_first_radio and not button_plugin.isChecked():
+                        button_plugin.animateClick(0)
+                        check_first_radio = False
 
                 button_plugin.setProperty("description", plugin.description)
                 button_plugin.setProperty("image_path", plugin.image_path)
@@ -492,10 +492,9 @@ class PreviewMoGui(QWidget, preview_mo.Ui_Form):
                 button_plugin.setAttribute(Qt.WA_Hover)
 
                 if plugin.type == "Required":
-                    button_plugin.setChecked(True)
                     button_plugin.setEnabled(False)
                 elif plugin.type == "Recommended":
-                    button_plugin.setChecked(True)
+                    button_plugin.animateClick(0) if not button_plugin.isChecked() else None
                 elif plugin.type == "NotUsable":
                     button_plugin.setChecked(False)
                     button_plugin.setEnabled(False)
@@ -562,8 +561,10 @@ class PreviewMoGui(QWidget, preview_mo.Ui_Form):
 
         for button in self.findChildren((QCheckBox, QRadioButton), "preview_button"):
             for folder_ in button.property("folder_list"):
-                if (button.isChecked() or folder_.always_install or
-                        folder_.install_usable and button.property("type") != "NotUsable"):
+                if (button.isChecked() and button.property("type") != "NotUsable" or
+                        folder_.always_install or
+                        folder_.install_usable and button.property("type") != "NotUsable" or
+                        button.property("type") == "Required"):
                     destination = folder_.destination
                     abs_source = folder_.abs_source
                     rel_source = folder_.rel_source
