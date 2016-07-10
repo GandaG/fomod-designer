@@ -30,6 +30,7 @@ from PyQt5.QtWidgets import (QFileDialog, QColorDialog, QMessageBox, QLabel, QHB
                              QCompleter, QApplication, QMainWindow, QUndoCommand, QUndoStack, QMenu)
 from PyQt5.QtGui import QIcon, QPixmap, QColor, QFont, QStandardItemModel
 from PyQt5.QtCore import Qt, pyqtSignal, QStringListModel, QMimeData
+from PyQt5.uic import loadUi
 from requests import get, codes, ConnectionError, Timeout
 from validator import validate_tree, check_warnings, ValidatorError
 from . import cur_folder, __version__
@@ -81,18 +82,50 @@ class IntroWindow(QMainWindow, window_intro.Ui_MainWindow):
 
         :param path: The path to open.
         """
+        main_window = MainFrame()
+        self_center = self.mapToGlobal(self.rect().center())
+        main_center = main_window.mapToGlobal(main_window.rect().center())
+        main_window.move(self_center - main_center)
+        main_window.open(path)
+        main_window.show()
+        self.close()
+        if self.settings_dict["General"]["tutorial_advanced"]:
+            main_window.setEnabled(False)
+            tutorial = loadUi(join(cur_folder, "resources/templates/tutorial_advanced.ui"))
+            tutorial.frame_node.resize(main_window.node_tree_view.size())
+            tutorial.frame_node.move(
+                main_window.node_tree_view.mapTo(main_window, main_window.node_tree_view.pos())
+            )
+            tutorial.frame_preview.resize(main_window.tabWidget.size())
+            tutorial.frame_preview.move(
+                main_window.tabWidget.mapTo(main_window, main_window.tabWidget.pos())
+            )
+            tutorial.frame_prop.resize(main_window.dockWidgetContents.size())
+            tutorial.frame_prop.move(
+                main_window.dockWidgetContents.mapTo(main_window, main_window.dockWidgetContents.pos())
+            )
+            tutorial.frame_child.resize(main_window.dockWidgetContents_3.size())
+            tutorial.frame_child.move(
+                main_window.dockWidgetContents_3.mapTo(main_window, main_window.dockWidgetContents_3.pos())
+            )
+            tutorial.button_exit.clicked.connect(lambda: main_window.setEnabled(True))
+            tutorial.button_exit.clicked.connect(tutorial.close)
+            tutorial.setParent(main_window)
+            tutorial.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog)
+            tutorial.setAttribute(Qt.WA_TranslucentBackground)
+            main_center = main_window.mapToGlobal(main_window.rect().center())
+            tutorial_center = tutorial.mapToGlobal(tutorial.rect().center())
+            tutorial.move(main_center - tutorial_center)
+            tutorial.setEnabled(True)
+            tutorial.exec_()
+            self.settings_dict["General"]["tutorial_advanced"] = False
+
         self.settings_dict["General"]["show_intro"] = not self.check_intro.isChecked()
         self.settings_dict["General"]["show_advanced"] = self.check_advanced.isChecked()
         makedirs(join(expanduser("~"), ".fomod"), exist_ok=True)
         with open(join(expanduser("~"), ".fomod", ".designer"), "w") as configfile:
             set_encoder_options("json", indent=4)
             configfile.write(encode(self.settings_dict))
-
-        main_window = MainFrame()
-        main_window.move(self.pos())
-        main_window.open(path)
-        main_window.show()
-        self.close()
 
 
 class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
@@ -1505,6 +1538,7 @@ class SettingsDialog(QDialog, window_settings.Ui_Dialog):
         self.combo_code_refresh.setCurrentIndex(self.settings_dict["General"]["code_refresh"])
         self.check_intro.setChecked(self.settings_dict["General"]["show_intro"])
         self.check_advanced.setChecked(self.settings_dict["General"]["show_advanced"])
+        self.check_tutorial.setChecked(self.settings_dict["General"]["tutorial_advanced"])
 
         self.check_valid_load.setChecked(self.settings_dict["Load"]["validate"])
         self.check_valid_load_ignore.setChecked(self.settings_dict["Load"]["validate_ignore"])
@@ -1551,6 +1585,7 @@ class SettingsDialog(QDialog, window_settings.Ui_Dialog):
         self.settings_dict["General"]["code_refresh"] = self.combo_code_refresh.currentIndex()
         self.settings_dict["General"]["show_intro"] = self.check_intro.isChecked()
         self.settings_dict["General"]["show_advanced"] = self.check_advanced.isChecked()
+        self.settings_dict["General"]["tutorial_advanced"] = self.check_tutorial.isChecked()
 
         self.settings_dict["Load"]["validate"] = self.check_valid_load.isChecked()
         self.settings_dict["Load"]["validate_ignore"] = self.check_valid_load_ignore.isChecked()
@@ -1692,6 +1727,7 @@ def read_settings():
             "code_refresh": 3,
             "show_intro": True,
             "show_advanced": False,
+            "tutorial_advanced": True,
         },
         "Appearance": {
             "required_colour": "#ba4d0e",
