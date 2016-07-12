@@ -1,5 +1,10 @@
 # Changelog
 
+0.7.1 (2016-07-12)
+
+* Fixed preview issue with non-existent nodes under info root.
+* Updated validation and children groups.
+
 0.7.0 (2016-07-10)
 
 * Fixed rare bug with the validator.
