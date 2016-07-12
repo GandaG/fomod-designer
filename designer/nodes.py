@@ -994,10 +994,6 @@ class NodeConfigPlugin(_NodeBase):
         required = (
             NodeConfigPluginDescription,
         )
-        at_least_one_child = (
-            NodeConfigFiles,
-            NodeConfigConditionFlags
-        )
         properties = OrderedDict([
             ("name", PropertyText("Name"))
         ])
@@ -1007,7 +1003,6 @@ class NodeConfigPlugin(_NodeBase):
             0,
             allowed_children=allowed_children,
             properties=properties,
-            at_least_one_children_group=at_least_one_child,
             required_children=required
         )
         super()._init()

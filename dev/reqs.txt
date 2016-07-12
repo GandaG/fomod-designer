@@ -1,5 +1,5 @@
 bumpversion==0.5.3
-fomod-validator==1.5.2
+fomod-validator==1.5.3
 invoke==0.12.2
 jsonpickle==0.9.3
 lxml==3.5.0
