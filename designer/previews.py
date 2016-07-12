@@ -181,10 +181,14 @@ class PreviewGuiWorker(QThread):
 
             self.kwargs["gui_worker"].clear_tab_signal.emit()
             self.kwargs["gui_worker"].clear_ui_signal.emit()
-            info_name = self.kwargs["info_root"]().find("Name").text
-            info_author = self.kwargs["info_root"]().find("Author").text
-            info_version = self.kwargs["info_root"]().find("Version").text
-            info_website = self.kwargs["info_root"]().find("Website").text
+            info_name = self.kwargs["info_root"]().find("Name").text \
+                if self.kwargs["info_root"]().find("Name") is not None else ""
+            info_author = self.kwargs["info_root"]().find("Author").text \
+                if self.kwargs["info_root"]().find("Author") is not None else ""
+            info_version = self.kwargs["info_root"]().find("Version").text \
+                if self.kwargs["info_root"]().find("Version") is not None else ""
+            info_website = self.kwargs["info_root"]().find("Website").text \
+                if self.kwargs["info_root"]().find("Website") is not None else ""
             self.kwargs["gui_worker"].set_labels_signal.emit(info_name, info_author, info_version, info_website)
 
             step_data = self.InstallStepData(element.get("name"))
