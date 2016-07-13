@@ -993,6 +993,7 @@ class NodeConfigPlugin(_NodeBase):
         )
         required = (
             NodeConfigPluginDescription,
+            NodeConfigTypeDesc,
         )
         properties = OrderedDict([
             ("name", PropertyText("Name"))
