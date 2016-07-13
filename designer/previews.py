@@ -597,8 +597,10 @@ class PreviewMoGui(QWidget, preview_mo.Ui_Form):
                         recurse_add_items(abs_source, parent_item)
 
             for file_ in button.property("file_list"):
-                if (button.isChecked() or folder_.always_install or
-                            folder_.install_usable and button.property("type") != "NotUsable"):
+                if (button.isChecked() and button.property("type") != "NotUsable" or
+                        file_.always_install or
+                        file_.install_usable and button.property("type") != "NotUsable" or
+                        button.property("type") == "Required"):
                     destination = file_.destination
                     abs_source = file_.abs_source
                     rel_source = file_.rel_source

@@ -32,7 +32,7 @@ from PyQt5.QtGui import QIcon, QPixmap, QColor, QFont, QStandardItemModel
 from PyQt5.QtCore import Qt, pyqtSignal, QStringListModel, QMimeData
 from PyQt5.uic import loadUi
 from requests import get, codes, ConnectionError, Timeout
-from validator import validate_tree, check_warnings, ValidatorError
+from validator import validate_tree, check_warnings, ValidatorError, ValidationError, WarningError, MissingFolderError
 from . import cur_folder, __version__
 from .io import import_, new, export, sort_elements, elem_factory, copy_element
 from .previews import PreviewDispatcherThread, PreviewMoGui
@@ -701,17 +701,25 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                 info_root, config_root = import_(normpath(package_path))
                 if info_root is not None and config_root is not None:
                     if self.settings_dict["Load"]["validate"]:
-                        validate_tree(
-                            parse(BytesIO(tostring(config_root, pretty_print=True))),
-                            join(cur_folder, "resources", "mod_schema.xsd"),
-                            self.settings_dict["Load"]["validate_ignore"]
-                        )
+                        try:
+                            validate_tree(
+                                parse(BytesIO(tostring(config_root, pretty_print=True))),
+                                join(cur_folder, "resources", "mod_schema.xsd"),
+                            )
+                        except ValidationError as p:
+                            generic_errorbox(p.title, str(p), p.detailed)
+                            if not self.settings_dict["Load"]["validate_ignore"]:
+                                return
                     if self.settings_dict["Load"]["warnings"]:
-                        check_warnings(
-                            package_path,
-                            config_root,
-                            self.settings_dict["Save"]["warn_ignore"]
-                        )
+                        try:
+                            check_warnings(
+                                package_path,
+                                config_root,
+                            )
+                        except WarningError as p:
+                            generic_errorbox(p.title, str(p), p.detailed)
+                            if not self.settings_dict["Save"]["warn_ignore"]:
+                                return
                 else:
                     info_root, config_root = new()
 
@@ -752,20 +760,30 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                 sort_elements(self._info_root)
                 sort_elements(self._config_root)
                 if self.settings_dict["Save"]["validate"]:
-                    validate_tree(
-                        parse(BytesIO(tostring(self._config_root, pretty_print=True))),
-                        join(cur_folder, "resources", "mod_schema.xsd"),
-                        self.settings_dict["Save"]["validate_ignore"]
-                    )
+                    try:
+                        validate_tree(
+                            parse(BytesIO(tostring(self._config_root, pretty_print=True))),
+                            join(cur_folder, "resources", "mod_schema.xsd"),
+                        )
+                    except ValidationError as e:
+                        generic_errorbox(e.title, str(e), e.detailed)
+                        if not self.settings_dict["Save"]["validate_ignore"]:
+                            return
                 if self.settings_dict["Save"]["warnings"]:
-                    check_warnings(
-                        self._package_path,
-                        self._config_root,
-                        self.settings_dict["Save"]["warn_ignore"]
-                    )
+                    try:
+                        check_warnings(
+                            self._package_path,
+                            self._config_root,
+                        )
+                    except MissingFolderError:
+                        pass
+                    except WarningError as e:
+                        generic_errorbox(e.title, str(e), e.detailed)
+                        if not self.settings_dict["Save"]["warn_ignore"]:
+                            return
                 export(self._info_root, self._config_root, self._package_path)
                 self.undo_stack.setClean()
-        except ValidatorError as e:
+        except (DesignerError, ValidatorError) as e:
             generic_errorbox(e.title, str(e))
             return
 
