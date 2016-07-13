@@ -1,9 +1,19 @@
 # Changelog
 
+0.7.2 (2016-07-13)
+
+* Plugin node should now have the correct required child nodes.
+* Fixed validation and warning dialogs and ignore process.
+* Fixed files processing in preview.
+
+----------------------------------
+
 0.7.1 (2016-07-12)
 
 * Fixed preview issue with non-existent nodes under info root.
 * Updated validation and children groups.
+
+----------------------------------
 
 0.7.0 (2016-07-10)
 
