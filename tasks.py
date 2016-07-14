@@ -61,7 +61,22 @@ def clean():
     print("Build caches cleaned.")
 
 
-@task(clean, )
+@task
+def clean_test():
+    from shutil import rmtree
+
+    rmtree("htmlcov", ignore_errors=True)
+    print("Test caches cleaned.")
+
+
+@task(clean_test)
+def test():
+    from os import system
+
+    system("py.test --cov=designer --cov-report html --cov-report term -vv tests/")
+
+
+@task(clean)
 def build():
     from platform import system, architecture
     from shutil import copy

@@ -176,7 +176,7 @@ def _validate_child(child):
     return False
 
 
-def elem_factory(tag, parent):
+def elem_factory(tag, parent=None):
     """
     Function meant as a replacement for the default element factory.
 
@@ -188,21 +188,24 @@ def elem_factory(tag, parent):
     :param parent: The parent of the future element.
     :return: The created element with the tag *tag*.
     """
-    list_ = [parent]
-    for elem in parent.iterancestors():
-        list_.append(elem)
+    if parent is not None:
+        list_ = [parent]
+        for elem in parent.iterancestors():
+            list_.append(elem)
 
-    list_ = list_[::-1]
-    list_[0] = Element(list_[0].tag)
-    for elem in list_[1:]:
-        list_[list_.index(elem)] = SubElement(list_[list_.index(elem) - 1], elem.tag)
-    SubElement(list_[len(list_) - 1], tag)
+        list_ = list_[::-1]
+        list_[0] = Element(list_[0].tag)
+        for elem in list_[1:]:
+            list_[list_.index(elem)] = SubElement(list_[list_.index(elem) - 1], elem.tag)
+        SubElement(list_[len(list_) - 1], tag)
 
-    root = fromstring(tostring(list_[0]), module_parser)
-    parsed_list = []
-    for elem in root.iterdescendants():
-        parsed_list.append(elem)
-    return parsed_list[len(parsed_list) - 1]
+        root = fromstring(tostring(list_[0]), module_parser)
+        parsed_list = []
+        for elem in root.iterdescendants():
+            parsed_list.append(elem)
+        return parsed_list[len(parsed_list) - 1]
+    else:
+        return module_parser.makeelement(tag)
 
 
 def copy_element(element_):

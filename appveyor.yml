@@ -1,9 +1,17 @@
+branches:
+  only:
+    - master
+    - develop
+
 install:
   - .\dev\appveyor-bootstrap.bat
 
 build: off
 
 test_script:
+  - inv test
+
+after_test:
   - inv build
 
 artifacts:

@@ -1,12 +1,22 @@
 language: python
 sudo: required
 dist: trusty
+branches:
+  only:
+    - master
+    - develop
 
 install:
   - chmod +x ./dev/travis-bootstrap.sh
   - ./dev/travis-bootstrap.sh
+  - pip install coveralls
 
 script:
+  - chmod +x ./dev/travis-test.sh
+  - ./dev/travis-test.sh
+
+after_success:
+  - coveralls
   - chmod +x ./dev/travis-build.sh
   - ./dev/travis-build.sh
 

@@ -199,7 +199,7 @@ class _NodeBase(etree.ElementBase):
         else:
             self.metadata.pop("name", None)
         if self.user_sort_order:
-            self.metadata["user_sort"] = self.user_sort_order
+            self.metadata["user_sort"] = self.user_sort_order.zfill(7)
         else:
             self.metadata.pop("user_sort", None)
 
