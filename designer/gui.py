@@ -708,7 +708,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                                 join(cur_folder, "resources", "mod_schema.xsd"),
                             )
                         except ValidationError as p:
-                            generic_errorbox(p.title, str(p), p.detailed)
+                            generic_errorbox(p.title, str(p), p.detailed).exec_()
                             if not self.settings_dict["Load"]["validate_ignore"]:
                                 return
                     if self.settings_dict["Load"]["warnings"]:
@@ -718,7 +718,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                                 config_root,
                             )
                         except WarningError as p:
-                            generic_errorbox(p.title, str(p), p.detailed)
+                            generic_errorbox(p.title, str(p), p.detailed).exec_()
                             if not self.settings_dict["Save"]["warn_ignore"]:
                                 return
                 else:
@@ -745,7 +745,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                 self.clear_prop_list()
                 self.button_wizard.setEnabled(False)
         except (DesignerError, ValidatorError) as p:
-            generic_errorbox(p.title, str(p), p.detailed)
+            generic_errorbox(p.title, str(p), p.detailed).exec_()
             return
 
     def save(self):
@@ -767,7 +767,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                             join(cur_folder, "resources", "mod_schema.xsd"),
                         )
                     except ValidationError as e:
-                        generic_errorbox(e.title, str(e), e.detailed)
+                        generic_errorbox(e.title, str(e), e.detailed).exec_()
                         if not self.settings_dict["Save"]["validate_ignore"]:
                             return
                 if self.settings_dict["Save"]["warnings"]:
@@ -779,13 +779,13 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                     except MissingFolderError:
                         pass
                     except WarningError as e:
-                        generic_errorbox(e.title, str(e), e.detailed)
+                        generic_errorbox(e.title, str(e), e.detailed).exec_()
                         if not self.settings_dict["Save"]["warn_ignore"]:
                             return
                 export(self._info_root, self._config_root, self._package_path)
                 self.undo_stack.setClean()
         except (DesignerError, ValidatorError) as e:
-            generic_errorbox(e.title, str(e))
+            generic_errorbox(e.title, str(e), e.detailed).exec_()
             return
 
     def settings(self):
@@ -1660,7 +1660,10 @@ class About(QDialog, window_about.Ui_Dialog):
         super().__init__(parent=parent)
         self.setupUi(self)
 
-        self.move(parent.window().frameGeometry().topLeft() + parent.window().rect().center() - self.rect().center())
+        if parent:
+            self.move(
+                parent.window().frameGeometry().topLeft() + parent.window().rect().center() - self.rect().center()
+            )
 
         self.setWindowFlags(Qt.WindowTitleHint | Qt.Dialog)
 
@@ -2046,11 +2049,75 @@ class PreviewMoGui(QWidget, preview_mo.Ui_Form):
         self.list_flags.header().resizeSections(QHeaderView.Stretch)
 
 
+class DefaultsSettings(object):
+    def __init__(self, key, default_enabled, default_value):
+        self.__enabled = default_enabled
+        self.__property_key = key
+        self.__property_value = default_value
+
+    def __eq__(self, other):
+        if self.enabled() == other.enabled() and self.value() == other.value() and self.key() == other.key():
+            return True
+        else:
+            return False
+
+    def set_enabled(self, enabled):
+        self.__enabled = enabled
+
+    def set_value(self, value):
+        self.__property_value = value
+
+    def enabled(self):
+        return self.__enabled
+
+    def value(self):
+        return self.__property_value
+
+    def key(self):
+        return self.__property_key
+
+
+default_settings = {
+    "General": {
+        "code_refresh": 3,
+        "show_intro": True,
+        "show_advanced": False,
+        "tutorial_advanced": True,
+    },
+    "Appearance": {
+        "required_colour": "#ba4d0e",
+        "atleastone_colour": "#d0d02e",
+        "either_colour": "#ffaa7f",
+        "style": "",
+        "palette": "",
+    },
+    "Defaults": {
+        "installSteps": DefaultsSettings("order", True, "Explicit"),
+        "optionalFileGroups": DefaultsSettings("order", True, "Explicit"),
+        "type": DefaultsSettings("name", True, "Optional"),
+        "defaultType": DefaultsSettings("name", True, "Optional"),
+    },
+    "Load": {
+        "validate": True,
+        "validate_ignore": False,
+        "warnings": True,
+        "warn_ignore": True,
+    },
+    "Save": {
+        "validate": True,
+        "validate_ignore": False,
+        "warnings": True,
+        "warn_ignore": True,
+    },
+    "Recent Files": deque(maxlen=5),
+}
+
+
 def not_implemented():
     """
     A convenience function for something that has not yet been implemented.
     """
-    generic_errorbox("Nope", "Sorry, this part hasn't been implemented yet!")
+    return generic_errorbox("Nope", "Sorry, this part hasn't been implemented yet!")
 
 
 def generic_errorbox(title, text, detail=""):
@@ -2066,7 +2133,7 @@ def generic_errorbox(title, text, detail=""):
     errorbox.setWindowTitle(title)
     errorbox.setDetailedText(detail)
     errorbox.setIconPixmap(QPixmap(join(cur_folder, "resources/logos/logo_admin.png")))
-    errorbox.exec_()
+    return errorbox
 
 
 def read_settings():
@@ -2076,81 +2143,19 @@ def read_settings():
 
     :return: The processed settings.
     """
-    class DefaultsSettings(object):
-        def __init__(self, key, default_enabled, default_value):
-            self.__enabled = default_enabled
-            self.__property_key = key
-            self.__property_value = default_value
-
-        def set_enabled(self, enabled):
-            self.__enabled = enabled
-
-        def set_value(self, value):
-            self.__property_value = value
-
-        def enabled(self):
-            return self.__enabled
-
-        def value(self):
-            return self.__property_value
-
-        def key(self):
-            return self.__property_key
-
     def deep_merge(a, b, path=None):
         """merges b into a"""
         if path is None:
             path = []
         for key in b:
-            if key in a:
+            if key in a:  # only accept the keys in default settings
                 if isinstance(a[key], dict) and isinstance(b[key], dict):
                     deep_merge(a[key], b[key], path + [str(key)])
-                elif a[key] == b[key]:
-                    pass  # same leaf value
                 elif isinstance(b[key], type(a[key])):
                     a[key] = b[key]
-                elif not isinstance(b[key], type(a[key])):
-                    pass  # user has messed with conf files
                 else:
-                    raise Exception('Conflict at {}'.format('.'.join(path + [str(key)])))
-            else:
-                a[key] = b[key]
+                    pass  # user has messed with conf files
         return a
-
-    default_settings = {
-        "General": {
-            "code_refresh": 3,
-            "show_intro": True,
-            "show_advanced": False,
-            "tutorial_advanced": True,
-        },
-        "Appearance": {
-            "required_colour": "#ba4d0e",
-            "atleastone_colour": "#d0d02e",
-            "either_colour": "#ffaa7f",
-            "style": "",
-            "palette": "",
-        },
-        "Defaults": {
-            "installSteps": DefaultsSettings("order", True, "Explicit"),
-            "optionalFileGroups": DefaultsSettings("order", True, "Explicit"),
-            "type": DefaultsSettings("name", True, "Optional"),
-            "defaultType": DefaultsSettings("name", True, "Optional"),
-        },
-        "Load": {
-            "validate": True,
-            "validate_ignore": False,
-            "warnings": True,
-            "warn_ignore": True,
-        },
-        "Save": {
-            "validate": True,
-            "validate_ignore": False,
-            "warnings": True,
-            "warn_ignore": True,
-        },
-        "Recent Files": deque(maxlen=5),
-    }
 
     try:
         with open(join(expanduser("~"), ".fomod", ".designer"), "r") as configfile:
