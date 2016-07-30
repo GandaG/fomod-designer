@@ -155,25 +155,9 @@ class _NodeBase(etree.ElementBase):
         """
         Updates this node's item's display name.
 
-        If the node contains a property called "name" then it uses its value for the display.
-        If it contains a property called "source" then it expects a path and uses the last part of the path.
+        Override in subclasses as needed.
         """
-        if "name" in self.properties:
-            if not self.properties["name"].value:
-                self.model_item.setText(self.name)
-                return self.name
-            self.model_item.setText(self.properties["name"].value)
-            return self.properties["name"].value
-        elif "source" in self.properties:
-            if not self.properties["source"].value:
-                self.model_item.setText(self.name)
-                return self.name
-            split_name = self.properties["source"].value.split(sep)
-            self.model_item.setText(split_name[len(split_name) - 1])
-            return split_name[len(split_name) - 1]
-        else:
-            self.model_item.setText(self.name)
-            return self.name
+        return self.name
 
     def load_metadata(self):
         """
@@ -682,6 +666,19 @@ class NodeConfigFile(_NodeBase):
         )
         super()._init()
 
+    def update_item_name(self):
+        """
+        Updates this node's item's display name.
+
+        Override in subclasses as needed.
+        """
+        if not self.properties["source"].value:
+            self.model_item.setText(self.name)
+            return self.name
+        split_name = self.properties["source"].value.split(sep)
+        self.model_item.setText(split_name[len(split_name) - 1])
+        return split_name[len(split_name) - 1]
+
 
 class NodeConfigFolder(_NodeBase):
     """
@@ -704,6 +701,19 @@ class NodeConfigFolder(_NodeBase):
             properties=properties
         )
         super()._init()
+
+    def update_item_name(self):
+        """
+        Updates this node's item's display name.
+
+        Override in subclasses as needed.
+        """
+        if not self.properties["source"].value:
+            self.model_item.setText(self.name)
+            return self.name
+        split_name = self.properties["source"].value.split(sep)
+        self.model_item.setText(split_name[len(split_name) - 1])
+        return split_name[len(split_name) - 1]
 
 
 class NodeConfigPatterns(_NodeBase):
@@ -859,6 +869,18 @@ class NodeConfigInstallStep(_NodeBase):
         )
         super()._init()
 
+    def update_item_name(self):
+        """
+        Updates this node's item's display name.
+
+        Override in subclasses as needed.
+        """
+        if not self.properties["name"].value:
+            self.model_item.setText(self.name)
+            return self.name
+        self.model_item.setText(self.properties["name"].value)
+        return self.properties["name"].value
+
 
 class NodeConfigVisible(_NodeBase):
     """
@@ -949,6 +971,18 @@ class NodeConfigGroup(_NodeBase):
         )
         super()._init()
 
+    def update_item_name(self):
+        """
+        Updates this node's item's display name.
+
+        Override in subclasses as needed.
+        """
+        if not self.properties["name"].value:
+            self.model_item.setText(self.name)
+            return self.name
+        self.model_item.setText(self.properties["name"].value)
+        return self.properties["name"].value
+
 
 class NodeConfigPlugins(_NodeBase):
     """
@@ -1007,6 +1041,18 @@ class NodeConfigPlugin(_NodeBase):
             required_children=required
         )
         super()._init()
+
+    def update_item_name(self):
+        """
+        Updates this node's item's display name.
+
+        Override in subclasses as needed.
+        """
+        if not self.properties["name"].value:
+            self.model_item.setText(self.name)
+            return self.name
+        self.model_item.setText(self.properties["name"].value)
+        return self.properties["name"].value
 
 
 class NodeConfigPluginDescription(_NodeBase):
@@ -1124,6 +1170,18 @@ class NodeConfigFlag(_NodeBase):
         )
         super()._init()
 
+    def update_item_name(self):
+        """
+        Updates this node's item's display name.
+
+        Override in subclasses as needed.
+        """
+        if not self.properties["name"].value:
+            self.model_item.setText(self.name)
+            return self.name
+        self.model_item.setText(self.properties["name"].value)
+        return self.properties["name"].value
+
 
 class NodeConfigDependencyType(_NodeBase):
     """
@@ -1169,6 +1227,18 @@ class NodeConfigDefaultType(_NodeBase):
         )
         super()._init()
 
+    def update_item_name(self):
+        """
+        Updates this node's item's display name.
+
+        Override in subclasses as needed.
+        """
+        if not self.properties["name"].value:
+            self.model_item.setText(self.name)
+            return self.name
+        self.model_item.setText(self.properties["name"].value)
+        return self.properties["name"].value
+
 
 class NodeConfigType(_NodeBase):
     """
@@ -1188,6 +1258,18 @@ class NodeConfigType(_NodeBase):
             sort_order="2"
         )
         super()._init()
+
+    def update_item_name(self):
+        """
+        Updates this node's item's display name.
+
+        Override in subclasses as needed.
+        """
+        if not self.properties["name"].value:
+            self.model_item.setText(self.name)
+            return self.name
+        self.model_item.setText(self.properties["name"].value)
+        return self.properties["name"].value
 
 
 class NodeConfigInstallPatterns(_NodeBase):
