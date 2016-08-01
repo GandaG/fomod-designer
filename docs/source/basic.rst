@@ -3,8 +3,10 @@ Basic Usage
 
 .. Describe basic usage - basic view and wizards
 
-Welcome to the Basic Usage section. This is recommended for first-time users and for everyone who doesn't
-want to worry about trees and checking documentation.
+For first-time users and those who don't really want to think too much about it.
+Follow each wizard's instructions in the app to fully build an installer.
+Remember than you can only save or open a new installer when on the very first page!
+If you're mid-way through your work but you want to save and leave, simply hit ``Finish`` until you reach that first page.
 
 Basic View
 ++++++++++

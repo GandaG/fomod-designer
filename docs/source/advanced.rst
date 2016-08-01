@@ -3,7 +3,12 @@
 Advanced Usage
 ==============
 
-Welcome to the ``Advanced Usage`` section. This is recommended for people who already know how to create/modify XML
+For the advanced users and everyone who knows their way around a FOMOD installer.
+In this section you'll find descriptions of the tags and nodes themselves - what they are, how to use them and
+examples when needed.
+
+There are no restrictions when using the ``Advanced View``, we trust that you know what you're doing.
+This is recommended for people who already know how to create/modify XML
 installers and are interested in speeding up their work or for users who want more customization options than the
 ``Basic View`` offers.
 
