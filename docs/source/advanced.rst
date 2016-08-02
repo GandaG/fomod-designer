@@ -1,46 +1,61 @@
-.. include:: <isotech.txt>
-
 Advanced Usage
 ==============
 
-For the advanced users and everyone who knows their way around a FOMOD installer.
+For the advanced users and everyone who knows their way around a *FOMOD* installer.
 In this section you'll find descriptions of the tags and nodes themselves - what they are, how to use them and
 examples when needed.
 
-There are no restrictions when using the ``Advanced View``, we trust that you know what you're doing.
+There are no restrictions when using the *Advanced View*, we trust that you know what you're doing.
 This is recommended for people who already know how to create/modify XML
 installers and are interested in speeding up their work or for users who want more customization options than the
-``Basic View`` offers.
+*Basic View* offers.
 
 Advanced View
 +++++++++++++
 
-.. Describe the advanced view and how to use it.
+The *Advanced View* can be divided in 4 parts: **Node Tree**, **Previews**, **Property Editor** and **Children Box**.
+All of these, with the exception of the **Previews**, can be moved around by the user.
 
+The **Node Tree**, by default situated on the left, contains all the nodes in the installer's two trees: the `Info`_ and
+the `Config`_ tree. You can right-click the tree to see all the actions available - some of these, like *Delete*, are
+not available for the root nodes. You can also traverse the tree with the arrow keys and use the Enter key or left-click
+to select the node, this will update the **Property Editor** and the **Children Box** (and the **Previews** in case that
+is enabled).
+
+The **Previews**, situated on the center, has two tabs: *GUI Preview* and *XML Preview*. The *GUI Preview* has a Mod
+Organizer-like interface that simulates the current `Install Step`_ - you can choose the options and the bottom half
+reflects the flags that would be set and/or the files that would be installed. The *XML Preview* has a preview of the
+XML code that that node and its children would output.
+
+The **Property Editor**, by default situated on the top right, contains all the editable properties for the currently
+selected node. You can find more information for each node's properties in the `FOMOD Bible`_.
+
+The **Children Box**, by default situated on the bottom right, contains all the available children to add to the
+currently selected node. Click on a child button here to add the corresponding node.
 
 Learn you a FOMOD For Great Good
 ++++++++++++++++++++++++++++++++
 
-This section contains the *FOMOD Bible* - a description of all the tags/nodes with examples.
+This section contains the `FOMOD Bible`_ - a description of all the tags/nodes with examples.
 This is not meant to be read from top to bottom but rather as a dictionary or a glossary -
-search for the tag/node you need more info for with the search box on the left sidebar.
+search for the tag/node you need more info on with the search box on the left sidebar.
 
 Tag vs Node
 ...........
 
-A **Tag** is any item within an xml document. Within the FOMOD schema
+A **Tag** is any item within an xml document. Within the *FOMOD* schema
 (the document that defines the rules for installer documents)
 all the allowed tags for FOMOD are defined. A tag has the format ``<tag/>`` or
 ``<tag>text goes here<tag/>`` if it contains text.
 
-Similarly, any item in the *FOMOD Designer*'s *Object Tree* is a **Node**.
+Similarly, any item in the *FOMOD Designer*'s *Node Tree* is a **Node**.
 Every node has a direct correspondence to a xml tag.
 These two terms are use interchangeably in the *FOMOD Bible*.
 
 Attribute vs Property
 .....................
 
-An **Attribute** is a way to customize a tag. These are also defined in the FOMOD schema and have the format:
+An **Attribute** is a way to customize a tag. These are also defined in the *FOMOD* schema and have the format:
 ``<tag attribute="value"/>``.
 
 A **Property** is the attribute equivalent for nodes. They can be edited via the *Property Editor*. In the *Bible*
@@ -57,13 +72,20 @@ the properties are always followed by the corresponding attribute in square brac
 Tag Order
 .........
 
-While this is not strictly enforced with nodes, some tags are enforced a specific order by the FOMOD schema.
+Some tags are enforced a specific order by the *FOMOD* schema.
 When applicable, the possible/required children listed in each node are ordered.
 
--------------------------------------
+This enforced order is reflected in the node tree. The user is able to modify the order
+of repeatable nodes through drag and drop.
+
+FOMOD Bible
+...........
+
+Please take note this isn't a fully comprehensive document (at least so far). If you want something more complete,
+feel free to look at the `revised *FOMOD* schema <>`_.
 
 Info
-....
+----
 
 Tag
     fomod
@@ -72,17 +94,17 @@ Description
     The root node for the document containing all the information relative to the installer.
 
 Children
-    ====================== =========== ===========
-    Nodes                  Minimum No. Maximum No.
-    ====================== =========== ===========
-    :ref:`info_name_label` 0           |infin|
-    `Author`_              0           |infin|
-    :ref:`info_desc_label` 0           |infin|
-    `ID`_                  0           |infin|
-    `Categories Group`_    0           |infin|
-    `Version`_             0           |infin|
-    `Website`_             0           |infin|
-    ====================== =========== ===========
+    ====================== ==========
+    Node                   Repeatable
+    ====================== ==========
+    :ref:`info_name_label` **No**
+    `Author`_              **No**
+    :ref:`info_desc_label` **No**
+    `ID`_                  **No**
+    `Categories Group`_    **No**
+    `Version`_             **No**
+    `Website`_             **No**
+    ====================== ==========
 
 Properties
     *None*
@@ -92,7 +114,7 @@ Properties
 .. _info_name_label:
 
 Name
-....
+----
 
 Tag
     Name
@@ -105,7 +127,7 @@ Children
 
 Properties
     =============== =============== ===============================
-    Properties      Attributes      Description
+    Property        Attribute       Description
     =============== =============== ===============================
     Text            [...]           The name of the mod.
     =============== =============== ===============================
@@ -113,7 +135,7 @@ Properties
 -------------------------------------
 
 Author
-......
+------
 
 Tag
     Author
@@ -126,7 +148,7 @@ Children
 
 Properties
     =============== =============== ===============================
-    Properties      Attributes      Description
+    Property        Attribute       Description
     =============== =============== ===============================
     Text            [...]           The author(s) of the mod.
     =============== =============== ===============================
@@ -136,7 +158,7 @@ Properties
 .. _info_desc_label:
 
 Description
-...........
+-----------
 
 Tag
     Description
@@ -149,7 +171,7 @@ Children
 
 Properties
     =============== =============== ===============================
-    Properties      Attributes      Description
+    Property        Attribute       Description
     =============== =============== ===============================
     Text            [...]           The description of the mod.
     =============== =============== ===============================
@@ -157,7 +179,7 @@ Properties
 -------------------------------------
 
 ID
-..
+--
 
 Tag
     Id
@@ -166,14 +188,14 @@ Description
     The node that holds the mod's ID.
     The ID is the last part of the nexus' link. Example:
 
-    Nexus mod link: http://www.nexusmods.com/skyrim/mods/548961 / ID becomes 548961
+    Nexus mod link: http://www.nexusmods.com/skyrim/mods/548961 -> ID's text is 548961
 
 Children
     *None*
 
 Properties
     =============== =============== ===============================
-    Properties      Attributes      Description
+    Property        Attribute       Description
     =============== =============== ===============================
     Text            [...]           The ID of the mod.
     =============== =============== ===============================
@@ -181,7 +203,7 @@ Properties
 -------------------------------------
 
 Categories Group
-................
+----------------
 
 Tag
     Groups
@@ -190,11 +212,11 @@ Description
     This node's purpose is solely to group the categories this mod belongs to together.
 
 Children
-    ====================== =========== ===========
-    Nodes                  Minimum No. Maximum No.
-    ====================== =========== ===========
-    `Category`_            0           |infin|
-    ====================== =========== ===========
+    ====================== ==========
+    Node                   Repeatable
+    ====================== ==========
+    `Category`_            **Yes**
+    ====================== ==========
 
 Properties
     *None*
@@ -202,7 +224,7 @@ Properties
 -------------------------------------
 
 Category
-........
+--------
 
 Tag
     element
@@ -215,7 +237,7 @@ Children
 
 Properties
     =============== =============== ===============================
-    Properties      Attributes      Description
+    Property        Attribute       Description
     =============== =============== ===============================
     Text            [...]           A category this mod belongs to.
     =============== =============== ===============================
@@ -223,7 +245,7 @@ Properties
 -------------------------------------
 
 Version
-.......
+-------
 
 Tag
     Version
@@ -236,7 +258,7 @@ Children
 
 Properties
     =============== =============== ===============================
-    Properties      Attributes      Description
+    Property        Attribute       Description
     =============== =============== ===============================
     Text            [...]           This mod's version.
     =============== =============== ===============================
@@ -244,7 +266,7 @@ Properties
 -------------------------------------
 
 Website
-.......
+-------
 
 Tag
     Website
@@ -257,7 +279,7 @@ Children
 
 Properties
     =============== =============== ===============================
-    Properties      Attributes      Description
+    Property        Attribute       Description
     =============== =============== ===============================
     Text            [...]           The mod's home website.
     =============== =============== ===============================
@@ -265,7 +287,7 @@ Properties
 -------------------------------------
 
 Config
-......
+------
 
 Tag
     config
@@ -274,17 +296,48 @@ Description
     The main element containing the module configuration info.
 
 Children
-    *None*
-
+    =========================== ========== ================================================
+    Node                        Repeatable Notes
+    =========================== ========== ================================================
+    :ref:`config_name_label`    **No**
+    :ref:`mod_image_label`      **No**
+    `Mod Dependencies`_         **No**     At least one of the following is required
+                                           for the installer to have any effect:
+                                           `Mod Dependencies`_, `Installation Steps`_,
+                                           `Mod Requirements`_, `Conditional Installation`_
+    `Installation Steps`_       **No**     At least one of the following is required
+                                           for the installer to have any effect:
+                                           `Mod Dependencies`_, `Installation Steps`_,
+                                           `Mod Requirements`_, `Conditional Installation`_
+    `Mod Requirements`_         **No**     At least one of the following is required
+                                           for the installer to have any effect:
+                                           `Mod Dependencies`_, `Installation Steps`_,
+                                           `Mod Requirements`_, `Conditional Installation`_
+    `Conditional Installation`_ **No**     At least one of the following is required
+                                           for the installer to have any effect:
+                                           `Mod Dependencies`_, `Installation Steps`_,
+                                           `Mod Requirements`_, `Conditional Installation`_
+    =========================== ========== ================================================
 
 Properties
+    =============== ==================================================================== ===============================
+    Property        Attribute                                                            Description
+    =============== ==================================================================== ===============================
+    *N/A*           {http://www.w3.org/2001/XMLSchema-instance}noNamespaceSchemaLocation This attribute contains the
+                                                                                         namespace for this file.
+
+                                                                                         This property is not editable.
+
+                                                                                         The value should always be:
+                                                                                         ``"http://qconsulting.ca/fo3/ModConfig5.0.xsd"``
+    =============== ==================================================================== ===============================
 
 -------------------------------------
 
-.. _config_desc_label:
+.. _config_name_label:
 
 Name
-....
+----
 
 Tag
     moduleName
@@ -295,13 +348,25 @@ Description
 Children
     *None*
 
-
 Properties
+    =============== =============== =================================================================
+    Property        Attribute       Description
+    =============== =============== =================================================================
+    Text            [...]           The name of the mod.
+    Position        position        The position of the mod's name in the header.
+
+                                    Accepts the values: ``"Left"``, ``"Right"`` or ``"RightOfImage"``
+    Colour          colour          The colour of the mod's name in the header.
+
+                                    Accepts RGB hex values.
+    =============== =============== =================================================================
 
 -------------------------------------
 
+.. _mod_image_label:
+
 Image
-.....
+-----
 
 Tag
     moduleImage
@@ -314,13 +379,26 @@ Description
 Children
     *None*
 
-
 Properties
+    =============== =============== ======================================
+    Property        Attribute       Description
+    =============== =============== ======================================
+    Path            path            The path to the image file.
+    Show Image      showImage       Whether the image is visible.
+
+                                    Accepts ``true`` or ``false``
+    Show Fade       showFade        Whether the image's opacity is fixed.
+
+                                    Accepts ``true`` or ``false``
+    Height          height          The maximum height of the image.
+
+                                    Accepts any integer larger than ``-1``
+    =============== =============== ======================================
 
 -------------------------------------
 
 Mod Dependencies
-................
+----------------
 
 Tag
     moduleDependencies
@@ -332,15 +410,32 @@ Description
     conditions are checked.
 
 Children
-    *None*
-
+    =========================== ==========
+    Node                        Repeatable
+    =========================== ==========
+    `File Dependency`_          **Yes**
+    `Flag Dependency`_          **Yes**
+    `Game Dependency`_          **No**
+    `Dependencies`_             **Yes**
+    =========================== ==========
 
 Properties
+    =============== =============== =============================================
+    Property        Attribute       Description
+    =============== =============== =============================================
+    Type            operator        The type of the dependency: ``And`` or ``Or``
+
+                                    If the type is ``And``, all conditions under
+                                    this node must be met.
+
+                                    If the type is ``Or``, only one condition
+                                    must be met.
+    =============== =============== =============================================
 
 -------------------------------------
 
 File Dependency
-...............
+---------------
 
 Tag
     fileDependency
@@ -351,13 +446,18 @@ Description
 Children
     *None*
 
-
 Properties
+    =============== =============== ======================================
+    Property        Attribute       Description
+    =============== =============== ======================================
+    File            file            The path to the file to be checked.
+    State           state           The supposed state of the file.
+    =============== =============== ======================================
 
 -------------------------------------
 
 Flag Dependency
-...............
+---------------
 
 Tag
     flagDependency
@@ -368,13 +468,18 @@ Description
 Children
     *None*
 
-
 Properties
+    =============== =============== =========================================
+    Property        Attribute       Description
+    =============== =============== =========================================
+    Flag            flag            The flag where this condition falls upon.
+    Value           value           The value of the flag to be checked.
+    =============== =============== =========================================
 
 -------------------------------------
 
 Game Dependency
-...............
+---------------
 
 Tag
     gameDependency
@@ -387,13 +492,17 @@ Description
 Children
     *None*
 
-
 Properties
+    =============== =============== ======================================
+    Property        Attribute       Description
+    =============== =============== ======================================
+    Version         version         The minimum version of the game.
+    =============== =============== ======================================
 
 -------------------------------------
 
 Installation Steps
-..................
+------------------
 
 Tag
     installSteps
@@ -402,15 +511,30 @@ Description
     The list of install steps that determine which files (or plugins) that may optionally be installed for this module.
 
 Children
-    *None*
-
+    =========================== ========== ============================================
+    Node                        Repeatable Notes
+    =========================== ========== ============================================
+    `Install Step`_             **Yes**    At least one of `Install Step`_ is required.
+    =========================== ========== ============================================
 
 Properties
+    =============== =============== ======================================
+    Property        Attribute       Description
+    =============== =============== ======================================
+    Order           order           The order of the install steps beneath
+                                    this node.
+                                    ``"Explicit"`` follows document
+                                    order while the others order
+                                    alphabetically.
+
+                                    Accepts ``"Ascending"``,
+                                    ``"Descending"`` or ``"Explicit"``
+    =============== =============== ======================================
 
 -------------------------------------
 
 Install Step
-............
+------------
 
 Tag
     installStep
@@ -419,15 +543,24 @@ Description
     A step in the install process containing groups of optional plugins.
 
 Children
-    *None*
-
+    =========================== ========== ============================================
+    Node                        Repeatable Notes
+    =========================== ========== ============================================
+    `Visibility`_               **No**
+    `Option Group`_             **No**     At least one of `Option Group`_ is required.
+    =========================== ========== ============================================
 
 Properties
+    =============== =============== ======================================
+    Property        Attribute       Description
+    =============== =============== ======================================
+    Name            name            The name of this install step.
+    =============== =============== ======================================
 
 -------------------------------------
 
 Visibility
-..........
+----------
 
 Tag
     visible
@@ -437,15 +570,32 @@ Description
     If the pattern is matched, then the install step will be visible.
 
 Children
-    *None*
-
+    =========================== ==========
+    Node                        Repeatable
+    =========================== ==========
+    `File Dependency`_          **Yes**
+    `Flag Dependency`_          **Yes**
+    `Game Dependency`_          **No**
+    `Dependencies`_             **Yes**
+    =========================== ==========
 
 Properties
+    =============== =============== =============================================
+    Property        Attribute       Description
+    =============== =============== =============================================
+    Type            operator        The type of the dependency: ``And`` or ``Or``
+
+                                    If the type is ``And``, all conditions under
+                                    this node must be met.
+
+                                    If the type is ``Or``, only one condition
+                                    must be met.
+    =============== =============== =============================================
 
 -------------------------------------
 
 Dependencies
-............
+------------
 
 Tag
     dependencies
@@ -454,15 +604,32 @@ Description
     A dependency that is made up of one or more dependencies.
 
 Children
-    *None*
-
+    =========================== ==========
+    Node                        Repeatable
+    =========================== ==========
+    `File Dependency`_          **Yes**
+    `Flag Dependency`_          **Yes**
+    `Game Dependency`_          **No**
+    `Dependencies`_             **Yes**
+    =========================== ==========
 
 Properties
+    =============== =============== =============================================
+    Property        Attribute       Description
+    =============== =============== =============================================
+    Type            operator        The type of the dependency: ``And`` or ``Or``
+
+                                    If the type is ``And``, all conditions under
+                                    this node must be met.
+
+                                    If the type is ``Or``, only one condition
+                                    must be met.
+    =============== =============== =============================================
 
 -------------------------------------
 
 Option Group
-............
+------------
 
 Tag
     optionalFileGroups
@@ -471,15 +638,30 @@ Description
     The list of optional files (or plugins) that may optionally be installed for this module.
 
 Children
-    *None*
-
+    =========================== ========== =====================================
+    Node                        Repeatable Notes
+    =========================== ========== =====================================
+    `Group`_                    **Yes**    At least one of `Group`_ is required.
+    =========================== ========== =====================================
 
 Properties
+    =============== =============== ======================================
+    Property        Attribute       Description
+    =============== =============== ======================================
+    Order           order           The order of the install steps beneath
+                                    this node.
+                                    ``"Explicit"`` follows document
+                                    order while the others order
+                                    alphabetically.
+
+                                    Accepts ``"Ascending"``,
+                                    ``"Descending"`` or ``"Explicit"``
+    =============== =============== ======================================
 
 -------------------------------------
 
 Group
-.....
+-----
 
 Tag
     group
@@ -488,15 +670,30 @@ Description
     A group of plugins for the mod.
 
 Children
-    *None*
-
+    =========================== ========== =======================================
+    Node                        Repeatable Notes
+    =========================== ========== =======================================
+    `Plugins`_                  **No**     At least one of `Plugins`_ is required.
+    =========================== ========== =======================================
 
 Properties
+    =============== =============== ======================================
+    Property        Attribute       Description
+    =============== =============== ======================================
+    Name            name            The name of this group.
+    Type            type            The selection type for this group.
+
+                                    Accepts ``"SelectAny"``,
+                                    ``"SelectAtMostOne"``,
+                                    ``"SelectExactlyOne"``,
+                                    ``"SelectAll"`` or
+                                    ``"SelectAtLeastOne"``
+    =============== =============== ======================================
 
 -------------------------------------
 
 Plugins
-.......
+-------
 
 Tag
     plugins
@@ -505,15 +702,30 @@ Description
     The list of plugins in the group.
 
 Children
-    *None*
-
+    =========================== ========== ======================================
+    Node                        Repeatable Notes
+    =========================== ========== ======================================
+    `Plugin`_                   **Yes**    At least one of `Plugin`_ is required.
+    =========================== ========== ======================================
 
 Properties
+    =============== =============== ======================================
+    Property        Attribute       Description
+    =============== =============== ======================================
+    Order           order           The order of the plugins beneath
+                                    this node.
+                                    ``"Explicit"`` follows document
+                                    order while the others order
+                                    alphabetically.
+
+                                    Accepts ``"Ascending"``,
+                                    ``"Descending"`` or ``"Explicit"``
+    =============== =============== ======================================
 
 -------------------------------------
 
 Plugin
-......
+------
 
 Tag
     plugin
@@ -522,15 +734,29 @@ Description
     A mod plugin belonging to a group.
 
 Children
-    *None*
-
+    =========================== ========== =====================================================
+    Node                        Repeatable Notes
+    =========================== ========== =====================================================
+    :ref:`config_desc_label`    **No**     At least one of :ref:`config_desc_label` is required.
+    :ref:`plugin_image_label`   **No**
+    `Files`_                    **No**
+    `Flags`_                    **No**
+    `Type Descriptor`_          **No**     At least one of `Type Descriptor`_ is required.
+    =========================== ========== =====================================================
 
 Properties
+    =============== =============== ======================================
+    Property        Attribute       Description
+    =============== =============== ======================================
+    Name            name            The name of this plugin.
+    =============== =============== ======================================
 
 -------------------------------------
 
+.. _config_desc_label:
+
 Description
-...........
+-----------
 
 Tag
     description
@@ -541,13 +767,19 @@ Description
 Children
     *None*
 
-
 Properties
+    =============== =============== ===============================
+    Property        Attribute       Description
+    =============== =============== ===============================
+    Description     [...]           The plugin's description.
+    =============== =============== ===============================
 
 -------------------------------------
 
+.. _plugin_image_label:
+
 Image
-.....
+-----
 
 Tag
     image
@@ -558,13 +790,17 @@ Description
 Children
     *None*
 
-
 Properties
+    =============== =============== ===============================
+    Property        Attribute       Description
+    =============== =============== ===============================
+    Path            path            The path to the image.
+    =============== =============== ===============================
 
 -------------------------------------
 
 Files
-.....
+-----
 
 Tag
     files
@@ -573,15 +809,20 @@ Description
     A list of files and folders to be installed.
 
 Children
-    *None*
-
+    =========================== ==========
+    Node                        Repeatable
+    =========================== ==========
+    `File`_                     **Yes**
+    `Folder`_                   **Yes**
+    =========================== ==========
 
 Properties
+    *None*
 
 -------------------------------------
 
 File
-....
+----
 
 Tag
     file
@@ -592,13 +833,35 @@ Description
 Children
     *None*
 
-
 Properties
+    ================= =============== ===================================
+    Property          Attribute       Description
+    ================= =============== ===================================
+    Source            source          The path to the file.
+    Destination       destination     The path from the game's mod folder
+                                      to the destination of this file.
+    Priority          priority        The priority of the file.
+
+                                      Higher priority means the file will
+                                      overwrite other files with lower
+                                      priority.
+    Always Install    alwaysInstall   If ``true``, this file will be
+                                      always installed, regardless of the
+                                      user's choice.
+
+                                      Accepts ``true`` or ``false``
+    Install If Usable installIfUsable If ``true``, this file will be
+                                      installed unless the plugin's type
+                                      is ``NotUsable``, regardless of the
+                                      user's choice.
+
+                                      Accepts ``true`` or ``false``
+    ================= =============== ===================================
 
 -------------------------------------
 
 Folder
-......
+------
 
 Tag
     folder
@@ -609,13 +872,36 @@ Description
 Children
     *None*
 
-
 Properties
+    ================= =============== ===================================
+    Property          Attribute       Description
+    ================= =============== ===================================
+    Source            source          The path to the folder.
+    Destination       destination     The path from the game's mod folder
+                                      to the destination of this folder.
+    Priority          priority        The priority of the folder.
+
+                                      Higher priority means the folder
+                                      will
+                                      overwrite other files with lower
+                                      priority.
+    Always Install    alwaysInstall   If ``true``, this folder will be
+                                      always installed, regardless of the
+                                      user's choice.
+
+                                      Accepts ``true`` or ``false``
+    Install If Usable installIfUsable If ``true``, this folder will be
+                                      installed unless the plugin's type
+                                      is ``NotUsable``, regardless of the
+                                      user's choice.
+
+                                      Accepts ``true`` or ``false``
+    ================= =============== ===================================
 
 -------------------------------------
 
 Flags
-.....
+-----
 
 Tag
     conditionFlags
@@ -624,15 +910,19 @@ Description
     The list of condition flags to set if the plugin is in the appropriate state.
 
 Children
-    *None*
-
+    =========================== ========== ====================================
+    Node                        Repeatable Notes
+    =========================== ========== ====================================
+    `Flag`_                     **Yes**    At least one of `Flag`_ is required.
+    =========================== ========== ====================================
 
 Properties
+    *None*
 
 -------------------------------------
 
 Flag
-....
+----
 
 Tag
     flag
@@ -643,13 +933,18 @@ Description
 Children
     *None*
 
-
 Properties
+    =============== =============== ===============================
+    Property        Attribute       Description
+    =============== =============== ===============================
+    Label           name            The flag's identifying label.
+    Value           [...]           The flag's new value.
+    =============== =============== ===============================
 
 -------------------------------------
 
 Type Descriptor
-...............
+---------------
 
 Tag
     typeDescriptor
@@ -658,15 +953,20 @@ Description
     Describes the type of a plugin.
 
 Children
-    *None*
-
+    =========================== ========== ==================================================
+    Node                        Repeatable Notes
+    =========================== ========== ==================================================
+    `Dependency Type`_          **No**     Either `Dependency Type`_ or `Type`_ must be used.
+    `Type`_                     **No**     Either `Dependency Type`_ or `Type`_ must be used.
+    =========================== ========== ==================================================
 
 Properties
+    *None*
 
 -------------------------------------
 
 Dependency Type
-...............
+---------------
 
 Tag
     dependencyType
@@ -675,15 +975,22 @@ Description
     Used when the plugin type is dependent upon the state of other mods.
 
 Children
-    *None*
-
+    =========================== ========== ===================================================
+    Node                        Repeatable Notes
+    =========================== ========== ===================================================
+    :ref:`depend_patterns`      **No**     At least one of :ref:`depend_patterns` is required.
+    `Default Type`_             **No**     At least one of `Default Type`_ is required.
+    =========================== ========== ===================================================
 
 Properties
+    *None*
 
 -------------------------------------
 
+.. _depend_patterns:
+
 Patterns
-........
+--------
 
 Tag
     patterns
@@ -693,15 +1000,21 @@ Description
     The first pattern that matches the user's installation determines the type of the plugin.
 
 Children
-    *None*
-
+    =========================== ========== ==================================================
+    Node                        Repeatable Notes
+    =========================== ========== ==================================================
+    :ref:`depend_pattern`       **Yes**    At least one of :ref:`depend_pattern` is required.
+    =========================== ========== ==================================================
 
 Properties
+    *None*
 
 -------------------------------------
 
+.. _depend_pattern:
+
 Pattern
-.......
+-------
 
 Tag
     pattern
@@ -710,15 +1023,20 @@ Description
     A specific pattern of mod files and condition flags against which to match the user's installation.
 
 Children
-    *None*
-
+    =========================== ========== ============================================
+    Node                        Repeatable Notes
+    =========================== ========== ============================================
+    `Dependencies`_             **No**     At least one of `Dependencies`_ is required.
+    `Type`_                     **No**     At least one of `Type`_ is required.
+    =========================== ========== ============================================
 
 Properties
+    *None*
 
 -------------------------------------
 
 Type
-....
+----
 
 Tag
     type
@@ -729,13 +1047,22 @@ Description
 Children
     *None*
 
-
 Properties
+    =============== =============== ===============================
+    Property        Attribute       Description
+    =============== =============== ===============================
+    Type            name            Describes the plugin's type.
+
+                                    Accepts ``Required``,
+                                    ``Recommended``, ``Optional``,
+                                    ``CouldBeUsable`` or
+                                    ``NotUsable``
+    =============== =============== ===============================
 
 -------------------------------------
 
 Default Type
-............
+------------
 
 Tag
     defaultType
@@ -746,13 +1073,22 @@ Description
 Children
     *None*
 
-
 Properties
+    =============== =============== ===============================
+    Property        Attribute       Description
+    =============== =============== ===============================
+    Type            name            Describes the plugin's type.
+
+                                    Accepts ``Required``,
+                                    ``Recommended``, ``Optional``,
+                                    ``CouldBeUsable`` or
+                                    ``NotUsable``
+    =============== =============== ===============================
 
 -------------------------------------
 
 Mod Requirements
-................
+----------------
 
 Tag
     requiredInstallFiles
@@ -761,15 +1097,20 @@ Description
     The list of files and folders that must be installed for this module.
 
 Children
-    *None*
-
+    =========================== ==========
+    Node                        Repeatable
+    =========================== ==========
+    `File`_                     **Yes**
+    `Folder`_                   **Yes**
+    =========================== ==========
 
 Properties
+    *None*
 
 -------------------------------------
 
 Conditional Installation
-........................
+------------------------
 
 Tag
     conditionalFileInstalls
@@ -778,15 +1119,21 @@ Description
     The list of optional files that may optionally be installed for this module, based on condition flags.
 
 Children
-    *None*
-
+    =========================== ========== =================================================
+    Node                        Repeatable Notes
+    =========================== ========== =================================================
+    :ref:`cond_patterns`        **No**     At least one of :ref:`cond_patterns` is required.
+    =========================== ========== =================================================
 
 Properties
+    *None*
 
 -------------------------------------
 
+.. _cond_patterns:
+
 Patterns
-........
+--------
 
 Tag
     patterns
@@ -796,15 +1143,21 @@ Description
     All matching patterns will have their files installed.
 
 Children
-    *None*
-
+    =========================== ========== ================================================
+    Node                        Repeatable Notes
+    =========================== ========== ================================================
+    :ref:`cond_pattern`         **Yes**    At least one of :ref:`cond_pattern` is required.
+    =========================== ========== ================================================
 
 Properties
+    *None*
 
 -------------------------------------
 
+.. _cond_pattern:
+
 Pattern
-.......
+-------
 
 Tag
     pattern
@@ -813,8 +1166,12 @@ Description
     A specific pattern of mod files and condition flags against which to match the user's installation.
 
 Children
-    *None*
-
+    =========================== ========== ============================================
+    Node                        Repeatable Notes
+    =========================== ========== ============================================
+    `Files`_                    **No**     At least one of `Files`_ is required.
+    `Dependencies`_             **No**     At least one of `Dependencies`_ is required.
+    =========================== ========== ============================================
 
 Properties
-
+    *None*
