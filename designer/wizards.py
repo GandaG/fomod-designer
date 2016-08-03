@@ -55,15 +55,6 @@ class _WizardBase(QStackedWidget):
         self._setup_pages()
 
     @abstractmethod
-    def _process_results(self, result):
-        """
-        Method called to process the results into a new element.
-
-        :param result: The temporary element with all the info.
-        """
-        pass
-
-    @abstractmethod
     def _setup_pages(self):
         """
         Method called during initialization to create all the pages necessary for each wizard.
@@ -75,9 +66,6 @@ class WizardFiles(_WizardBase):
     """
     Wizard for the "files" tag.
     """
-    def _process_results(self, result):
-        self.finished.emit(result)
-
     def _setup_pages(self):
         def add_elem(element_, layout):
             """
@@ -117,7 +105,7 @@ class WizardFiles(_WizardBase):
         page_ui.button_add_folder.clicked.connect(
             lambda: add_elem(elem_factory("folder", element_result), page_ui.layout_folder)
         )
-        page_ui.finish_button.clicked.connect(lambda: self._process_results(element_result))
+        page_ui.finish_button.clicked.connect(lambda: self.finished.emit(element_result))
         page_ui.cancel_button.clicked.connect(self.cancelled.emit)
 
         self.code_changed.emit(element_result)
@@ -169,9 +157,6 @@ class WizardDepend(_WizardBase):
     """
     Wizard for the "dependencies" tag.
     """
-    def _process_results(self, result):
-        self.finished.emit(result)
-
     def _setup_pages(self):
         """
         NodeConfigVisible and NodeConfigRoot are used as simple placeholders for the factory. They serve no purpose
@@ -247,7 +232,7 @@ class WizardDepend(_WizardBase):
         page_ui.button_sub.clicked.connect(
             lambda: self.add_elem(element_result, page_ui.layout_depend, tag="dependencies"))
 
-        page_ui.finish_button.clicked.connect(lambda: self._process_results(element_result))
+        page_ui.finish_button.clicked.connect(lambda: self.finished.emit(element_result))
         page_ui.cancel_button.clicked.connect(self.cancelled.emit)
 
         self.addWidget(page)
@@ -451,14 +436,6 @@ class WizardDepend(_WizardBase):
 
 
 class WizardDependType(_WizardBase):
-    def _process_results(self, result):
-        self.element.getparent().replace(self.element, result)
-        item_parent = self.element.model_item.parent()
-        row = self.element.model_item.row()
-        item_parent.removeRow(row)
-        item_parent.insertRow(row, result.model_item)
-        self.finished.emit()
-
     def _setup_pages(self):
         def copy_elem(element_):
             result = elem_factory(element_.tag, element_.getparent())
@@ -507,7 +484,7 @@ class WizardDependType(_WizardBase):
             lambda: self.add_elem(patterns_elem, page.layout_pattern, tag="pattern"))
         page.button_pattern.clicked.connect(lambda: self.code_changed.emit(element_result))
 
-        page.finish_button.clicked.connect(lambda: self._process_results(element_result))
+        page.finish_button.clicked.connect(lambda: self.finished.emit(element_result))
         page.cancel_button.clicked.connect(self.cancelled.emit)
 
         self.code_changed.emit(element_result)
@@ -597,14 +574,6 @@ class WizardDependType(_WizardBase):
 
 
 class WizardPlugin(_WizardBase):
-    def _process_results(self, result):
-        self.element.getparent().replace(self.element, result)
-        item_parent = self.element.model_item.parent()
-        row = self.element.model_item.row()
-        item_parent.removeRow(row)
-        item_parent.insertRow(row, result.model_item)
-        self.finished.emit()
-
     def _setup_pages(self):
         def copy_elem(element_):
             result = elem_factory(element_.tag, element_.getparent())
@@ -754,7 +723,7 @@ class WizardPlugin(_WizardBase):
         page.radio_depend.clicked.connect(lambda: create_type_depend(type_descriptor_elem))
         page.radio_depend.clicked.connect(lambda: self.code_changed.emit(element_result))
 
-        page.finish_button.clicked.connect(lambda: self._process_results(element_result))
+        page.finish_button.clicked.connect(lambda: self.finished.emit(element_result))
         page.cancel_button.clicked.connect(self.cancelled.emit)
 
         self.code_changed.emit(element_result)

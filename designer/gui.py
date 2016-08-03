@@ -554,9 +554,6 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
         self.update_recent_files()
         self.check_updates()
 
-        # disable the wizards until they're up-to-date
-        self.button_wizard.hide()
-
     def on_custom_context_menu(self, position):
         index = self.node_tree_view.indexAt(position)
         node_tree_context_menu = QMenu(self.node_tree_view)
