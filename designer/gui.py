@@ -1415,17 +1415,25 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
             self.menu_File.setEnabled(True)
             self.menu_Tools.setEnabled(True)
             self.menu_View.setEnabled(True)
+            for action in action_list:
+                action.setEnabled(True)
 
         current_index = self.node_tree_model.indexFromItem(self.current_node.model_item)
         enabled_tree = self.action_Object_Tree.isChecked()
         enabled_box = self.actionObject_Box.isChecked()
         enabled_list = self.action_Property_Editor.isChecked()
+        action_list = []
         self.action_Object_Tree.toggled.emit(False)
         self.actionObject_Box.toggled.emit(False)
         self.action_Property_Editor.toggled.emit(False)
         self.menu_File.setEnabled(False)
         self.menu_Tools.setEnabled(False)
         self.menu_View.setEnabled(False)
+        action_list.extend(self.menu_File.actions())
+        action_list.extend(self.menu_Tools.actions())
+        action_list.extend(self.menu_View.actions())
+        for action in action_list:
+            action.setEnabled(False)
 
         parent_node = self.current_node.getparent()
         original_node = self.current_node
