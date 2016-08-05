@@ -1868,6 +1868,9 @@ class PreviewMoGui(QWidget, preview_mo.Ui_Form):
                         button_plugin.animateClick(0)
                         check_first_radio = False
 
+                else:
+                    continue
+
                 button_plugin.setProperty("description", plugin.description)
                 button_plugin.setProperty("image_path", plugin.image_path)
                 button_plugin.setProperty("file_list", plugin.file_list)

@@ -201,6 +201,10 @@ class _NodeBase(etree.ElementBase):
             if meta_comment is None:
                 self.append(NodeComment("<designer.metadata.do.not.edit> " + encode(self.metadata)))
 
+    def set_text(self, value):
+        if "<node_text>" in self.properties.keys():
+            self.properties["<node_text>"].set_value(value)
+
 
 class NodeStandardItem(QStandardItem):
     """A Standard Item but with an added reference to a xml node."""
