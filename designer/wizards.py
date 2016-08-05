@@ -502,11 +502,18 @@ class WizardDependType(_WizardBase):
         return item
 
     def _nested_wizard(self, element, depend_button):
-        def update_depend_button(parent_element, depend_button_):
+        def update_depend_button(new_element, parent_element, depend_button_):
             depend_elem = parent_element.find("dependencies")
+            parent_element.replace(depend_elem, new_element)
+            self.type_depend_element = new_element
+            item_parent = parent_element.model_item
+            row = depend_elem.model_item.row()
+            item_parent.removeRow(row)
+            item_parent.insertRow(row, new_element.model_item)
+            self.code_changed.emit(parent_element.getparent().getparent())
             depend_button_.clicked.disconnect()
             depend_button_.clicked.connect(
-                lambda _, element_=depend_elem: self._nested_wizard(element_, depend_button_)
+                lambda _, element_=new_element: self._nested_wizard(element_, depend_button_)
             )
 
         nested_wiz = WizardDepend(self, element, self.code_changed, **self.kwargs)
@@ -520,9 +527,8 @@ class WizardDependType(_WizardBase):
 
         nested_wiz.finished.connect(lambda: nested_wiz.deleteLater())
         nested_wiz.finished.connect(
-            lambda parent=element.getparent().getparent().getparent(): self.code_changed.emit(parent)
+            lambda new_elem, parent=element.getparent(): update_depend_button(new_elem, parent, depend_button)
         )
-        nested_wiz.finished.connect(lambda parent=element.getparent(): update_depend_button(parent, depend_button))
 
 
 class WizardPlugin(_WizardBase):
