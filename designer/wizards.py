@@ -534,31 +534,30 @@ class WizardPlugin(_WizardBase):
                 line_edit.setText(relpath(file_path[0], self.kwargs["package_path"]))
 
         def create_type_depend(type_descriptor_elem_):
-            for elem in type_descriptor_elem_:
-                type_descriptor_elem_.remove_child(elem)
-            type_depend_elem_ = elem_factory("dependencyType", type_descriptor_elem_)
-            type_depend_elem_.add_child(elem_factory("patterns", type_depend_elem_))
-            type_depend_elem_.add_child(elem_factory("defaultType", type_depend_elem_))
-            type_descriptor_elem_.add_child(type_depend_elem_)
+            type_descriptor_elem_.clear()
+            if self.type_depend_element is None:
+                self.type_depend_element = elem_factory("dependencyType", type_descriptor_elem_)
+                self.type_depend_element.add_child(elem_factory("patterns", self.type_depend_element))
+                self.type_depend_element.add_child(elem_factory("defaultType", self.type_depend_element))
+            type_descriptor_elem_.add_child(self.type_depend_element)
             try:
                 page_ui.button_depend.clicked.disconnect()
             except TypeError:
                 pass
             page_ui.button_depend.clicked.connect(
-                lambda _, element_=type_depend_elem_: self._nested_type_depend(element_, page_ui.button_depend)
+                lambda _, element_=self.type_depend_element: self._nested_type_depend(element_, page_ui.button_depend)
             )
 
         def create_type(type_descriptor_elem_):
-            for elem in type_descriptor_elem_:
-                type_descriptor_elem_.remove_child(elem)
-            type_elem_ = elem_factory("type", type_descriptor_elem_)
-            type_descriptor_elem_.add_child(type_elem_)
+            type_descriptor_elem_.clear()
+            if self.type_element is None:
+                self.type_element = elem_factory("type", type_descriptor_elem_)
+            type_descriptor_elem_.add_child(self.type_element)
             page_ui.combo_type.currentTextChanged.disconnect()
-            page_ui.combo_type.currentTextChanged.connect(type_elem_.properties["name"].set_value)
-            page_ui.combo_type.currentTextChanged.connect(type_elem_.write_attribs)
+            page_ui.combo_type.currentTextChanged.connect(self.type_element.properties["name"].set_value)
+            page_ui.combo_type.currentTextChanged.connect(self.type_element.write_attribs)
             page_ui.combo_type.currentTextChanged.connect(lambda: self.code_changed.emit(element_result))
-            page_ui.combo_type.setCurrentText("Required")
-            page_ui.combo_type.setCurrentText("Optional")
+            page_ui.combo_type.setCurrentText(self.type_element.properties["name"].value)
 
         element_result = copy_element(self.element)
 
@@ -600,25 +599,25 @@ class WizardPlugin(_WizardBase):
         page_ui.descriptionLineEdit.setText(description_elem.text)
         page_ui.edit_image.setText(image_elem.properties["path"].value)
 
-        type_elem = type_descriptor_elem.find("type")
-        type_depend_elem = type_descriptor_elem.find("dependencyType")
-        if type_depend_elem is not None:
+        self.type_element = type_descriptor_elem.find("type")
+        self.type_depend_element = type_descriptor_elem.find("dependencyType")
+        if self.type_depend_element is not None:
             page_ui.radio_depend.setChecked(True)
             page_ui.button_depend.setEnabled(True)
             page_ui.combo_type.setEnabled(False)
             page_ui.button_depend.clicked.connect(
-                lambda _, element_=type_depend_elem: self._nested_type_depend(element_, page_ui.button_depend)
+                lambda _, element_=self.type_depend_element: self._nested_type_depend(element_, page_ui.button_depend)
             )
-        elif type_elem is not None:
-            page_ui.combo_type.setCurrentText(type_elem.properties["name"].value)
-            page_ui.combo_type.currentTextChanged.connect(type_elem.properties["name"].set_value)
-            page_ui.combo_type.currentTextChanged.connect(type_elem.write_attribs)
+        elif self.type_element is not None:
+            page_ui.combo_type.setCurrentText(self.type_element.properties["name"].value)
+            page_ui.combo_type.currentTextChanged.connect(self.type_element.properties["name"].set_value)
+            page_ui.combo_type.currentTextChanged.connect(self.type_element.write_attribs)
             page_ui.combo_type.currentTextChanged.connect(lambda: self.code_changed.emit(element_result))
         else:
-            type_elem = elem_factory("type", type_descriptor_elem)
-            type_descriptor_elem.add_child(type_elem)
-            page_ui.combo_type.currentTextChanged.connect(type_elem.properties["name"].set_value)
-            page_ui.combo_type.currentTextChanged.connect(type_elem.write_attribs)
+            self.type_element = elem_factory("type", type_descriptor_elem)
+            type_descriptor_elem.add_child(self.type_element)
+            page_ui.combo_type.currentTextChanged.connect(self.type_element.properties["name"].set_value)
+            page_ui.combo_type.currentTextChanged.connect(self.type_element.write_attribs)
             page_ui.combo_type.currentTextChanged.connect(lambda: self.code_changed.emit(element_result))
             page_ui.combo_type.setCurrentText("Optional")
 
@@ -714,6 +713,7 @@ class WizardPlugin(_WizardBase):
         def update_depend_button(new_element, parent_element, depend_button_):
             depend_elem = parent_element.find("dependencyType")
             parent_element.replace(depend_elem, new_element)
+            self.type_depend_element = new_element
             item_parent = parent_element.model_item
             row = depend_elem.model_item.row()
             item_parent.removeRow(row)
