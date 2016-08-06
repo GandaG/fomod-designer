@@ -35,7 +35,8 @@ from PyQt5.uic import loadUi
 from requests import get, codes, ConnectionError, Timeout
 from validator import validate_tree, check_warnings, ValidatorError, ValidationError, WarningError, MissingFolderError
 from . import cur_folder, __version__
-from .io import import_, new, export, sort_elements, elem_factory, copy_element
+from .nodes import _NodeBase
+from .io import import_, new, export, sort_nodes, node_factory, copy_node
 from .previews import PreviewDispatcherThread
 from .props import PropertyFile, PropertyColour, PropertyFolder, PropertyCombo, PropertyInt, PropertyText, \
     PropertyFlagLabel, PropertyFlagValue, PropertyHTML
@@ -201,7 +202,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                 return 0
 
             mime_data = MainFrame.NodeMimeData()
-            new_node = copy_element(self.itemFromIndex(index_list[0]).xml_node)
+            new_node = copy_node(self.itemFromIndex(index_list[0]).xml_node)
             mime_data.set_item(new_node.model_item)
             mime_data.set_node(new_node)
             mime_data.set_original_item(self.itemFromIndex(index_list[0]))
@@ -373,7 +374,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
 
         def redo(self):
             if self.new_child_node is None:
-                self.new_child_node = elem_factory(self.child_tag, self.parent_node)
+                self.new_child_node = node_factory(self.child_tag, self.parent_node)
                 defaults_dict = self.settings_dict["Defaults"]
                 if self.child_tag in defaults_dict and defaults_dict[self.child_tag].enabled():
                     self.new_child_node.properties[defaults_dict[self.child_tag].key()].set_value(
@@ -401,7 +402,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
             self.pasted_node = None
 
         def redo(self):
-            self.pasted_node = copy_element(QApplication.clipboard().mimeData().node())
+            self.pasted_node = copy_node(QApplication.clipboard().mimeData().node())
             self.parent_item.xml_node.append(self.pasted_node)
             self.parent_item.appendRow(self.pasted_node.model_item)
             self.parent_item.sortChildren(0)
@@ -433,6 +434,8 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
         self.menu_Recent_Files.setIcon(QIcon(join(cur_folder, "resources/logos/logo_recent.png")))
         self.actionExpand_All.setIcon(QIcon(join(cur_folder, "resources/logos/logo_expand.png")))
         self.actionCollapse_All.setIcon(QIcon(join(cur_folder, "resources/logos/logo_collapse.png")))
+        self.actionHide_Node.setIcon(QIcon(join(cur_folder, "resources/logos/logo_hide.png")))
+        self.actionShow_Node.setIcon(QIcon(join(cur_folder, "resources/logos/logo_show.png")))
 
         # manage undo and redo
         self.undo_stack = QUndoStack(self)
@@ -460,6 +463,8 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
         self.actionO_ptions.triggered.connect(self.settings)
         self.action_Refresh.triggered.connect(self.refresh)
         self.action_Delete.triggered.connect(self.delete)
+        self.actionHide_Node.triggered.connect(self.hide_node)
+        self.actionShow_Node.triggered.connect(self.show_node)
         self.actionHe_lp.triggered.connect(self.help)
         self.action_About.triggered.connect(lambda _, self_=self: self.about(self_))
         self.actionClear.triggered.connect(self.clear_recent_files)
@@ -521,7 +526,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
         self.flag_value_completer.setModel(self.flag_value_model)
 
         # connect node selected signal
-        self.current_node = None
+        self.current_node = None  # type: _NodeBase
         self.select_node.connect(
             lambda index: self.set_current_node(self.node_tree_model.itemFromIndex(index).xml_node)
         )
@@ -536,6 +541,22 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
         self.select_node.connect(
             lambda: self.button_wizard.setEnabled(False)
             if self.current_node.wizard is None else self.button_wizard.setEnabled(True)
+        )
+        self.select_node.connect(
+            lambda index: self.actionHide_Node.setEnabled(True)
+            if self.current_node is not self._config_root and
+            self.current_node is not self._info_root and
+            self.current_node not in self.current_node.getparent().hidden_children and
+            not self.current_node.allowed_instances
+            else self.actionHide_Node.setEnabled(False)
+        )
+        self.select_node.connect(
+            lambda index: self.actionShow_Node.setEnabled(True)
+            if self.current_node is not self._config_root and
+            self.current_node is not self._info_root and
+            self.current_node in self.current_node.getparent().hidden_children and
+            not self.current_node.allowed_instances
+            else self.actionShow_Node.setEnabled(False)
         )
 
         # manage code changed signal
@@ -566,6 +587,11 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
             self.select_node.emit(index)
             node_tree_context_menu.addSeparator()
             node_tree_context_menu.addAction(self.action_Delete)
+            if self.current_node is not self._config_root and self.current_node is not self._info_root:
+                if self.current_node in self.current_node.getparent().hidden_children:
+                    node_tree_context_menu.addAction(self.actionShow_Node)
+                else:
+                    node_tree_context_menu.addAction(self.actionHide_Node)
             node_tree_context_menu.addSeparator()
             node_tree_context_menu.addActions([self.actionCopy, self.actionPaste])
             node_tree_context_menu.addSeparator()
@@ -597,7 +623,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
 
     def paste_item_from_clipboard(self):
         parent_item = self.node_tree_model.itemFromIndex(self.node_tree_view.selectedIndexes()[0])
-        new_node = copy_element(QApplication.clipboard().mimeData().node())
+        new_node = copy_node(QApplication.clipboard().mimeData().node())
         if not parent_item.xml_node.can_add_child(new_node):
             self.statusBar().showMessage("This parent is not valid!")
         else:
@@ -673,6 +699,14 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
         self.statusBar().addPermanentWidget(QLabel("Checking for updates..."))
 
         Thread(target=check_remote).start()
+
+    def hide_node(self):
+        if self.current_node is not None:
+            self.current_node.set_hidden(True)
+
+    def show_node(self):
+        if self.current_node is not None:
+            self.current_node.set_hidden(False)
 
     def open(self, path=""):
         """
@@ -758,8 +792,8 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
             if self._info_root is None and self._config_root is None:
                 return
             elif not self.undo_stack.isClean():
-                sort_elements(self._info_root)
-                sort_elements(self._config_root)
+                sort_nodes(self._info_root)
+                sort_nodes(self._config_root)
                 if self.settings_dict["Save"]["validate"]:
                     try:
                         validate_tree(
@@ -811,6 +845,8 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
             if self.current_node is None:
                 self.statusBar().showMessage("Can't delete nothing.")
             else:
+                if self.current_node.is_hidden:
+                    self.current_node.set_hidden(False)
                 self.undo_stack.push(self.DeleteCommand(
                     self.current_node,
                     self.node_tree_model,

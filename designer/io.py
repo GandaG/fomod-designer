@@ -16,7 +16,7 @@
 
 from os import listdir, makedirs
 from os.path import join
-from lxml.etree import (PythonElementClassLookup, XMLParser, tostring, fromstring, CommentBase,
+from lxml.etree import (PythonElementClassLookup, XMLParser, tostring, fromstring, CommentBase, Comment,
                         Element, SubElement, parse, ParseError, ElementTree, CustomElementClassLookup)
 from .exceptions import MissingFileError, ParserError, TagNotFound
 
@@ -176,7 +176,7 @@ def _validate_child(child):
     return False
 
 
-def elem_factory(tag, parent=None):
+def node_factory(tag, parent=None):
     """
     Function meant as a replacement for the default element factory.
 
@@ -208,18 +208,19 @@ def elem_factory(tag, parent=None):
         return module_parser.makeelement(tag)
 
 
-def copy_element(element_):
-    result = elem_factory(element_.tag, element_.getparent())
-    element_.write_attribs()
-    result.text = element_.text
-    for key in element_.keys():
-        result.set(key, element_.get(key))
+def copy_node(node, parent=None):
+    if parent is None:
+        parent = node.getparent()
+    result = node_factory(node.tag, parent)
+    result.text = node.text
+    for key in node.keys():
+        result.set(key, node.get(key))
     result.parse_attribs()
-    for child in element_:
-        if isinstance(child, CommentBase):
-            result.append(type(child)(child.text))
+    for child in node:
+        if child.tag is Comment:
+            result.append(CommentBase(child.text))
         else:
-            new_child = copy_element(child)
+            new_child = copy_node(child)
             result.add_child(new_child)
     result.load_metadata()
     return result
@@ -287,7 +288,16 @@ def export(info_root, config_root, package_path):
     :param info_root: The root element of the info.xml file.
     :param config_root: The root element of the moduleconfig.xml file.
     :param package_path: The path to save the files to.
+    :param hidden_nodes: The currently hidden nodes in either tree.
     """
+    hidden_nodes_pairs = []
+    for root in (info_root, config_root):
+        for node in root:
+            if node.hidden_children:
+                for hidden_node in node.hidden_children:
+                    hidden_nodes_pairs.append((node, hidden_node, node.index(hidden_node)))
+                    node.remove(hidden_node)
+
     try:
         fomod_folder = _check_file(package_path, "fomod")
     except MissingFileError as e:
@@ -317,14 +327,17 @@ def export(info_root, config_root, package_path):
         config_tree = ElementTree(config_root)
         config_tree.write(configfile, pretty_print=True)
 
+    for pair in hidden_nodes_pairs:
+        pair[0].insert(pair[2], pair[1])
 
-def sort_elements(root_element):
+
+def sort_nodes(root_node):
     """
     Sorts the xml elements according to their sort_order member.
 
-    :param root_element: The root element of xml tree.
+    :param root_node: The root element of xml tree.
     """
-    for parent in root_element.xpath('//*[./*]'):
+    for parent in root_node.xpath('//*[./*]'):
         parent[:] = sorted(
             parent,
             key=lambda x: x.sort_order + "." + x.user_sort_order if not isinstance(x, CommentBase) else "0"

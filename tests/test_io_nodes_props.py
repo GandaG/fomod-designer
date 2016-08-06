@@ -16,7 +16,7 @@
 
 import sys, os, lxml, pytest
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from designer.io import import_, export, module_parser, sort_elements, new, copy_element, elem_factory
+from designer.io import import_, export, module_parser, sort_nodes, new, copy_node, node_factory
 from designer.exceptions import TagNotFound, ParserError, BaseInstanceException
 from designer.nodes import _NodeBase
 from designer.props import _PropertyBase
@@ -26,8 +26,8 @@ def test_import_export(tmpdir):
     tmpdir = str(tmpdir)
 
     info_root, config_root = import_(os.path.join(os.path.dirname(__file__), "data", "valid_fomod"))
-    sort_elements(info_root)
-    sort_elements(config_root)
+    sort_nodes(info_root)
+    sort_nodes(config_root)
     export(info_root, config_root, tmpdir)
 
     with open(os.path.join(os.path.dirname(__file__), "data", "valid_fomod", "fomod", "Info.xml")) as info_base:
@@ -77,9 +77,9 @@ def test_node_operations():
     assert base_info == lxml.etree.tostring(info_root, encoding="unicode")
     assert base_config == lxml.etree.tostring(config_root, encoding="unicode")
 
-    new_elem = elem_factory(config_root.allowed_children[0].tag, config_root)
+    new_elem = node_factory(config_root.allowed_children[0].tag, config_root)
     config_root.add_child(new_elem)
-    new_config_root = copy_element(config_root)
+    new_config_root = copy_node(config_root)
     new_config_root.remove_child(new_config_root[0])
 
     assert base_config == lxml.etree.tostring(new_config_root, encoding="unicode")

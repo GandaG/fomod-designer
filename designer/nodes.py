@@ -18,9 +18,10 @@ from os import sep
 from collections import OrderedDict
 from PyQt5.QtGui import QStandardItem
 from PyQt5.QtCore import Qt
-from lxml import etree
+from lxml import etree, objectify
 from jsonpickle import encode, decode, set_encoder_options
 from json import JSONDecodeError
+from .io import copy_node, sort_nodes
 from .wizards import WizardFiles, WizardDepend
 from .props import PropertyCombo, PropertyInt, PropertyText, PropertyFile, PropertyFolder, PropertyColour, \
     PropertyFlagLabel, PropertyFlagValue, PropertyHTML
@@ -40,20 +41,16 @@ class _NodeBase(etree.ElementBase):
             raise BaseInstanceException(self)
         super()._init()
 
-    def init(
-        self,
-        name,
-        tag,
-        allowed_instances,
-        sort_order="0",
-        allowed_children=None,
-        properties=None,
-        wizard=None,
-        required_children=None,
-        either_children_group=None,
-        at_least_one_children_group=None,
-        name_editable=False,
-    ):
+    def init(self, name, tag, allowed_instances,
+             sort_order="0",
+             allowed_children=None,
+             properties=None,
+             wizard=None,
+             required_children=None,
+             either_children_group=None,
+             at_least_one_children_group=None,
+             name_editable=False,
+             ):
 
         if not properties:
             properties = OrderedDict()
@@ -74,6 +71,8 @@ class _NodeBase(etree.ElementBase):
         self.required_children = required_children
         self.either_children_group = either_children_group
         self.at_least_one_children_group = at_least_one_children_group
+        self.hidden_children = []
+        self.is_hidden = False
         self.allowed_instances = allowed_instances
         self.wizard = wizard
         self.metadata = {}
@@ -127,6 +126,16 @@ class _NodeBase(etree.ElementBase):
             self.model_item.takeRow(child.model_item.row())
             self.remove(child)
 
+    def set_hidden(self, hide: bool):
+        self.is_hidden = hide
+        if hide:
+            self.model_item.setForeground(Qt.green)
+            self.getparent().hidden_children.append(self)
+        else:
+            self.model_item.setForeground(Qt.black)
+            self.getparent().hidden_children.remove(self)
+        self.getparent().save_metadata()
+
     def parse_attribs(self):
         """
         Reads the values from the BaseElement's attrib dictionary into the node's properties.
@@ -150,6 +159,8 @@ class _NodeBase(etree.ElementBase):
                 self.text = self.properties[key].value
                 continue
             self.set(key, str(self.properties[key].value))
+        if self.is_hidden:
+            self.getparent().save_metadata()
 
     def update_item_name(self):
         """
@@ -173,6 +184,15 @@ class _NodeBase(etree.ElementBase):
 
         self.model_item.setText(self.metadata.get("name", self.update_item_name()))
         self.user_sort_order = self.metadata.get("user_sort", "0".zfill(7))
+        if not self.hidden_children:
+            hidden_nodes = self.metadata.get("hidden_nodes", [])
+            for node_string in hidden_nodes:
+                node_string = node_string.replace("<!- -", "<!--").replace("- ->", "-->")
+                node = copy_node(etree.fromstring(node_string), self)  # type: _NodeBase
+                self.add_child(node) if node.tag is not etree.Comment else self.append(node)
+                node.set_hidden(True)
+                sort_nodes(self)
+                self.model_item.sortChildren(0)
 
     def save_metadata(self):
         """
@@ -182,10 +202,21 @@ class _NodeBase(etree.ElementBase):
             self.metadata["name"] = self.model_item.text()
         else:
             self.metadata.pop("name", None)
-        if self.user_sort_order:
+
+        if self.user_sort_order and self.user_sort_order != "0".zfill(7):
             self.metadata["user_sort"] = self.user_sort_order.zfill(7)
         else:
             self.metadata.pop("user_sort", None)
+
+        if self.hidden_children:
+            self.metadata["hidden_nodes"] = []
+            for element in self.hidden_children:
+                objectify.deannotate(element, cleanup_namespaces=True)
+                node_string = etree.tostring(element, pretty_print=False, encoding="unicode")
+                node_string = node_string.replace("<!--", "<!- -").replace("-->", "- ->")
+                self.metadata["hidden_nodes"].append(node_string)
+        else:
+            self.metadata.pop("hidden_nodes", None)
 
         if not self.allowed_children and "<node_text>" not in self.properties.keys():
             return
@@ -193,12 +224,15 @@ class _NodeBase(etree.ElementBase):
             meta_comment = None
             set_encoder_options("json", separators=(',', ':'))
             for child in self:
-                if type(child) is NodeComment and self.metadata:
+                if type(child) is NodeComment:
                     if child.text.split()[0] == "<designer.metadata.do.not.edit>":
                         meta_comment = child
-                        child.text = "<designer.metadata.do.not.edit> " + encode(self.metadata)
+                        if self.metadata:
+                            child.text = "<designer.metadata.do.not.edit> " + encode(self.metadata)
+                        else:
+                            self.remove(child)
 
-            if meta_comment is None:
+            if meta_comment is None and self.metadata:
                 self.append(NodeComment("<designer.metadata.do.not.edit> " + encode(self.metadata)))
 
 
