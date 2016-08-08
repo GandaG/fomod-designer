@@ -9,7 +9,7 @@ install:
 build: off
 
 test_script:
-  - inv test
+  - py.test --cov=designer --cov-report html --cov-report term -vv tests/
 
 after_test:
   - inv build

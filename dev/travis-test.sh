@@ -21,4 +21,6 @@ eval "$(pyenv virtualenv-init -)"
 
 pyenv shell miniconda3-3.19.0/envs/fomod-designer
 
-invoke test
+py.test --cov=designer --cov-report html --cov-report term -vv tests/
+
+coveralls

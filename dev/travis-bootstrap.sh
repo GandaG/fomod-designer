@@ -51,3 +51,4 @@ pyenv shell miniconda3-3.19.0/envs/fomod-designer
 pip install pip -U
 pip install setuptools -U --ignore-installed
 pip install -r dev/reqs.txt
+pip install -r dev/test-reqs.txt
