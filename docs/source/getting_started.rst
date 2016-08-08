@@ -14,7 +14,7 @@ is located.
 .. note::
     Now for an important distinction from other apps you may have used: the *FOMOD Designer* does not have separate
     **New** and **Open** buttons. Simply select the correct folder and it'll auto detect an existing installer.
-    If you want to know about the behind the scenes for this, check the :doc:`F.A.Q. <faq>`.
+    If you want to know about the behind the scenes for this, check the :ref:`F.A.Q. <open_new_merged>`.
 
 The **Main** window should now appear. If you're a first-time user it should load the *Basic View* and you should head
 on to the :doc:`Basic Usage <basic>`. In case you're a returning user and/or you've enabled the *Advanced View*

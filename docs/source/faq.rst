@@ -1,6 +1,8 @@
 Frequently Asked Questions
 ==========================
 
+.. _open_new_merged:
+
 Why are the *New* and *Open* buttons merged?
 ++++++++++++++++++++++++++++++++++++++++++++
 

@@ -82,7 +82,7 @@ FOMOD Bible
 ...........
 
 Please take note this isn't a fully comprehensive document (at least so far). If you want something more complete,
-feel free to look at the `revised *FOMOD* schema <>`_.
+feel free to look at the `revised *FOMOD* schema <https://github.com/GandaG/fomod-designer/blob/develop/resources/mod_schema.xsd>`_.
 
 Info
 ----

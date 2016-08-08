@@ -12,7 +12,7 @@ There are pre-built, ready-to-use executables always available for
 
 It is recommended to use the `latest stable version <https://github.com/GandaG/fomod-editor/releases/latest>`_
 since it's less likely to have critical bugs. If you need to use a feature that
-hasn't made it to the stable builds, feel free to download the `bleeding edge build <>`_.
+hasn't made it to the stable builds, feel free to download the `bleeding edge build <https://ci.appveyor.com/project/GandaG/fomod-editor/build/artifacts>`_.
 
 If there are no builds for your system or you just love to have tons
 of work try building from source.
@@ -20,11 +20,11 @@ of work try building from source.
 Building from Source
 ++++++++++++++++++++
 
-1. Download the `repository from Github <>`_;
+1. Download the `repository from Github <https://github.com/GandaG/fomod-designer/archive/develop.zip>`_;
 
 2. Unpack the archive into a folder;
 
-3. Install `Conda <>`_;
+3. Install `Conda <http://conda.pydata.org/miniconda.html>`_;
 
 4. Open the command line/terminal in the folder from step 2;
 
