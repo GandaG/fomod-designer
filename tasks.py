@@ -78,8 +78,6 @@ def docs():
     from os.path import join
 
     makedirs(join("resources", "docs"), exist_ok=True)
-    system("sphinx-apidoc -TPMeo {} {} {}".format(join("docs", "source", "api"), "designer",
-                                                  join("designer", "ui_templates")))
     system("sphinx-build -b html -d {} {} {}".format(join("docs", "build", "doctrees"),
                                                      join("docs", "source"),
                                                      join("resources", "docs")))

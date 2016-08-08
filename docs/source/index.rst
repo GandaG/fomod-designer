@@ -13,5 +13,4 @@
    Installation <install>
    Basic Usage <basic>
    Advanced Usage <advanced>
-   Code Documentation <api>
    F.A.Q. <faq>
