@@ -33,4 +33,6 @@ head to the :doc:`Advanced Usage <advanced>`.
    Installation <install>
    Basic Usage <basic>
    Advanced Usage <advanced>
+   Contributing <contributing>
+   Changelog <changelog>
    F.A.Q. <faq>

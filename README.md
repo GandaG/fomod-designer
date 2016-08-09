@@ -7,22 +7,6 @@
 
 You can get more information in the official documentation hosted at [Read The Docs](http://fomod-designer.readthedocs.io/en/stable/).
 
-## Contributing
-
-This repo uses a ***.settings*** file to define all the necessary settings. This file follows this syntax:
-
-```
-[git]
-user=git_username
-email=git_email
-```
-
-For more information see the [CONTRIBUTING] document.
-Thank you, [contributors]!
-
-  [CONTRIBUTING]: /.github/CONTRIBUTING.md
-  [contributors]: https://github.com/GandaG/fomod-editor/graphs/contributors
-
 ## License
 
 ***FOMOD Designer*** is free software and may be redistributed

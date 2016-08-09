@@ -1,6 +1,7 @@
-# Changelog
+Changelog
+=========
 
-0.7.2 (2016-07-13)
+**0.7.2 (2016-07-13)**
 
 * Plugin node should now have the correct required child nodes.
 * Fixed validation and warning dialogs and ignore process.
@@ -8,14 +9,14 @@
 
 ----------------------------------
 
-0.7.1 (2016-07-12)
+**0.7.1 (2016-07-12)**
 
 * Fixed preview issue with non-existent nodes under info root.
 * Updated validation and children groups.
 
 ----------------------------------
 
-0.7.0 (2016-07-10)
+**0.7.0 (2016-07-10)**
 
 * Fixed rare bug with the validator.
 * Added Dependencies Wizard.
@@ -48,7 +49,7 @@
 
 ----------------------------------
 
-0.6.0 (2016-06-13)
+**0.6.0 (2016-06-13)**
 
 * Added check for updates at startup.
 * Added line numbers to code preview.
@@ -57,13 +58,13 @@
 
 ----------------------------------
 
-0.5.1 (2016-06-12)
+**0.5.1 (2016-06-12)**
 
 * Fixed versioning issues.
 
 ----------------------------------
 
-0.5.0 (2016-06-12)
+**0.5.0 (2016-06-12)**
 
 * Added intro window.
 * Added Files wizard.
@@ -79,14 +80,14 @@
 
 ----------------------------------
 
-0.4.1 (2016-05-16)
+**0.4.1 (2016-05-16)**
 
 * Fixed wrong default attributes in file and folder tags.
 * Added wizard framework.
 
 ----------------------------------
 
-0.4.0 (2016-05-14)
+**0.4.0 (2016-05-14)**
 
 * Added file and window icons.
 * Fixed combo boxes not being set at start.
@@ -106,7 +107,7 @@
 
 ----------------------------------
 
-0.3.1 (2016-04-17)
+**0.3.1 (2016-04-17)**
 
 * Tags/item with name/source property now have that as the title instead of the tag's name.
 * Fixed all keyboard shortcuts.
@@ -120,7 +121,7 @@
 
 ----------------------------------
 
-0.3.0 (2016-04-07)
+**0.3.0 (2016-04-07)**
 
 * All basic functionality is now done.
 * Tag properties are now properly displayed and editable.
@@ -132,25 +133,25 @@
 
 ----------------------------------
 
-0.2.1 (2016-04-05)
+**0.2.1 (2016-04-05)**
 
 * In-tag text is now properly parsed and saved along with everything else.
 
 ----------------------------------
 
-0.2.0 (2016-04-05)
+**0.2.0 (2016-04-05)**
 
 * Users can now modify the installer's objects.
 
 ----------------------------------
 
-0.1.0 (2016-04-03)
+**0.1.0 (2016-04-03)**
 
 * Users can now open and save FOMOD installers.
 * Main windows title now shows which package you are currently working on.
 
 ----------------------------------
 
-0.0.1 (2016-03-15)
+**0.0.1 (2016-03-15)**
 
 * GUI draft completed.

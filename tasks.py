@@ -52,17 +52,6 @@ def preview():
     run("python dev/pyinstaller-bootstrap.py")
 
 
-@task
-def clean_docs():
-    from shutil import rmtree
-    from os.path import join
-
-    rmtree(join("docs", "build"), ignore_errors=True)
-    rmtree(join("resources", "docs"), ignore_errors=True)
-    rmtree(join("docs", "source", "api"), ignore_errors=True)
-    print("Documentation caches cleaned.")
-
-
 @task()
 def clean():
     from shutil import rmtree
@@ -72,7 +61,7 @@ def clean():
     print("Build caches cleaned.")
 
 
-@task(clean_docs)
+@task()
 def docs():
     from os import system, makedirs
     from os.path import join
@@ -93,7 +82,7 @@ def build():
     from fnmatch import fnmatch
 
     # set which files will be included within the archive.
-    included_files = ["LICENSE", "README.md", "CHANGELOG.md", "CONTRIBUTING.md"]
+    included_files = ["LICENSE", "README.md", "CHANGELOG.rst", "CONTRIBUTING.rst"]
     archive_name = "designer"  # the archive's name
 
     try:
