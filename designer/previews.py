@@ -22,7 +22,6 @@ from lxml.objectify import deannotate
 from pygments import highlight
 from pygments.formatters.html import HtmlFormatter
 from pygments.lexers.html import XmlLexer
-from .io import sort_nodes
 
 
 class PreviewDispatcherThread(QThread):
@@ -53,7 +52,7 @@ class PreviewDispatcherThread(QThread):
             if element is not None:
                 element.write_attribs()
                 element.load_metadata()
-                sort_nodes(element)
+                element.sort()
 
             # dispatch to every queue
             self.gui_queue.put(element)

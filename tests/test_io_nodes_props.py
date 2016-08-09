@@ -16,7 +16,7 @@
 
 import sys, os, lxml, pytest
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from designer.io import import_, export, module_parser, sort_nodes, new, copy_node, node_factory
+from designer.io import import_, export, module_parser, new, copy_node, node_factory
 from designer.exceptions import TagNotFound, ParserError, BaseInstanceException
 from designer.nodes import _NodeBase
 from designer.props import _PropertyBase
@@ -26,8 +26,8 @@ def test_import_export(tmpdir):
     tmpdir = str(tmpdir)
 
     info_root, config_root = import_(os.path.join(os.path.dirname(__file__), "data", "valid_fomod"))
-    sort_nodes(info_root)
-    sort_nodes(config_root)
+    info_root.sort()
+    config_root.sort()
     export(info_root, config_root, tmpdir)
 
     with open(os.path.join(os.path.dirname(__file__), "data", "valid_fomod", "fomod", "Info.xml")) as info_base:

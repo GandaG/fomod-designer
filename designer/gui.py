@@ -36,7 +36,7 @@ from requests import get, head, codes, ConnectionError, Timeout
 from validator import validate_tree, check_warnings, ValidatorError, ValidationError, WarningError, MissingFolderError
 from . import cur_folder, __version__
 from .nodes import _NodeBase
-from .io import import_, new, export, sort_nodes, node_factory, copy_node
+from .io import import_, new, export, node_factory, copy_node
 from .previews import PreviewDispatcherThread
 from .props import PropertyFile, PropertyColour, PropertyFolder, PropertyCombo, PropertyInt, PropertyText, \
     PropertyFlagLabel, PropertyFlagValue, PropertyHTML
@@ -793,8 +793,8 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
             if self._info_root is None and self._config_root is None:
                 return
             elif not self.undo_stack.isClean():
-                sort_nodes(self._info_root)
-                sort_nodes(self._config_root)
+                self._info_root.sort()
+                self._config_root.sort()
                 if self.settings_dict["Save"]["validate"]:
                     try:
                         validate_tree(

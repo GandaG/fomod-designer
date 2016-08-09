@@ -329,16 +329,3 @@ def export(info_root, config_root, package_path):
 
     for pair in hidden_nodes_pairs:
         pair[0].insert(pair[2], pair[1])
-
-
-def sort_nodes(root_node):
-    """
-    Sorts the xml elements according to their sort_order member.
-
-    :param root_node: The root element of xml tree.
-    """
-    for parent in root_node.xpath('//*[./*]'):
-        parent[:] = sorted(
-            parent,
-            key=lambda x: x.sort_order + "." + x.user_sort_order if not isinstance(x, CommentBase) else "0"
-        )

@@ -21,7 +21,7 @@ from PyQt5.QtCore import Qt
 from lxml import etree, objectify
 from jsonpickle import encode, decode, set_encoder_options
 from json import JSONDecodeError
-from .io import copy_node, sort_nodes
+from .io import copy_node
 from .wizards import WizardFiles, WizardDepend
 from .props import PropertyCombo, PropertyInt, PropertyText, PropertyFile, PropertyFolder, PropertyColour, \
     PropertyFlagLabel, PropertyFlagValue, PropertyHTML
@@ -136,6 +136,13 @@ class _NodeBase(etree.ElementBase):
             self.getparent().hidden_children.remove(self)
         self.getparent().save_metadata()
 
+    def sort(self):
+        for parent in self.xpath('//*[./*]'):
+            parent[:] = sorted(
+                parent,
+                key=lambda x: x.sort_order + "." + x.user_sort_order if x.tag is not etree.Comment else "0"
+            )
+
     def parse_attribs(self):
         """
         Reads the values from the BaseElement's attrib dictionary into the node's properties.
@@ -191,7 +198,7 @@ class _NodeBase(etree.ElementBase):
                 node = copy_node(etree.fromstring(node_string), self)  # type: _NodeBase
                 self.add_child(node) if node.tag is not etree.Comment else self.append(node)
                 node.set_hidden(True)
-                sort_nodes(self)
+                self.sort()
                 self.model_item.sortChildren(0)
 
     def save_metadata(self):
