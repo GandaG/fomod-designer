@@ -15,11 +15,11 @@
 # limitations under the License.
 
 from os import makedirs, listdir
-from os.path import expanduser, normpath, basename, join, relpath, isdir, isfile
+from os.path import expanduser, normpath, basename, join, relpath, isdir, isfile, abspath
 from io import BytesIO
 from threading import Thread
 from queue import Queue
-from webbrowser import open as web_open
+from webbrowser import open_new_tab
 from datetime import datetime
 from collections import deque
 from json import JSONDecodeError
@@ -32,7 +32,7 @@ from PyQt5.QtWidgets import (QFileDialog, QColorDialog, QMessageBox, QLabel, QHB
 from PyQt5.QtGui import QIcon, QPixmap, QColor, QFont, QStandardItemModel, QStandardItem
 from PyQt5.QtCore import Qt, pyqtSignal, QStringListModel, QMimeData, QEvent
 from PyQt5.uic import loadUi
-from requests import get, codes, ConnectionError, Timeout
+from requests import get, head, codes, ConnectionError, Timeout
 from validator import validate_tree, check_warnings, ValidatorError, ValidationError, WarningError, MissingFolderError
 from . import cur_folder, __version__
 from .nodes import _NodeBase
@@ -76,6 +76,7 @@ class IntroWindow(QMainWindow, window_intro.Ui_MainWindow):
             self.show()
 
         self.new_button.clicked.connect(lambda: self.open_path(""))
+        self.button_help.clicked.connect(MainFrame.help)
         self.button_about.clicked.connect(lambda _, self_=self: MainFrame.about(self_))
 
     def open_path(self, path):
@@ -666,7 +667,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
         def update_available_button():
             update_button = QPushButton("New Version Available!")
             update_button.setFlat(True)
-            update_button.clicked.connect(lambda: web_open("https://github.com/GandaG/fomod-designer/releases/latest"))
+            update_button.clicked.connect(lambda: open_new_tab("https://github.com/GandaG/fomod-designer/releases/latest"))
             self.statusBar().addPermanentWidget(update_button)
 
         def check_remote():
@@ -857,7 +858,15 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
 
     @staticmethod
     def help():
-        not_implemented()
+        docs_url = "http://fomod-designer.readthedocs.io/en/stable/index.html"
+        local_docs = "file://" + abspath(join(cur_folder, "resources", "docs", "index.html"))
+        try:
+            if head(docs_url, timeout=0.5).status_code == codes.ok:
+                open_new_tab(docs_url)
+            else:
+                raise ConnectionError()
+        except (Timeout, ConnectionError):
+            open_new_tab(local_docs)
 
     @staticmethod
     def about(parent):
@@ -2147,13 +2156,6 @@ default_settings = {
     },
     "Recent Files": deque(maxlen=5),
 }
-
-
-def not_implemented():
-    """
-    A convenience function for something that has not yet been implemented.
-    """
-    return generic_errorbox("Nope", "Sorry, this part hasn't been implemented yet!")
 
 
 def generic_errorbox(title, text, detail=""):

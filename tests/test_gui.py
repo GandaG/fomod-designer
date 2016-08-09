@@ -19,8 +19,9 @@ import os
 from datetime import datetime
 from copy import deepcopy
 from io import StringIO
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 from jsonpickle import encode, decode
+from requests import codes
 from json import JSONDecodeError
 from PyQt5.QtWidgets import QDialogButtonBox, QMessageBox
 from PyQt5.QtCore import Qt
@@ -44,6 +45,26 @@ def test_about_dialog(qtbot):
 
     qtbot.mouseClick(about_window.button, Qt.LeftButton)
     assert not about_window.isVisible()
+
+
+@patch('designer.gui.open_new_tab')
+@patch('designer.gui.head')
+def test_help(mock_head, mock_new_tab):
+    mock_response = Mock(spec='status_code')
+    mock_head.return_value = mock_response
+    docs_url = "http://fomod-designer.readthedocs.io/en/stable/index.html"
+    local_docs = "file://" + \
+                 os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "resources", "docs", "index.html"))
+
+    mock_response.status_code = codes.ok
+    MainFrame.help()
+    mock_head.assert_called_once_with(docs_url, timeout=0.5)
+    mock_new_tab.assert_called_once_with(docs_url)
+
+    mock_response.status_code = codes.forbidden
+    MainFrame.help()
+    mock_head.assert_called_with(docs_url, timeout=0.5)
+    mock_new_tab.assert_called_with(local_docs)
 
 
 def test_errorbox(qtbot):
