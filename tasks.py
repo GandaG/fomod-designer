@@ -53,6 +53,17 @@ def preview():
 
 
 @task
+def clean_docs():
+    from shutil import rmtree
+    from os.path import join
+
+    rmtree(join("docs", "build"), ignore_errors=True)
+    rmtree(join("resources", "docs"), ignore_errors=True)
+    rmtree(join("docs", "source", "api"), ignore_errors=True)
+    print("Documentation caches cleaned.")
+
+
+@task()
 def clean():
     from shutil import rmtree
 
@@ -61,7 +72,18 @@ def clean():
     print("Build caches cleaned.")
 
 
-@task(clean)
+@task(clean_docs)
+def docs():
+    from os import system, makedirs
+    from os.path import join
+
+    makedirs(join("resources", "docs"), exist_ok=True)
+    system("sphinx-build -b html -d {} {} {}".format(join("docs", "build", "doctrees"),
+                                                     join("docs", "source"),
+                                                     join("resources", "docs")))
+
+
+@task(clean, docs)
 def build():
     from platform import system, architecture
     from shutil import copy
