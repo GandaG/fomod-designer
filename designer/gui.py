@@ -24,7 +24,7 @@ from datetime import datetime
 from collections import deque
 from json import JSONDecodeError
 from jsonpickle import encode, decode, set_encoder_options
-from lxml.etree import parse, tostring
+from lxml.etree import parse, tostring, Comment
 from PyQt5.QtWidgets import (QFileDialog, QColorDialog, QMessageBox, QLabel, QHBoxLayout, QCommandLinkButton, QDialog,
                              QFormLayout, QLineEdit, QSpinBox, QComboBox, QWidget, QPushButton, QSizePolicy, QStatusBar,
                              QCompleter, QApplication, QMainWindow, QUndoCommand, QUndoStack, QMenu, QHeaderView,
@@ -35,7 +35,7 @@ from PyQt5.uic import loadUi
 from requests import get, head, codes, ConnectionError, Timeout
 from validator import validate_tree, check_warnings, ValidatorError, ValidationError, WarningError, MissingFolderError
 from . import cur_folder, __version__
-from .nodes import _NodeBase
+from .nodes import _NodeElement, NodeComment
 from .io import import_, new, export, node_factory, copy_node
 from .previews import PreviewDispatcherThread
 from .props import PropertyFile, PropertyColour, PropertyFolder, PropertyCombo, PropertyInt, PropertyText, \
@@ -527,7 +527,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
         self.flag_value_completer.setModel(self.flag_value_model)
 
         # connect node selected signal
-        self.current_node = None  # type: _NodeBase
+        self.current_node = None  # type: _NodeElement
         self.select_node.connect(
             lambda index: self.set_current_node(self.node_tree_model.itemFromIndex(index).xml_node)
         )
@@ -842,19 +842,18 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
         """
         Deletes the current node in the tree. No effect when using the Basic View.
         """
-        try:
-            if self.current_node is None:
-                self.statusBar().showMessage("Can't delete nothing.")
-            else:
-                if self.current_node.is_hidden:
-                    self.current_node.set_hidden(False)
-                self.undo_stack.push(self.DeleteCommand(
-                    self.current_node,
-                    self.node_tree_model,
-                    self.select_node
-                ))
-        except AttributeError:
+        if self.current_node is None:
+            self.statusBar().showMessage("Can't delete nothing.")
+        elif self.current_node.getparent() is None:
             self.statusBar().showMessage("Can't delete root nodes.")
+        else:
+            if self.current_node.is_hidden:
+                self.current_node.set_hidden(False)
+            self.undo_stack.push(self.DeleteCommand(
+                self.current_node,
+                self.node_tree_model,
+                self.select_node
+            ))
 
     @staticmethod
     def help():
@@ -939,7 +938,12 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
             if widget is not None:
                 widget.deleteLater()
 
-        for child in self.current_node.allowed_children:
+        children_list = list(self.current_node.allowed_children)
+
+        if self.current_node.tag is not Comment:
+            children_list.insert(0, NodeComment)
+
+        for child in children_list:
             new_object = child()
             child_button = QPushButton(new_object.name)
             font_button = QFont()
@@ -1020,11 +1024,18 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
             self.layout_prop_editor.setWidget(prop_index, QFormLayout.LabelRole, label)
 
             if type(props[key]) is PropertyText:
-                def open_plain_editor(line_edit_):
+                def open_plain_editor(line_edit_, node):
                     dialog_ui = window_plaintexteditor.Ui_Dialog()
                     dialog = QDialog(self)
                     dialog_ui.setupUi(dialog)
                     dialog_ui.edit_text.setPlainText(line_edit_.text())
+                    if node.tag is Comment:
+                        for sequence in node.forbidden_sequences:
+                            dialog_ui.edit_text.textChanged.connect(
+                                lambda: dialog_ui.edit_text.setText(
+                                    dialog_ui.edit_text.toPlainText().replace(sequence, "")
+                                ) if sequence in dialog_ui.edit_text.toPlainText() else None
+                            )
                     dialog_ui.buttonBox.accepted.connect(dialog.close)
                     dialog_ui.buttonBox.accepted.connect(lambda: line_edit_.setText(dialog_ui.edit_text.toPlainText()))
                     dialog_ui.buttonBox.accepted.connect(line_edit_.editingFinished.emit)
@@ -1041,6 +1052,13 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                 layout.addWidget(text_button)
                 layout.setContentsMargins(0, 0, 0, 0)
                 text_edit.setText(props[key].value)
+                if self.current_node.tag is Comment:
+                    for sequence in self.current_node.forbidden_sequences:
+                        text_edit.textChanged.connect(
+                            lambda: text_edit.setText(
+                                text_edit.text().replace(sequence, "")
+                            ) if sequence in text_edit.text() else None
+                        )
                 text_edit.textChanged.connect(props[key].set_value)
                 text_edit.textChanged[str].connect(self.current_node.write_attribs)
                 text_edit.textChanged[str].connect(self.current_node.update_item_name)
@@ -1065,7 +1083,9 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                 text_edit.editingFinished.connect(
                     lambda index=prop_index: og_values.update({index: text_edit.text()})
                 )
-                text_button.clicked.connect(lambda _, line_edit_=text_edit: open_plain_editor(line_edit_))
+                text_button.clicked.connect(
+                    lambda _, line_edit_=text_edit, node=self.current_node: open_plain_editor(line_edit_, node)
+                )
 
             if type(props[key]) is PropertyHTML:
                 def open_plain_editor(line_edit_):

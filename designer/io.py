@@ -163,7 +163,7 @@ def _validate_child(child):
     :param child: The child to check.
     :return: True if valid, False if not.
     """
-    if type(child) in child.getparent().allowed_children:
+    if type(child) in child.getparent().allowed_children or child.tag is Comment:
         if child.allowed_instances:
             instances = 0
             for item in child.getparent():
@@ -188,7 +188,10 @@ def node_factory(tag, parent=None):
     :param parent: The parent of the future element.
     :return: The created element with the tag *tag*.
     """
-    if parent is not None:
+    if tag is Comment:
+        from .nodes import NodeComment
+        return NodeComment()
+    elif parent is not None:
         list_ = [parent]
         for elem in parent.iterancestors():
             list_.append(elem)
@@ -249,14 +252,15 @@ def import_(package_path):
         config_root = parse(config_path, parser=module_parser).getroot()
 
         for root in (info_root, config_root):
-            for element in root.iter(tag=Element):
+            root.sort()
+            root.model_item.sortChildren(0)
+            for element in root.iter():
                 element.parse_attribs()
 
                 for elem in element:
-                    if not isinstance(elem, CommentBase):
-                        element.model_item.appendRow(elem.model_item)
-                        if not _validate_child(elem):
-                            element.remove_child(elem)
+                    element.model_item.appendRow(elem.model_item)
+                    if not _validate_child(elem):
+                        element.remove_child(elem)
 
                 element.write_attribs()
                 element.load_metadata()

@@ -18,7 +18,7 @@ import sys, os, lxml, pytest
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from designer.io import import_, export, module_parser, new, copy_node, node_factory
 from designer.exceptions import TagNotFound, ParserError, BaseInstanceException
-from designer.nodes import _NodeBase
+from designer.nodes import _NodeElement
 from designer.props import _PropertyBase
 
 
@@ -55,7 +55,7 @@ def test_exceptions():
         import_(os.path.join(os.path.dirname(__file__), "data", "invalid_fomod"))
 
     with pytest.raises(BaseInstanceException):
-        _NodeBase()
+        _NodeElement()
 
     with pytest.raises(BaseInstanceException):
         _PropertyBase("test", [])

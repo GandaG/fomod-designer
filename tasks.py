@@ -82,7 +82,7 @@ def build():
     from fnmatch import fnmatch
 
     # set which files will be included within the archive.
-    included_files = ["LICENSE", "README.md", "CHANGELOG.rst", "CONTRIBUTING.rst"]
+    included_files = ["LICENSE"]
     archive_name = "designer"  # the archive's name
 
     try:

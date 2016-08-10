@@ -17,7 +17,7 @@
 from os.path import join, sep, normpath
 from queue import Queue
 from PyQt5.QtCore import QThread
-from lxml.etree import XML, tostring
+from lxml.etree import XML, tostring, Comment
 from lxml.objectify import deannotate
 from pygments import highlight
 from pygments.formatters.html import HtmlFormatter
@@ -77,7 +77,7 @@ class PreviewCodeWorker(QThread):
             # wait for next element
             element = self.queue.get()
 
-            if element is None:
+            if element is None or element.tag is Comment:
                 self.return_signal.emit("")
                 continue
 
