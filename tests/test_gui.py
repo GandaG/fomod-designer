@@ -26,8 +26,8 @@ from json import JSONDecodeError
 from PyQt5.QtWidgets import QDialogButtonBox, QMessageBox
 from PyQt5.QtCore import Qt
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from designer import __version__
-from designer.gui import About, read_settings, default_settings, SettingsDialog, generic_errorbox, IntroWindow, \
+from src import __version__
+from src.gui import About, read_settings, default_settings, SettingsDialog, generic_errorbox, IntroWindow, \
     MainFrame
 
 
@@ -47,8 +47,8 @@ def test_about_dialog(qtbot):
     assert not about_window.isVisible()
 
 
-@patch('designer.gui.open_new_tab')
-@patch('designer.gui.head')
+@patch('src.gui.open_new_tab')
+@patch('src.gui.head')
 def test_help(mock_head, mock_new_tab):
     mock_response = Mock(spec='status_code')
     mock_head.return_value = mock_response
@@ -81,7 +81,7 @@ def test_errorbox(qtbot):
     assert not errorbox.isVisible()
 
 
-@patch('designer.gui.open')
+@patch('src.gui.open')
 def test_read_settings(mock_open):
     mock_open.return_value = StringIO(encode(default_settings))
     assert read_settings() == default_settings
@@ -102,8 +102,8 @@ def test_read_settings(mock_open):
     assert read_settings() == default_settings
 
 
-@patch('designer.gui.read_settings')
-@patch('designer.gui.open')
+@patch('src.gui.read_settings')
+@patch('src.gui.open')
 def test_settings_dialog(mock_open, mock_read_settings, qtbot, tmpdir):
     with open(os.path.join(str(tmpdir), "settings_file"), "wt") as settings_file:
         settings_file.write(encode(default_settings))
@@ -170,7 +170,7 @@ def test_settings_dialog(mock_open, mock_read_settings, qtbot, tmpdir):
         assert decode(settings_file.read()) == settings_window.settings_dict
 
 
-@patch("designer.gui.read_settings")
+@patch("src.gui.read_settings")
 def test_intro(mock_read_settings, qtbot):
     settings_dict = default_settings
     settings_dict["General"]["tutorial_advanced"] = False

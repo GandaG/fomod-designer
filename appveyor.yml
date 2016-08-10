@@ -9,13 +9,21 @@ install:
 build: off
 
 test_script:
-  - py.test --cov=designer --cov-report html --cov-report term -vv tests/
+  - py.test --cov=src --cov-report html --cov-report term -vv tests/
 
 after_test:
+  - if not exist %APPVEYOR_BUILD_FOLDER%\output mkdir %APPVEYOR_BUILD_FOLDER%\output
+
+  - C:\Miniconda-x64\Scripts\activate.bat fomod-designer
   - inv build
+  - ps: cp dist\*.zip output
+
+  - C:\Miniconda\Scripts\activate.bat fomod-designer
+  - inv build
+  - ps: cp dist\*.zip output
 
 artifacts:
-  - path: dist\*
+  - path: output\*
     name: windows_build
 
 deploy:

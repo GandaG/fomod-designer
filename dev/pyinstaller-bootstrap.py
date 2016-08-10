@@ -19,5 +19,5 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 if __name__ == '__main__':
-    from designer.__main__ import main  # placed here so pycharm doesn't complain about import location
+    from src.__main__ import main  # placed here so pycharm doesn't complain about import location
     main()

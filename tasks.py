@@ -39,7 +39,7 @@ def gen_ui():
     from os.path import join, isfile
     from PyQt5.uic import compileUiDir
 
-    target_dir = "designer/ui_templates"
+    target_dir = "src/ui_templates"
     init_fname = "__init__.py"
     for item in listdir(target_dir):
         if item != init_fname and isfile(join(target_dir, item)):
