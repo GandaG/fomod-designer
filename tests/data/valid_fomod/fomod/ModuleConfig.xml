@@ -1,0 +1,76 @@
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://qconsulting.ca/fo3/ModConfig5.0.xsd">
+  <moduleName position="RightOfImage" colour="aaaaaa">Test</moduleName>
+  <moduleImage path="" showImage="true" showFade="true" height="-1"/>
+  <moduleDependencies operator="And">
+    <!--boopity-->
+    <fileDependency file="" state="Active"/>
+    <flagDependency flag="" value=""/>
+    <gameDependency version=""/>
+    <dependencies operator="And">
+      <fileDependency file="" state="Active"/>
+    </dependencies>
+  </moduleDependencies>
+  <requiredInstallFiles>
+    <file source="" destination="" priority="0" alwaysInstall="false" installIfUsable="false"/>
+    <folder source="" destination="" priority="0" alwaysInstall="false" installIfUsable="false"/>
+  </requiredInstallFiles>
+  <installSteps order="Explicit">
+    <installStep name="">
+      <visible operator="And">
+        <fileDependency file="" state="Active"/>
+        <flagDependency flag="" value=""/>
+        <gameDependency version=""/>
+      </visible>
+      <optionalFileGroups order="Explicit">
+        <group name="" type="SelectAny">
+          <plugins order="Ascending">
+            <plugin name="">
+              <description/>
+              <image path=""/>
+              <files>
+                <file source="" destination="" priority="0" alwaysInstall="false" installIfUsable="false"/>
+                <folder source="" destination="" priority="0" alwaysInstall="false" installIfUsable="false"/>
+              </files>
+              <conditionFlags>
+                <flag name=""/>
+              </conditionFlags>
+              <typeDescriptor>
+                <dependencyType>
+                  <defaultType name="Optional"/>
+                  <patterns>
+                    <pattern>
+                      <dependencies operator="And"/>
+                      <type name="Optional"/>
+                    </pattern>
+                  </patterns>
+                </dependencyType>
+              </typeDescriptor>
+            </plugin>
+            <plugin name="">
+              <description/>
+              <typeDescriptor>
+                <type name="Optional"/>
+              </typeDescriptor>
+            </plugin>
+          </plugins>
+        </group>
+      </optionalFileGroups>
+    </installStep>
+  </installSteps>
+  <conditionalFileInstalls>
+    <patterns>
+      <pattern>
+        <dependencies operator="And">
+          <fileDependency file="" state="Active"/>
+          <flagDependency flag="" value=""/>
+          <gameDependency version=""/>
+          <dependencies operator="And"/>
+        </dependencies>
+        <files>
+          <file source="" destination="" priority="0" alwaysInstall="false" installIfUsable="false"/>
+          <folder source="" destination="" priority="0" alwaysInstall="false" installIfUsable="false"/>
+        </files>
+      </pattern>
+    </patterns>
+  </conditionalFileInstalls>
+</config>

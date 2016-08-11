@@ -39,7 +39,7 @@ def gen_ui():
     from os.path import join, isfile
     from PyQt5.uic import compileUiDir
 
-    target_dir = "designer/ui_templates"
+    target_dir = "src/ui_templates"
     init_fname = "__init__.py"
     for item in listdir(target_dir):
         if item != init_fname and isfile(join(target_dir, item)):
@@ -52,7 +52,7 @@ def preview():
     run("python dev/pyinstaller-bootstrap.py")
 
 
-@task
+@task()
 def clean():
     from shutil import rmtree
 
@@ -61,7 +61,18 @@ def clean():
     print("Build caches cleaned.")
 
 
-@task(clean, )
+@task()
+def docs():
+    from os import system, makedirs
+    from os.path import join
+
+    makedirs(join("resources", "docs"), exist_ok=True)
+    system("sphinx-build -b html -d {} {} {}".format(join("docs", "build", "doctrees"),
+                                                     join("docs", "source"),
+                                                     join("resources", "docs")))
+
+
+@task(clean, docs)
 def build():
     from platform import system, architecture
     from shutil import copy
@@ -71,7 +82,7 @@ def build():
     from fnmatch import fnmatch
 
     # set which files will be included within the archive.
-    included_files = ["LICENSE", "README.md", "CHANGELOG.md", "CONTRIBUTING.md"]
+    included_files = ["LICENSE"]
     archive_name = "designer"  # the archive's name
 
     try:

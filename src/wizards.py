@@ -21,7 +21,7 @@ from PyQt5.QtWidgets import QStackedWidget, QFileDialog, QWidget
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import pyqtSignal
 from . import cur_folder
-from .io import elem_factory
+from .io import node_factory
 from .exceptions import BaseInstanceException
 from .ui_templates import (wizard_files_01, wizard_files_item, wizard_depend_01, wizard_depend_depend,
                            wizard_depend_depend_depend, wizard_depend_depend_file, wizard_depend_depend_flag,
@@ -84,7 +84,7 @@ class WizardFiles(_WizardBase):
             :param element_: The element to be copied
             :param layout: The layout into which to insert the newly copied element
             """
-            child = elem_factory(element_.tag, element_result)
+            child = node_factory(element_.tag, element_result)
             for key in element_.attrib:
                 child.properties[key].set_value(element_.attrib[key])
             element_result.add_child(child)
@@ -112,10 +112,10 @@ class WizardFiles(_WizardBase):
 
         # finish with connections
         page_ui.button_add_file.clicked.connect(
-            lambda: add_elem(elem_factory("file", element_result), page_ui.layout_file)
+            lambda: add_elem(node_factory("file", element_result), page_ui.layout_file)
         )
         page_ui.button_add_folder.clicked.connect(
-            lambda: add_elem(elem_factory("folder", element_result), page_ui.layout_folder)
+            lambda: add_elem(node_factory("folder", element_result), page_ui.layout_folder)
         )
         page_ui.finish_button.clicked.connect(lambda: self._process_results(element_result))
         page_ui.cancel_button.clicked.connect(self.cancelled.emit)
@@ -182,13 +182,13 @@ class WizardDepend(_WizardBase):
             if element_.getparent().tag == "dependencies" or \
                     element_.getparent().tag == "moduleDependencies" or \
                     element_.getparent().tag == "visible":
-                result = elem_factory(element_.tag, NodeConfigVisible())
+                result = node_factory(element_.tag, NodeConfigVisible())
             elif element_.tag == "moduleDependencies":
-                result = elem_factory(element_.tag, NodeConfigVisible())
+                result = node_factory(element_.tag, NodeConfigVisible())
             elif element_.tag == "visible":
-                result = elem_factory(element_.tag, NodeConfigVisible())
+                result = node_factory(element_.tag, NodeConfigVisible())
             else:
-                result = elem_factory(element_.tag, NodeConfigRoot())
+                result = node_factory(element_.tag, NodeConfigRoot())
 
             element_.write_attribs()
             for key in element_.keys():
@@ -261,7 +261,7 @@ class WizardDepend(_WizardBase):
         from .nodes import NodeConfigVisible
 
         if element_ is None and tag:
-            child = elem_factory(tag, NodeConfigVisible())
+            child = node_factory(tag, NodeConfigVisible())
             parent_elem.add_child(child)
         else:
             if element_ is None:
@@ -294,7 +294,7 @@ class WizardDepend(_WizardBase):
                 elem.write_attribs()
         else:
             if value:
-                elem = elem_factory("gameDependency", element)
+                elem = node_factory("gameDependency", element)
                 element.add_child(elem)
                 elem.properties["version"].set_value(value)
                 elem.write_attribs()

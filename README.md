@@ -1,41 +1,11 @@
 # FOMOD Designer
-[![Build status](https://ci.appveyor.com/api/projects/status/nep4id3ammekof68?svg=true)](https://ci.appveyor.com/project/GandaG/fomod-editor) [![Build Status](https://travis-ci.org/GandaG/fomod-designer.svg?branch=develop)](https://travis-ci.org/GandaG/fomod-designer)
+[![Build status](https://ci.appveyor.com/api/projects/status/nep4id3ammekof68?svg=true)](https://ci.appveyor.com/project/GandaG/fomod-editor) [![Build Status](https://travis-ci.org/GandaG/fomod-designer.svg?branch=develop)](https://travis-ci.org/GandaG/fomod-designer) [![Coverage Status](https://coveralls.io/repos/github/GandaG/fomod-designer/badge.svg?branch=develop)](https://coveralls.io/github/GandaG/fomod-designer?branch=develop) [![Documentation Status](https://readthedocs.org/projects/fomod-designer/badge/?version=stable)](http://fomod-designer.readthedocs.io/en/stable/?badge=stable)
 
 *A visual editor to quickly create FOMOD installers for Nexus based mods.*
 
-## Overview
+## Documentation
 
-*TODO*
-
-## Installation
-
-* Download the zip file corresponding to your OS from the [latest release](https://github.com/GandaG/fomod-editor/releases/latest);
-* Extract the folder within to a location of your choice;
-* Run the "designer" executable within the folder.
-
-## Usage
-
-* Open the application;
-* Click on the **New/Open** button;
-* Select the root folder of your package (where the files you'll install are);
-* Create/modify your installer;
-* Once you're ready, click on the **Save** button to save your installer.
-
-## Contributing
-
-This repo uses a ***.settings*** file to define all the necessary settings. This file follows this syntax:
-
-```
-[git]
-user=git_username
-email=git_email
-```
-
-For more information see the [CONTRIBUTING] document.
-Thank you, [contributors]!
-
-  [CONTRIBUTING]: /.github/CONTRIBUTING.md
-  [contributors]: https://github.com/GandaG/fomod-editor/graphs/contributors
+You can get more information in the official documentation hosted at [Read The Docs](http://fomod-designer.readthedocs.io/en/stable/).
 
 ## License
 

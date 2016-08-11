@@ -14,33 +14,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from os import makedirs
-from os.path import expanduser, normpath, basename, join, relpath, isdir
+from os import makedirs, listdir
+from os.path import expanduser, normpath, basename, join, relpath, isdir, isfile, abspath
 from io import BytesIO
 from threading import Thread
 from queue import Queue
-from webbrowser import open as web_open
+from webbrowser import open_new_tab
 from datetime import datetime
 from collections import deque
 from json import JSONDecodeError
 from jsonpickle import encode, decode, set_encoder_options
-from lxml.etree import parse, tostring
+from lxml.etree import parse, tostring, Comment
 from PyQt5.QtWidgets import (QFileDialog, QColorDialog, QMessageBox, QLabel, QHBoxLayout, QCommandLinkButton, QDialog,
                              QFormLayout, QLineEdit, QSpinBox, QComboBox, QWidget, QPushButton, QSizePolicy, QStatusBar,
-                             QCompleter, QApplication, QMainWindow, QUndoCommand, QUndoStack, QMenu)
-from PyQt5.QtGui import QIcon, QPixmap, QColor, QFont, QStandardItemModel
-from PyQt5.QtCore import Qt, pyqtSignal, QStringListModel, QMimeData
+                             QCompleter, QApplication, QMainWindow, QUndoCommand, QUndoStack, QMenu, QHeaderView,
+                             QAction, QVBoxLayout, QGroupBox, QCheckBox, QRadioButton)
+from PyQt5.QtGui import QIcon, QPixmap, QColor, QFont, QStandardItemModel, QStandardItem
+from PyQt5.QtCore import Qt, pyqtSignal, QStringListModel, QMimeData, QEvent
 from PyQt5.uic import loadUi
-from requests import get, codes, ConnectionError, Timeout
+from requests import get, head, codes, ConnectionError, Timeout
 from validator import validate_tree, check_warnings, ValidatorError, ValidationError, WarningError, MissingFolderError
 from . import cur_folder, __version__
-from .io import import_, new, export, sort_elements, elem_factory, copy_element
-from .previews import PreviewDispatcherThread, PreviewMoGui
+from .nodes import _NodeElement, NodeComment
+from .io import import_, new, export, node_factory, copy_node
+from .previews import PreviewDispatcherThread
 from .props import PropertyFile, PropertyColour, PropertyFolder, PropertyCombo, PropertyInt, PropertyText, \
     PropertyFlagLabel, PropertyFlagValue, PropertyHTML
 from .exceptions import DesignerError
 from .ui_templates import window_intro, window_mainframe, window_about, window_settings, window_texteditor, \
-    window_plaintexteditor
+    window_plaintexteditor, preview_mo
 
 
 class IntroWindow(QMainWindow, window_intro.Ui_MainWindow):
@@ -74,6 +76,7 @@ class IntroWindow(QMainWindow, window_intro.Ui_MainWindow):
             self.show()
 
         self.new_button.clicked.connect(lambda: self.open_path(""))
+        self.button_help.clicked.connect(MainFrame.help)
         self.button_about.clicked.connect(lambda _, self_=self: MainFrame.about(self_))
 
     def open_path(self, path):
@@ -200,7 +203,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                 return 0
 
             mime_data = MainFrame.NodeMimeData()
-            new_node = copy_element(self.itemFromIndex(index_list[0]).xml_node)
+            new_node = copy_node(self.itemFromIndex(index_list[0]).xml_node)
             mime_data.set_item(new_node.model_item)
             mime_data.set_node(new_node)
             mime_data.set_original_item(self.itemFromIndex(index_list[0]))
@@ -372,7 +375,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
 
         def redo(self):
             if self.new_child_node is None:
-                self.new_child_node = elem_factory(self.child_tag, self.parent_node)
+                self.new_child_node = node_factory(self.child_tag, self.parent_node)
                 defaults_dict = self.settings_dict["Defaults"]
                 if self.child_tag in defaults_dict and defaults_dict[self.child_tag].enabled():
                     self.new_child_node.properties[defaults_dict[self.child_tag].key()].set_value(
@@ -400,7 +403,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
             self.pasted_node = None
 
         def redo(self):
-            self.pasted_node = copy_element(QApplication.clipboard().mimeData().node())
+            self.pasted_node = copy_node(QApplication.clipboard().mimeData().node())
             self.parent_item.xml_node.append(self.pasted_node)
             self.parent_item.appendRow(self.pasted_node.model_item)
             self.parent_item.sortChildren(0)
@@ -432,6 +435,8 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
         self.menu_Recent_Files.setIcon(QIcon(join(cur_folder, "resources/logos/logo_recent.png")))
         self.actionExpand_All.setIcon(QIcon(join(cur_folder, "resources/logos/logo_expand.png")))
         self.actionCollapse_All.setIcon(QIcon(join(cur_folder, "resources/logos/logo_collapse.png")))
+        self.actionHide_Node.setIcon(QIcon(join(cur_folder, "resources/logos/logo_hide.png")))
+        self.actionShow_Node.setIcon(QIcon(join(cur_folder, "resources/logos/logo_show.png")))
 
         # manage undo and redo
         self.undo_stack = QUndoStack(self)
@@ -459,6 +464,8 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
         self.actionO_ptions.triggered.connect(self.settings)
         self.action_Refresh.triggered.connect(self.refresh)
         self.action_Delete.triggered.connect(self.delete)
+        self.actionHide_Node.triggered.connect(self.hide_node)
+        self.actionShow_Node.triggered.connect(self.show_node)
         self.actionHe_lp.triggered.connect(self.help)
         self.action_About.triggered.connect(lambda _, self_=self: self.about(self_))
         self.actionClear.triggered.connect(self.clear_recent_files)
@@ -520,7 +527,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
         self.flag_value_completer.setModel(self.flag_value_model)
 
         # connect node selected signal
-        self.current_node = None
+        self.current_node = None  # type: _NodeElement
         self.select_node.connect(
             lambda index: self.set_current_node(self.node_tree_model.itemFromIndex(index).xml_node)
         )
@@ -535,6 +542,22 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
         self.select_node.connect(
             lambda: self.button_wizard.setEnabled(False)
             if self.current_node.wizard is None else self.button_wizard.setEnabled(True)
+        )
+        self.select_node.connect(
+            lambda index: self.actionHide_Node.setEnabled(True)
+            if self.current_node is not self._config_root and
+            self.current_node is not self._info_root and
+            self.current_node not in self.current_node.getparent().hidden_children and
+            not self.current_node.allowed_instances
+            else self.actionHide_Node.setEnabled(False)
+        )
+        self.select_node.connect(
+            lambda index: self.actionShow_Node.setEnabled(True)
+            if self.current_node is not self._config_root and
+            self.current_node is not self._info_root and
+            self.current_node in self.current_node.getparent().hidden_children and
+            not self.current_node.allowed_instances
+            else self.actionShow_Node.setEnabled(False)
         )
 
         # manage code changed signal
@@ -565,6 +588,11 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
             self.select_node.emit(index)
             node_tree_context_menu.addSeparator()
             node_tree_context_menu.addAction(self.action_Delete)
+            if self.current_node is not self._config_root and self.current_node is not self._info_root:
+                if self.current_node in self.current_node.getparent().hidden_children:
+                    node_tree_context_menu.addAction(self.actionShow_Node)
+                else:
+                    node_tree_context_menu.addAction(self.actionHide_Node)
             node_tree_context_menu.addSeparator()
             node_tree_context_menu.addActions([self.actionCopy, self.actionPaste])
             node_tree_context_menu.addSeparator()
@@ -596,7 +624,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
 
     def paste_item_from_clipboard(self):
         parent_item = self.node_tree_model.itemFromIndex(self.node_tree_view.selectedIndexes()[0])
-        new_node = copy_element(QApplication.clipboard().mimeData().node())
+        new_node = copy_node(QApplication.clipboard().mimeData().node())
         if not parent_item.xml_node.can_add_child(new_node):
             self.statusBar().showMessage("This parent is not valid!")
         else:
@@ -639,7 +667,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
         def update_available_button():
             update_button = QPushButton("New Version Available!")
             update_button.setFlat(True)
-            update_button.clicked.connect(lambda: web_open("https://github.com/GandaG/fomod-designer/releases/latest"))
+            update_button.clicked.connect(lambda: open_new_tab("https://github.com/GandaG/fomod-designer/releases/latest"))
             self.statusBar().addPermanentWidget(update_button)
 
         def check_remote():
@@ -672,6 +700,14 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
         self.statusBar().addPermanentWidget(QLabel("Checking for updates..."))
 
         Thread(target=check_remote).start()
+
+    def hide_node(self):
+        if self.current_node is not None:
+            self.current_node.set_hidden(True)
+
+    def show_node(self):
+        if self.current_node is not None:
+            self.current_node.set_hidden(False)
 
     def open(self, path=""):
         """
@@ -707,7 +743,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                                 join(cur_folder, "resources", "mod_schema.xsd"),
                             )
                         except ValidationError as p:
-                            generic_errorbox(p.title, str(p), p.detailed)
+                            generic_errorbox(p.title, str(p), p.detailed).exec_()
                             if not self.settings_dict["Load"]["validate_ignore"]:
                                 return
                     if self.settings_dict["Load"]["warnings"]:
@@ -717,7 +753,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                                 config_root,
                             )
                         except WarningError as p:
-                            generic_errorbox(p.title, str(p), p.detailed)
+                            generic_errorbox(p.title, str(p), p.detailed).exec_()
                             if not self.settings_dict["Save"]["warn_ignore"]:
                                 return
                 else:
@@ -744,7 +780,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                 self.clear_prop_list()
                 self.button_wizard.setEnabled(False)
         except (DesignerError, ValidatorError) as p:
-            generic_errorbox(p.title, str(p), p.detailed)
+            generic_errorbox(p.title, str(p), p.detailed).exec_()
             return
 
     def save(self):
@@ -757,8 +793,8 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
             if self._info_root is None and self._config_root is None:
                 return
             elif not self.undo_stack.isClean():
-                sort_elements(self._info_root)
-                sort_elements(self._config_root)
+                self._info_root.sort()
+                self._config_root.sort()
                 if self.settings_dict["Save"]["validate"]:
                     try:
                         validate_tree(
@@ -766,7 +802,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                             join(cur_folder, "resources", "mod_schema.xsd"),
                         )
                     except ValidationError as e:
-                        generic_errorbox(e.title, str(e), e.detailed)
+                        generic_errorbox(e.title, str(e), e.detailed).exec_()
                         if not self.settings_dict["Save"]["validate_ignore"]:
                             return
                 if self.settings_dict["Save"]["warnings"]:
@@ -778,13 +814,13 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                     except MissingFolderError:
                         pass
                     except WarningError as e:
-                        generic_errorbox(e.title, str(e), e.detailed)
+                        generic_errorbox(e.title, str(e), e.detailed).exec_()
                         if not self.settings_dict["Save"]["warn_ignore"]:
                             return
                 export(self._info_root, self._config_root, self._package_path)
                 self.undo_stack.setClean()
         except (DesignerError, ValidatorError) as e:
-            generic_errorbox(e.title, str(e))
+            generic_errorbox(e.title, str(e), e.detailed).exec_()
             return
 
     def settings(self):
@@ -806,21 +842,30 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
         """
         Deletes the current node in the tree. No effect when using the Basic View.
         """
-        try:
-            if self.current_node is None:
-                self.statusBar().showMessage("Can't delete nothing.")
-            else:
-                self.undo_stack.push(self.DeleteCommand(
-                    self.current_node,
-                    self.node_tree_model,
-                    self.select_node
-                ))
-        except AttributeError:
+        if self.current_node is None:
+            self.statusBar().showMessage("Can't delete nothing.")
+        elif self.current_node.getparent() is None:
             self.statusBar().showMessage("Can't delete root nodes.")
+        else:
+            if self.current_node.is_hidden:
+                self.current_node.set_hidden(False)
+            self.undo_stack.push(self.DeleteCommand(
+                self.current_node,
+                self.node_tree_model,
+                self.select_node
+            ))
 
     @staticmethod
     def help():
-        not_implemented()
+        docs_url = "http://fomod-designer.readthedocs.io/en/stable/index.html"
+        local_docs = "file://" + abspath(join(cur_folder, "resources", "docs", "index.html"))
+        try:
+            if head(docs_url, timeout=0.5).status_code == codes.ok:
+                open_new_tab(docs_url)
+            else:
+                raise ConnectionError()
+        except (Timeout, ConnectionError):
+            open_new_tab(local_docs)
 
     @staticmethod
     def about(parent):
@@ -893,7 +938,12 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
             if widget is not None:
                 widget.deleteLater()
 
-        for child in self.current_node.allowed_children:
+        children_list = list(self.current_node.allowed_children)
+
+        if self.current_node.tag is not Comment:
+            children_list.insert(0, NodeComment)
+
+        for child in children_list:
             new_object = child()
             child_button = QPushButton(new_object.name)
             font_button = QFont()
@@ -974,11 +1024,18 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
             self.layout_prop_editor.setWidget(prop_index, QFormLayout.LabelRole, label)
 
             if type(props[key]) is PropertyText:
-                def open_plain_editor(line_edit_):
+                def open_plain_editor(line_edit_, node):
                     dialog_ui = window_plaintexteditor.Ui_Dialog()
                     dialog = QDialog(self)
                     dialog_ui.setupUi(dialog)
                     dialog_ui.edit_text.setPlainText(line_edit_.text())
+                    if node.tag is Comment:
+                        for sequence in node.forbidden_sequences:
+                            dialog_ui.edit_text.textChanged.connect(
+                                lambda: dialog_ui.edit_text.setText(
+                                    dialog_ui.edit_text.toPlainText().replace(sequence, "")
+                                ) if sequence in dialog_ui.edit_text.toPlainText() else None
+                            )
                     dialog_ui.buttonBox.accepted.connect(dialog.close)
                     dialog_ui.buttonBox.accepted.connect(lambda: line_edit_.setText(dialog_ui.edit_text.toPlainText()))
                     dialog_ui.buttonBox.accepted.connect(line_edit_.editingFinished.emit)
@@ -995,6 +1052,13 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                 layout.addWidget(text_button)
                 layout.setContentsMargins(0, 0, 0, 0)
                 text_edit.setText(props[key].value)
+                if self.current_node.tag is Comment:
+                    for sequence in self.current_node.forbidden_sequences:
+                        text_edit.textChanged.connect(
+                            lambda: text_edit.setText(
+                                text_edit.text().replace(sequence, "")
+                            ) if sequence in text_edit.text() else None
+                        )
                 text_edit.textChanged.connect(props[key].set_value)
                 text_edit.textChanged[str].connect(self.current_node.write_attribs)
                 text_edit.textChanged[str].connect(self.current_node.update_item_name)
@@ -1019,7 +1083,9 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                 text_edit.editingFinished.connect(
                     lambda index=prop_index: og_values.update({index: text_edit.text()})
                 )
-                text_button.clicked.connect(lambda _, line_edit_=text_edit: open_plain_editor(line_edit_))
+                text_button.clicked.connect(
+                    lambda _, line_edit_=text_edit, node=self.current_node: open_plain_editor(line_edit_, node)
+                )
 
             if type(props[key]) is PropertyHTML:
                 def open_plain_editor(line_edit_):
@@ -1659,7 +1725,10 @@ class About(QDialog, window_about.Ui_Dialog):
         super().__init__(parent=parent)
         self.setupUi(self)
 
-        self.move(parent.window().frameGeometry().topLeft() + parent.window().rect().center() - self.rect().center())
+        if parent:
+            self.move(
+                parent.window().frameGeometry().topLeft() + parent.window().rect().center() - self.rect().center()
+            )
 
         self.setWindowFlags(Qt.WindowTitleHint | Qt.Dialog)
 
@@ -1673,11 +1742,440 @@ class About(QDialog, window_about.Ui_Dialog):
         self.button.clicked.connect(self.close)
 
 
-def not_implemented():
-    """
-    A convenience function for something that has not yet been implemented.
-    """
-    generic_errorbox("Nope", "Sorry, this part hasn't been implemented yet!")
+class PreviewMoGui(QWidget, preview_mo.Ui_Form):
+    clear_tab_signal = pyqtSignal()
+    clear_ui_signal = pyqtSignal()
+    invalid_node_signal = pyqtSignal()
+    missing_node_signal = pyqtSignal()
+    set_labels_signal = pyqtSignal([str, str, str, str])
+    create_page_signal = pyqtSignal([object])
+
+    class ScaledLabel(QLabel):
+        def __init__(self, parent=None):
+            super().__init__(parent)
+            self.original_pixmap = None
+            self.setMinimumSize(320, 200)
+
+        def set_scalable_pixmap(self, pixmap):
+            self.original_pixmap = pixmap
+            self.setPixmap(self.original_pixmap.scaled(self.size(), Qt.KeepAspectRatio))
+
+        def resizeEvent(self, event):
+            if self.pixmap() and self.original_pixmap:
+                self.setPixmap(self.original_pixmap.scaled(event.size(), Qt.KeepAspectRatio))
+
+    class PreviewItem(QStandardItem):
+        def set_priority(self, value):
+            self.priority = value
+
+    def __init__(self, mo_preview_layout):
+        super().__init__()
+        self.mo_preview_layout = mo_preview_layout
+        self.setupUi(self)
+        self.mo_preview_layout.addWidget(self)
+        self.label_image = self.ScaledLabel(self)
+        self.splitter_label.addWidget(self.label_image)
+        self.hide()
+
+        self.button_preview_more.setIcon(QIcon(join(cur_folder, "resources/logos/logo_more.png")))
+        self.button_preview_less.setIcon(QIcon(join(cur_folder, "resources/logos/logo_less.png")))
+        self.button_preview_more.clicked.connect(self.button_preview_more.hide)
+        self.button_preview_more.clicked.connect(self.button_preview_less.show)
+        self.button_preview_more.clicked.connect(self.widget_preview.show)
+        self.button_preview_less.clicked.connect(self.button_preview_less.hide)
+        self.button_preview_less.clicked.connect(self.button_preview_more.show)
+        self.button_preview_less.clicked.connect(self.widget_preview.hide)
+        self.button_preview_more.clicked.emit()
+        self.button_results_more.setIcon(QIcon(join(cur_folder, "resources/logos/logo_more.png")))
+        self.button_results_less.setIcon(QIcon(join(cur_folder, "resources/logos/logo_less.png")))
+        self.button_results_more.clicked.connect(self.button_results_more.hide)
+        self.button_results_more.clicked.connect(self.button_results_less.show)
+        self.button_results_more.clicked.connect(self.widget_results.show)
+        self.button_results_less.clicked.connect(self.button_results_less.hide)
+        self.button_results_less.clicked.connect(self.button_results_more.show)
+        self.button_results_less.clicked.connect(self.widget_results.hide)
+        self.button_results_less.clicked.emit()
+
+        self.model_files = QStandardItemModel()
+        self.tree_results.expanded.connect(
+            lambda: self.tree_results.header().resizeSections(QHeaderView.Stretch)
+        )
+        self.tree_results.collapsed.connect(
+            lambda: self.tree_results.header().resizeSections(QHeaderView.Stretch)
+        )
+        self.tree_results.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.tree_results.customContextMenuRequested.connect(self.on_custom_context_menu)
+        self.model_flags = QStandardItemModel()
+        self.list_flags.expanded.connect(
+            lambda: self.list_flags.header().resizeSections(QHeaderView.Stretch)
+        )
+        self.list_flags.collapsed.connect(
+            lambda: self.list_flags.header().resizeSections(QHeaderView.Stretch)
+        )
+        self.reset_models()
+
+        self.label_invalid = QLabel(
+            "Select an Installation Step node or one of its children to preview its installer page."
+        )
+        self.label_invalid.setAlignment(Qt.AlignCenter)
+        self.mo_preview_layout.addWidget(self.label_invalid)
+        self.label_invalid.hide()
+
+        self.label_missing = QLabel(
+            "In order to preview an installer page, create an Installation Step node."
+        )
+        self.label_missing.setAlignment(Qt.AlignCenter)
+        self.mo_preview_layout.addWidget(self.label_missing)
+        self.label_missing.hide()
+
+        self.clear_tab_signal.connect(self.clear_tab)
+        self.clear_ui_signal.connect(self.clear_ui)
+        self.invalid_node_signal.connect(self.invalid_node)
+        self.missing_node_signal.connect(self.missing_node)
+        self.set_labels_signal.connect(self.set_labels)
+        self.create_page_signal.connect(self.create_page)
+
+    def on_custom_context_menu(self, position):
+        node_tree_context_menu = QMenu(self.tree_results)
+
+        action_expand = QAction(QIcon(join(cur_folder, "resources/logos/logo_expand.png")), "Expand All", self)
+        action_collapse = QAction(QIcon(join(cur_folder, "resources/logos/logo_collapse.png")), "Collapse All", self)
+
+        action_expand.triggered.connect(self.tree_results.expandAll)
+        action_collapse.triggered.connect(self.tree_results.collapseAll)
+
+        node_tree_context_menu.addActions([action_expand, action_collapse])
+
+        node_tree_context_menu.move(self.tree_results.mapToGlobal(position))
+        node_tree_context_menu.exec_()
+
+    def eventFilter(self, object_, event):
+        if event.type() == QEvent.HoverEnter:
+            self.label_description.setText(object_.property("description"))
+            self.label_image.set_scalable_pixmap(QPixmap(object_.property("image_path")))
+
+        return QWidget().eventFilter(object_, event)
+
+    def clear_ui(self):
+        self.label_name.clear()
+        self.label_author.clear()
+        self.label_version.clear()
+        self.label_website.clear()
+        self.label_description.clear()
+        self.label_image.clear()
+        [widget.deleteLater() for widget in [
+            self.layout_widget.itemAt(index).widget() for index in range(self.layout_widget.count())
+            if self.layout_widget.itemAt(index).widget()
+            ]]
+        self.reset_models()
+
+    def reset_models(self):
+        self.model_files.clear()
+        self.model_files.setHorizontalHeaderLabels(["Files Preview", "Source", "Plugin"])
+        self.model_files_root = QStandardItem(QIcon(join(cur_folder, "resources/logos/logo_folder.png")), "<root>")
+        self.model_files.appendRow(self.model_files_root)
+        self.tree_results.setModel(self.model_files)
+        self.model_flags.clear()
+        self.model_flags.setHorizontalHeaderLabels(["Flag Label", "Flag Value", "Plugin"])
+        self.list_flags.setModel(self.model_flags)
+
+    def clear_tab(self):
+        for index in reversed(range(self.mo_preview_layout.count())):
+            widget = self.mo_preview_layout.itemAt(index).widget()
+            if widget is not None:
+                widget.hide()
+
+    def invalid_node(self):
+        self.clear_tab()
+        self.label_invalid.show()
+
+    def missing_node(self):
+        self.clear_tab()
+        self.label_missing.show()
+
+    def set_labels(self, name, author, version, website):
+        self.label_name.setText(name)
+        self.label_author.setText(author)
+        self.label_version.setText(version)
+        self.label_website.setText("<a href = {}>link</a>".format(website))
+
+    # this is pretty horrendous, need to come up with a better way of doing this.
+    def create_page(self, page_data):
+        group_step = QGroupBox(page_data.name)
+        layout_step = QVBoxLayout()
+        group_step.setLayout(layout_step)
+
+        check_first_radio = True
+        for group in page_data.group_list:
+            group_group = QGroupBox(group.name)
+            layout_group = QVBoxLayout()
+            group_group.setLayout(layout_group)
+
+            for plugin in group.plugin_list:
+                if group.type in ["SelectAny", "SelectAll", "SelectAtLeastOne"]:
+                    button_plugin = QCheckBox(plugin.name, self)
+
+                    if group.type == "SelectAll":
+                        button_plugin.setChecked(True)
+                        button_plugin.setEnabled(False)
+                    elif group.type == "SelectAtLeastOne":
+                        button_plugin.toggled.connect(
+                            lambda checked, button=button_plugin: button.setChecked(True)
+                            if not checked and not [
+                                button for button in [
+                                    layout_group.itemAt(index).widget() for index in range(layout_group.count())
+                                    if layout_group.itemAt(index).widget()
+                                ] if button.isChecked()
+                            ]
+                            else None
+                        )
+
+                elif group.type in ["SelectExactlyOne", "SelectAtMostOne"]:
+                    button_plugin = QRadioButton(plugin.name, self)
+                    if check_first_radio and not button_plugin.isChecked():
+                        button_plugin.animateClick(0)
+                        check_first_radio = False
+
+                button_plugin.setProperty("description", plugin.description)
+                button_plugin.setProperty("image_path", plugin.image_path)
+                button_plugin.setProperty("file_list", plugin.file_list)
+                button_plugin.setProperty("folder_list", plugin.folder_list)
+                button_plugin.setProperty("flag_list", plugin.flag_list)
+                button_plugin.setProperty("type", plugin.type)
+                button_plugin.setAttribute(Qt.WA_Hover)
+
+                if plugin.type == "Required":
+                    button_plugin.setEnabled(False)
+                elif plugin.type == "Recommended":
+                    button_plugin.animateClick(0) if not button_plugin.isChecked() else None
+                elif plugin.type == "NotUsable":
+                    button_plugin.setChecked(False)
+                    button_plugin.setEnabled(False)
+
+                button_plugin.toggled.connect(self.reset_models)
+                button_plugin.toggled.connect(self.update_installed_files)
+                button_plugin.toggled.connect(self.update_set_flags)
+
+                button_plugin.installEventFilter(self)
+                button_plugin.setObjectName("preview_button")
+                layout_group.addWidget(button_plugin)
+
+            if group.type == "SelectAtMostOne":
+                button_none = QRadioButton("None")
+                layout_group.addWidget(button_none)
+
+            layout_step.addWidget(group_group)
+
+        self.layout_widget.addWidget(group_step)
+        self.reset_models()
+        self.update_installed_files()
+        self.update_set_flags()
+        self.show()
+
+    def update_installed_files(self):
+        def recurse_add_items(folder, parent):
+            for boop in listdir(folder):  # I was very tired
+                if isdir(join(folder, boop)):
+                    folder_item = None
+                    existing_folder_ = self.model_files.findItems(boop, Qt.MatchRecursive)
+                    if existing_folder_:
+                        for boopity in existing_folder_:
+                            if boopity.parent() is parent:
+                                folder_item = boopity
+                                break
+                    if not folder_item:
+                        folder_item = self.PreviewItem(
+                            QIcon(join(cur_folder, "resources/logos/logo_folder.png")),
+                            boop
+                        )
+                        folder_item.set_priority(folder_.priority)
+                        parent.appendRow([folder_item, QStandardItem(rel_source), QStandardItem(button.text())])
+                    recurse_add_items(join(folder, boop), folder_item)
+
+                elif isfile(join(folder, boop)):
+                    file_item_ = None
+                    existing_file_ = self.model_files.findItems(boop, Qt.MatchRecursive)
+                    if existing_file_:
+                        for boopity in existing_file_:
+                            if boopity.parent() is parent:
+                                if folder_.priority < boopity.priority:
+                                    file_item_ = boopity
+                                    break
+                                else:
+                                    parent.removeRow(boopity.row())
+                                    break
+                    if not file_item_:
+                        file_item_ = self.PreviewItem(
+                            QIcon(join(cur_folder, "resources/logos/logo_file.png")),
+                            boop
+                        )
+                        file_item_.set_priority(folder_.priority)
+                        parent.appendRow([file_item_, QStandardItem(rel_source), QStandardItem(button.text())])
+
+        for button in self.findChildren((QCheckBox, QRadioButton), "preview_button"):
+            for folder_ in button.property("folder_list"):
+                if (button.isChecked() and button.property("type") != "NotUsable" or
+                        folder_.always_install or
+                        folder_.install_usable and button.property("type") != "NotUsable" or
+                        button.property("type") == "Required"):
+                    destination = folder_.destination
+                    abs_source = folder_.abs_source
+                    rel_source = folder_.rel_source
+                    parent_item = self.model_files_root
+
+                    destination_split = destination.split("/")
+                    if destination_split[0] == ".":
+                        destination_split = destination_split[1:]
+                    for dest_folder in destination_split:
+                        existing_folder_list = self.model_files.findItems(dest_folder, Qt.MatchRecursive)
+                        if existing_folder_list:
+                            for existing_folder in existing_folder_list:
+                                if existing_folder.parent() is parent_item:
+                                    parent_item = existing_folder
+                                    break
+                            continue
+                        item_ = self.PreviewItem(
+                            QIcon(join(cur_folder, "resources/logos/logo_folder.png")),
+                            dest_folder
+                        )
+                        item_.set_priority(folder_.priority)
+                        parent_item.appendRow([item_, QStandardItem(), QStandardItem(button.text())])
+                        parent_item = item_
+
+                    if isdir(abs_source):
+                        recurse_add_items(abs_source, parent_item)
+
+            for file_ in button.property("file_list"):
+                if (button.isChecked() and button.property("type") != "NotUsable" or
+                        file_.always_install or
+                        file_.install_usable and button.property("type") != "NotUsable" or
+                        button.property("type") == "Required"):
+                    destination = file_.destination
+                    abs_source = file_.abs_source
+                    rel_source = file_.rel_source
+                    parent_item = self.model_files_root
+
+                    destination_split = destination.split("/")
+                    if destination_split[0] == ".":
+                        destination_split = destination_split[1:]
+                    for dest_folder in destination_split:
+                        existing_folder_list = self.model_files.findItems(dest_folder, Qt.MatchRecursive)
+                        if existing_folder_list:
+                            for existing_folder in existing_folder_list:
+                                if existing_folder.parent() is parent_item:
+                                    parent_item = existing_folder
+                                    break
+                            continue
+                        item_ = self.PreviewItem(
+                            QIcon(join(cur_folder, "resources/logos/logo_folder.png")),
+                            dest_folder
+                        )
+                        item_.set_priority(file_.priority)
+                        parent_item.appendRow([item_, QStandardItem(), QStandardItem(button.text())])
+                        parent_item = item_
+
+                    source_file = abs_source.split("/")[len(abs_source.split("/")) - 1]
+                    file_item = None
+                    existing_file_list = self.model_files.findItems(source_file, Qt.MatchRecursive)
+                    if existing_file_list:
+                        for existing_file in existing_file_list:
+                            if existing_file.parent() is parent_item:
+                                if file_.priority < existing_file.priority:
+                                    file_item = existing_file
+                                    break
+                                else:
+                                    parent_item.removeRow(existing_file.row())
+                                    break
+                    if not file_item:
+                        file_item = self.PreviewItem(
+                            QIcon(join(cur_folder, "resources/logos/logo_file.png")),
+                            source_file
+                        )
+                        file_item.set_priority(file_.priority)
+                        parent_item.appendRow([file_item, QStandardItem(rel_source), QStandardItem(button.text())])
+
+        self.tree_results.header().resizeSections(QHeaderView.Stretch)
+
+    def update_set_flags(self):
+        for button in self.findChildren((QCheckBox, QRadioButton), "preview_button"):
+            if button.isChecked():
+                for flag in button.property("flag_list"):
+                    flag_label = QStandardItem(flag.label)
+                    flag_value = QStandardItem(flag.value)
+                    flag_plugin = QStandardItem(button.text())
+                    existing_flag = self.model_flags.findItems(flag.label)
+                    if existing_flag:
+                        previous_flag_row = existing_flag[0].row()
+                        self.model_flags.removeRow(previous_flag_row)
+                        self.model_flags.insertRow(previous_flag_row, [flag_label, flag_value, flag_plugin])
+                    else:
+                        self.model_flags.appendRow([flag_label, flag_value, flag_plugin])
+
+        self.list_flags.header().resizeSections(QHeaderView.Stretch)
+
+
+class DefaultsSettings(object):
+    def __init__(self, key, default_enabled, default_value):
+        self.__enabled = default_enabled
+        self.__property_key = key
+        self.__property_value = default_value
+
+    def __eq__(self, other):
+        if self.enabled() == other.enabled() and self.value() == other.value() and self.key() == other.key():
+            return True
+        else:
+            return False
+
+    def set_enabled(self, enabled):
+        self.__enabled = enabled
+
+    def set_value(self, value):
+        self.__property_value = value
+
+    def enabled(self):
+        return self.__enabled
+
+    def value(self):
+        return self.__property_value
+
+    def key(self):
+        return self.__property_key
+
+
+default_settings = {
+    "General": {
+        "code_refresh": 3,
+        "show_intro": True,
+        "show_advanced": False,
+        "tutorial_advanced": True,
+    },
+    "Appearance": {
+        "required_colour": "#ba4d0e",
+        "atleastone_colour": "#d0d02e",
+        "either_colour": "#ffaa7f",
+        "style": "",
+        "palette": "",
+    },
+    "Defaults": {
+        "installSteps": DefaultsSettings("order", True, "Explicit"),
+        "optionalFileGroups": DefaultsSettings("order", True, "Explicit"),
+        "type": DefaultsSettings("name", True, "Optional"),
+        "defaultType": DefaultsSettings("name", True, "Optional"),
+    },
+    "Load": {
+        "validate": True,
+        "validate_ignore": False,
+        "warnings": True,
+        "warn_ignore": True,
+    },
+    "Save": {
+        "validate": True,
+        "validate_ignore": False,
+        "warnings": True,
+        "warn_ignore": True,
+    },
+    "Recent Files": deque(maxlen=5),
+}
 
 
 def generic_errorbox(title, text, detail=""):
@@ -1693,7 +2191,7 @@ def generic_errorbox(title, text, detail=""):
     errorbox.setWindowTitle(title)
     errorbox.setDetailedText(detail)
     errorbox.setIconPixmap(QPixmap(join(cur_folder, "resources/logos/logo_admin.png")))
-    errorbox.exec_()
+    return errorbox
 
 
 def read_settings():
@@ -1703,81 +2201,19 @@ def read_settings():
 
     :return: The processed settings.
     """
-    class DefaultsSettings(object):
-        def __init__(self, key, default_enabled, default_value):
-            self.__enabled = default_enabled
-            self.__property_key = key
-            self.__property_value = default_value
-
-        def set_enabled(self, enabled):
-            self.__enabled = enabled
-
-        def set_value(self, value):
-            self.__property_value = value
-
-        def enabled(self):
-            return self.__enabled
-
-        def value(self):
-            return self.__property_value
-
-        def key(self):
-            return self.__property_key
-
     def deep_merge(a, b, path=None):
         """merges b into a"""
         if path is None:
             path = []
         for key in b:
-            if key in a:
+            if key in a:  # only accept the keys in default settings
                 if isinstance(a[key], dict) and isinstance(b[key], dict):
                     deep_merge(a[key], b[key], path + [str(key)])
-                elif a[key] == b[key]:
-                    pass  # same leaf value
                 elif isinstance(b[key], type(a[key])):
                     a[key] = b[key]
-                elif not isinstance(b[key], type(a[key])):
-                    pass  # user has messed with conf files
                 else:
-                    raise Exception('Conflict at {}'.format('.'.join(path + [str(key)])))
-            else:
-                a[key] = b[key]
+                    pass  # user has messed with conf files
         return a
-
-    default_settings = {
-        "General": {
-            "code_refresh": 3,
-            "show_intro": True,
-            "show_advanced": False,
-            "tutorial_advanced": True,
-        },
-        "Appearance": {
-            "required_colour": "#ba4d0e",
-            "atleastone_colour": "#d0d02e",
-            "either_colour": "#ffaa7f",
-            "style": "",
-            "palette": "",
-        },
-        "Defaults": {
-            "installSteps": DefaultsSettings("order", True, "Explicit"),
-            "optionalFileGroups": DefaultsSettings("order", True, "Explicit"),
-            "type": DefaultsSettings("name", True, "Optional"),
-            "defaultType": DefaultsSettings("name", True, "Optional"),
-        },
-        "Load": {
-            "validate": True,
-            "validate_ignore": False,
-            "warnings": True,
-            "warn_ignore": True,
-        },
-        "Save": {
-            "validate": True,
-            "validate_ignore": False,
-            "warnings": True,
-            "warn_ignore": True,
-        },
-        "Recent Files": deque(maxlen=5),
-    }
 
     try:
         with open(join(expanduser("~"), ".fomod", ".designer"), "r") as configfile:

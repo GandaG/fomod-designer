@@ -18,9 +18,10 @@ from os import sep
 from collections import OrderedDict
 from PyQt5.QtGui import QStandardItem
 from PyQt5.QtCore import Qt
-from lxml import etree
+from lxml import etree, objectify
 from jsonpickle import encode, decode, set_encoder_options
 from json import JSONDecodeError
+from .io import copy_node
 from .wizards import WizardFiles, WizardDepend
 from .props import PropertyCombo, PropertyInt, PropertyText, PropertyFile, PropertyFolder, PropertyColour, \
     PropertyFlagLabel, PropertyFlagValue, PropertyHTML
@@ -28,32 +29,70 @@ from .exceptions import BaseInstanceException
 
 
 class NodeComment(etree.CommentBase):
-    pass
+    """
+    The base class for all comment nodes.
+    """
+    def __init__(self, text=""):
+        super(NodeComment, self).__init__(text)
+
+    def _init(self):
+        super()._init()
+        self.sort_order = "0"
+        self.user_sort_order = "0".zfill(7)
+        self.allowed_children = ()
+        self.allowed_instances = 0
+        self.wizard = None
+        self.name = "Comment"
+        self.is_hidden = False
+        self.forbidden_sequences = ["<!- -", "- ->", "--"]
+        self.properties = {"<node_text>": PropertyText("Comment")}
+        self.model_item = NodeStandardItem(self)
+        self.model_item.setForeground(Qt.blue)
+        self.update_item_name()
+
+    def update_item_name(self):
+        self.model_item.setText(self.name) if not self.text else self.model_item.setText(self.text[:40])
+
+    def parse_attribs(self):
+        self.properties["<node_text>"].set_value(self.text)
+        self.update_item_name()
+
+    def write_attribs(self):
+        self.text = self.properties["<node_text>"].value
+        if self.text.startswith("<designer.metadata.do.not.edit>"):
+            self.getparent().model_item.takeRow(self.model_item.row())
+        else:
+            self.model_item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsEnabled)
+
+    def load_metadata(self):
+        pass
+
+    def save_metadata(self):
+        pass
+
+    def sort(self):
+        pass
 
 
-class _NodeBase(etree.ElementBase):
+class _NodeElement(etree.ElementBase):
     """
     The base class for all nodes. Should never be instantiated directly.
     """
     def _init(self):
-        if type(self) is _NodeBase:
+        if type(self) is _NodeElement:
             raise BaseInstanceException(self)
         super()._init()
 
-    def init(
-        self,
-        name,
-        tag,
-        allowed_instances,
-        sort_order="0",
-        allowed_children=None,
-        properties=None,
-        wizard=None,
-        required_children=None,
-        either_children_group=None,
-        at_least_one_children_group=None,
-        name_editable=False,
-    ):
+    def init(self, name, tag, allowed_instances,
+             sort_order="0",
+             allowed_children=None,
+             properties=None,
+             wizard=None,
+             required_children=None,
+             either_children_group=None,
+             at_least_one_children_group=None,
+             name_editable=False,
+             ):
 
         if not properties:
             properties = OrderedDict()
@@ -74,10 +113,12 @@ class _NodeBase(etree.ElementBase):
         self.required_children = required_children
         self.either_children_group = either_children_group
         self.at_least_one_children_group = at_least_one_children_group
+        self.hidden_children = []
+        self.is_hidden = False
         self.allowed_instances = allowed_instances
         self.wizard = wizard
         self.metadata = {}
-        self.user_sort_order = "0"
+        self.user_sort_order = "0".zfill(7)
 
         self.model_item = NodeStandardItem(self)
         self.model_item.setText(self.name)
@@ -101,7 +142,7 @@ class _NodeBase(etree.ElementBase):
                     instances += 1
             if instances >= child.allowed_instances:
                 return False
-        if type(child) in self.allowed_children:
+        if type(child) in self.allowed_children or child.tag is etree.Comment:
             return True
         return False
 
@@ -127,6 +168,23 @@ class _NodeBase(etree.ElementBase):
             self.model_item.takeRow(child.model_item.row())
             self.remove(child)
 
+    def set_hidden(self, hide: bool):
+        self.is_hidden = hide
+        if hide:
+            self.model_item.setForeground(Qt.green)
+            self.getparent().hidden_children.append(self)
+        else:
+            self.model_item.setForeground(Qt.black)
+            self.getparent().hidden_children.remove(self)
+        self.getparent().save_metadata()
+
+    def sort(self):
+        for parent in self.xpath('//*[./*]'):
+            parent[:] = sorted(
+                parent,
+                key=lambda x: x.sort_order + "." + x.user_sort_order
+            )
+
     def parse_attribs(self):
         """
         Reads the values from the BaseElement's attrib dictionary into the node's properties.
@@ -150,30 +208,16 @@ class _NodeBase(etree.ElementBase):
                 self.text = self.properties[key].value
                 continue
             self.set(key, str(self.properties[key].value))
+        if self.is_hidden:
+            self.getparent().save_metadata()
 
     def update_item_name(self):
         """
         Updates this node's item's display name.
 
-        If the node contains a property called "name" then it uses its value for the display.
-        If it contains a property called "source" then it expects a path and uses the last part of the path.
+        Override in subclasses as needed.
         """
-        if "name" in self.properties:
-            if not self.properties["name"].value:
-                self.model_item.setText(self.name)
-                return self.name
-            self.model_item.setText(self.properties["name"].value)
-            return self.properties["name"].value
-        elif "source" in self.properties:
-            if not self.properties["source"].value:
-                self.model_item.setText(self.name)
-                return self.name
-            split_name = self.properties["source"].value.split(sep)
-            self.model_item.setText(split_name[len(split_name) - 1])
-            return split_name[len(split_name) - 1]
-        else:
-            self.model_item.setText(self.name)
-            return self.name
+        return self.name
 
     def load_metadata(self):
         """
@@ -181,7 +225,7 @@ class _NodeBase(etree.ElementBase):
         """
         for child in self:
             if type(child) is NodeComment:
-                if child.text.split()[0] == "<designer.metadata.do.not.edit>":
+                if child.text.startswith("<designer.metadata.do.not.edit>"):
                     try:
                         self.metadata = decode(child.text.split(maxsplit=1)[1])
                     except JSONDecodeError:
@@ -189,6 +233,15 @@ class _NodeBase(etree.ElementBase):
 
         self.model_item.setText(self.metadata.get("name", self.update_item_name()))
         self.user_sort_order = self.metadata.get("user_sort", "0".zfill(7))
+        if not self.hidden_children:
+            hidden_nodes = self.metadata.get("hidden_nodes", [])
+            for node_string in hidden_nodes:
+                node_string = node_string.replace("<!- -", "<!--").replace("- ->", "-->")
+                node = copy_node(etree.fromstring(node_string), self)  # type: _NodeElement
+                self.add_child(node) if node.tag is not etree.Comment else self.append(node)
+                node.set_hidden(True)
+                self.sort()
+                self.model_item.sortChildren(0)
 
     def save_metadata(self):
         """
@@ -198,10 +251,21 @@ class _NodeBase(etree.ElementBase):
             self.metadata["name"] = self.model_item.text()
         else:
             self.metadata.pop("name", None)
-        if self.user_sort_order:
-            self.metadata["user_sort"] = self.user_sort_order
+
+        if self.user_sort_order and self.user_sort_order != "0".zfill(7):
+            self.metadata["user_sort"] = self.user_sort_order.zfill(7)
         else:
             self.metadata.pop("user_sort", None)
+
+        if self.hidden_children:
+            self.metadata["hidden_nodes"] = []
+            for element in self.hidden_children:
+                objectify.deannotate(element, cleanup_namespaces=True)
+                node_string = etree.tostring(element, pretty_print=False, encoding="unicode")
+                node_string = node_string.replace("<!--", "<!- -").replace("-->", "- ->")
+                self.metadata["hidden_nodes"].append(node_string)
+        else:
+            self.metadata.pop("hidden_nodes", None)
 
         if not self.allowed_children and "<node_text>" not in self.properties.keys():
             return
@@ -209,13 +273,18 @@ class _NodeBase(etree.ElementBase):
             meta_comment = None
             set_encoder_options("json", separators=(',', ':'))
             for child in self:
-                if type(child) is NodeComment and self.metadata:
-                    if child.text.split()[0] == "<designer.metadata.do.not.edit>":
+                if type(child) is NodeComment:
+                    if child.text.startswith("<designer.metadata.do.not.edit>"):
                         meta_comment = child
-                        child.text = "<designer.metadata.do.not.edit> " + encode(self.metadata)
+                        if self.metadata:
+                            child.text = "<designer.metadata.do.not.edit> " + encode(self.metadata)
+                        else:
+                            self.remove(child)
 
-            if meta_comment is None:
-                self.append(NodeComment("<designer.metadata.do.not.edit> " + encode(self.metadata)))
+            if meta_comment is None and self.metadata:
+                meta_comment = NodeComment()
+                meta_comment.properties["<node_text>"].set_value("<designer.metadata.do.not.edit> " + encode(self.metadata))
+                self.add_child(meta_comment)
 
 
 class NodeStandardItem(QStandardItem):
@@ -233,7 +302,7 @@ class NodeStandardItem(QStandardItem):
             return False
 
 
-class NodeInfoRoot(_NodeBase):
+class NodeInfoRoot(_NodeElement):
     """
     A node for the tag fomod
     """
@@ -258,7 +327,7 @@ class NodeInfoRoot(_NodeBase):
         super()._init()
 
 
-class NodeInfoName(_NodeBase):
+class NodeInfoName(_NodeElement):
     """
     A node for the tag Name
     """
@@ -277,7 +346,7 @@ class NodeInfoName(_NodeBase):
         super()._init()
 
 
-class NodeInfoAuthor(_NodeBase):
+class NodeInfoAuthor(_NodeElement):
     """
     A node for the tag Author
     """
@@ -296,7 +365,7 @@ class NodeInfoAuthor(_NodeBase):
         super()._init()
 
 
-class NodeInfoVersion(_NodeBase):
+class NodeInfoVersion(_NodeElement):
     """
     A node for the tag Version
     """
@@ -315,7 +384,7 @@ class NodeInfoVersion(_NodeBase):
         super()._init()
 
 
-class NodeInfoID(_NodeBase):
+class NodeInfoID(_NodeElement):
     """
     A node for the tag Id
     """
@@ -334,7 +403,7 @@ class NodeInfoID(_NodeBase):
         super()._init()
 
 
-class NodeInfoWebsite(_NodeBase):
+class NodeInfoWebsite(_NodeElement):
     """
     A node for the tag Website
     """
@@ -353,7 +422,7 @@ class NodeInfoWebsite(_NodeBase):
         super()._init()
 
 
-class NodeInfoDescription(_NodeBase):
+class NodeInfoDescription(_NodeElement):
     """
     A node for the tag Description
     """
@@ -372,7 +441,7 @@ class NodeInfoDescription(_NodeBase):
         super()._init()
 
 
-class NodeInfoGroup(_NodeBase):
+class NodeInfoGroup(_NodeElement):
     """
     A node for the tag Groups
     """
@@ -391,7 +460,7 @@ class NodeInfoGroup(_NodeBase):
         super()._init()
 
 
-class NodeInfoElement(_NodeBase):
+class NodeInfoElement(_NodeElement):
     """
     A node for the tag element
     """
@@ -410,7 +479,7 @@ class NodeInfoElement(_NodeBase):
         super()._init()
 
 
-class NodeConfigRoot(_NodeBase):
+class NodeConfigRoot(_NodeElement):
     """
     A node for the tag config
     """
@@ -454,7 +523,7 @@ class NodeConfigRoot(_NodeBase):
         super()._init()
 
 
-class NodeConfigModName(_NodeBase):
+class NodeConfigModName(_NodeElement):
     """
     A node for the tag moduleName
     """
@@ -476,7 +545,7 @@ class NodeConfigModName(_NodeBase):
         super()._init()
 
 
-class NodeConfigModImage(_NodeBase):
+class NodeConfigModImage(_NodeElement):
     """
     A node for the tag moduleImage
     """
@@ -499,7 +568,7 @@ class NodeConfigModImage(_NodeBase):
         super()._init()
 
 
-class NodeConfigModDepend(_NodeBase):
+class NodeConfigModDepend(_NodeElement):
     """
     A node for the tag moduleDependencies
     """
@@ -527,7 +596,7 @@ class NodeConfigModDepend(_NodeBase):
         super()._init()
 
 
-class NodeConfigReqFiles(_NodeBase):
+class NodeConfigReqFiles(_NodeElement):
     """
     A node for the tag requiredInstallFiles
     """
@@ -549,7 +618,7 @@ class NodeConfigReqFiles(_NodeBase):
         super()._init()
 
 
-class NodeConfigInstallSteps(_NodeBase):
+class NodeConfigInstallSteps(_NodeElement):
     """
     A node for the tag installSteps
     """
@@ -577,7 +646,7 @@ class NodeConfigInstallSteps(_NodeBase):
         super()._init()
 
 
-class NodeConfigCondInstall(_NodeBase):
+class NodeConfigCondInstall(_NodeElement):
     """
     A node for the tag conditionalFileInstalls
     """
@@ -601,7 +670,7 @@ class NodeConfigCondInstall(_NodeBase):
         super()._init()
 
 
-class NodeConfigDependFile(_NodeBase):
+class NodeConfigDependFile(_NodeElement):
     """
     A node for the tag fileDependency
     """
@@ -621,7 +690,7 @@ class NodeConfigDependFile(_NodeBase):
         super()._init()
 
 
-class NodeConfigDependFlag(_NodeBase):
+class NodeConfigDependFlag(_NodeElement):
     """
     A node for the tag flagDependency
     """
@@ -641,7 +710,7 @@ class NodeConfigDependFlag(_NodeBase):
         super()._init()
 
 
-class NodeConfigDependGame(_NodeBase):
+class NodeConfigDependGame(_NodeElement):
     """
     A node for the tag gameDependency
     """
@@ -660,7 +729,7 @@ class NodeConfigDependGame(_NodeBase):
         super()._init()
 
 
-class NodeConfigFile(_NodeBase):
+class NodeConfigFile(_NodeElement):
     """
     A node for the tag file
     """
@@ -682,8 +751,21 @@ class NodeConfigFile(_NodeBase):
         )
         super()._init()
 
+    def update_item_name(self):
+        """
+        Updates this node's item's display name.
 
-class NodeConfigFolder(_NodeBase):
+        Override in subclasses as needed.
+        """
+        if not self.properties["source"].value:
+            self.model_item.setText(self.name)
+            return self.name
+        split_name = self.properties["source"].value.split(sep)
+        self.model_item.setText(split_name[len(split_name) - 1])
+        return split_name[len(split_name) - 1]
+
+
+class NodeConfigFolder(_NodeElement):
     """
     A node for the tag folder
     """
@@ -705,8 +787,21 @@ class NodeConfigFolder(_NodeBase):
         )
         super()._init()
 
+    def update_item_name(self):
+        """
+        Updates this node's item's display name.
 
-class NodeConfigPatterns(_NodeBase):
+        Override in subclasses as needed.
+        """
+        if not self.properties["source"].value:
+            self.model_item.setText(self.name)
+            return self.name
+        split_name = self.properties["source"].value.split(sep)
+        self.model_item.setText(split_name[len(split_name) - 1])
+        return split_name[len(split_name) - 1]
+
+
+class NodeConfigPatterns(_NodeElement):
     """
     A node for the tag patterns
     """
@@ -729,7 +824,7 @@ class NodeConfigPatterns(_NodeBase):
         super()._init()
 
 
-class NodeConfigPattern(_NodeBase):
+class NodeConfigPattern(_NodeElement):
     """
     A node for the tag pattern
     """
@@ -755,7 +850,7 @@ class NodeConfigPattern(_NodeBase):
         super()._init()
 
 
-class NodeConfigFiles(_NodeBase):
+class NodeConfigFiles(_NodeElement):
     """
     A node for the tag files
     """
@@ -777,7 +872,7 @@ class NodeConfigFiles(_NodeBase):
         super()._init()
 
 
-class NodeConfigDependencies(_NodeBase):
+class NodeConfigDependencies(_NodeElement):
     """
     A node for the tag dependencies
     """
@@ -805,7 +900,7 @@ class NodeConfigDependencies(_NodeBase):
         super()._init()
 
 
-class NodeConfigNestedDependencies(_NodeBase):
+class NodeConfigNestedDependencies(_NodeElement):
     """
     A node for the tag dependencies (this one refers to the all the dependencies that have a dependencies as a parent).
     """
@@ -832,7 +927,7 @@ class NodeConfigNestedDependencies(_NodeBase):
         super()._init()
 
 
-class NodeConfigInstallStep(_NodeBase):
+class NodeConfigInstallStep(_NodeElement):
     """
     A node for the tag installStep
     """
@@ -859,8 +954,20 @@ class NodeConfigInstallStep(_NodeBase):
         )
         super()._init()
 
+    def update_item_name(self):
+        """
+        Updates this node's item's display name.
 
-class NodeConfigVisible(_NodeBase):
+        Override in subclasses as needed.
+        """
+        if not self.properties["name"].value:
+            self.model_item.setText(self.name)
+            return self.name
+        self.model_item.setText(self.properties["name"].value)
+        return self.properties["name"].value
+
+
+class NodeConfigVisible(_NodeElement):
     """
     A node for the tag visible
     """
@@ -888,7 +995,7 @@ class NodeConfigVisible(_NodeBase):
         super()._init()
 
 
-class NodeConfigOptGroups(_NodeBase):
+class NodeConfigOptGroups(_NodeElement):
     """
     A node for the tag optionalFileGroups
     """
@@ -916,7 +1023,7 @@ class NodeConfigOptGroups(_NodeBase):
         super()._init()
 
 
-class NodeConfigGroup(_NodeBase):
+class NodeConfigGroup(_NodeElement):
     """
     A node for the tag group
     """
@@ -949,8 +1056,20 @@ class NodeConfigGroup(_NodeBase):
         )
         super()._init()
 
+    def update_item_name(self):
+        """
+        Updates this node's item's display name.
 
-class NodeConfigPlugins(_NodeBase):
+        Override in subclasses as needed.
+        """
+        if not self.properties["name"].value:
+            self.model_item.setText(self.name)
+            return self.name
+        self.model_item.setText(self.properties["name"].value)
+        return self.properties["name"].value
+
+
+class NodeConfigPlugins(_NodeElement):
     """
     A node for the tag plugins
     """
@@ -977,7 +1096,7 @@ class NodeConfigPlugins(_NodeBase):
         super()._init()
 
 
-class NodeConfigPlugin(_NodeBase):
+class NodeConfigPlugin(_NodeElement):
     """
     A node for the tag plugin
     """
@@ -1008,8 +1127,20 @@ class NodeConfigPlugin(_NodeBase):
         )
         super()._init()
 
+    def update_item_name(self):
+        """
+        Updates this node's item's display name.
 
-class NodeConfigPluginDescription(_NodeBase):
+        Override in subclasses as needed.
+        """
+        if not self.properties["name"].value:
+            self.model_item.setText(self.name)
+            return self.name
+        self.model_item.setText(self.properties["name"].value)
+        return self.properties["name"].value
+
+
+class NodeConfigPluginDescription(_NodeElement):
     """
     A node for the tag description
     """
@@ -1029,7 +1160,7 @@ class NodeConfigPluginDescription(_NodeBase):
         super()._init()
 
 
-class NodeConfigImage(_NodeBase):
+class NodeConfigImage(_NodeElement):
     """
     A node for the tag image
     """
@@ -1049,7 +1180,7 @@ class NodeConfigImage(_NodeBase):
         super()._init()
 
 
-class NodeConfigConditionFlags(_NodeBase):
+class NodeConfigConditionFlags(_NodeElement):
     """
     A node for the tag conditionFlags
     """
@@ -1073,7 +1204,7 @@ class NodeConfigConditionFlags(_NodeBase):
         super()._init()
 
 
-class NodeConfigTypeDesc(_NodeBase):
+class NodeConfigTypeDesc(_NodeElement):
     """
     A node for the tag typeDescriptor
     """
@@ -1105,7 +1236,7 @@ class NodeConfigTypeDesc(_NodeBase):
         return False
 
 
-class NodeConfigFlag(_NodeBase):
+class NodeConfigFlag(_NodeElement):
     """
     A node for the tag flag
     """
@@ -1124,8 +1255,20 @@ class NodeConfigFlag(_NodeBase):
         )
         super()._init()
 
+    def update_item_name(self):
+        """
+        Updates this node's item's display name.
 
-class NodeConfigDependencyType(_NodeBase):
+        Override in subclasses as needed.
+        """
+        if not self.properties["name"].value:
+            self.model_item.setText(self.name)
+            return self.name
+        self.model_item.setText(self.properties["name"].value)
+        return self.properties["name"].value
+
+
+class NodeConfigDependencyType(_NodeElement):
     """
     A node for the tag dependencyType
     """
@@ -1150,7 +1293,7 @@ class NodeConfigDependencyType(_NodeBase):
         super()._init()
 
 
-class NodeConfigDefaultType(_NodeBase):
+class NodeConfigDefaultType(_NodeElement):
     """
     A node for the tag defaultType
     """
@@ -1169,8 +1312,20 @@ class NodeConfigDefaultType(_NodeBase):
         )
         super()._init()
 
+    def update_item_name(self):
+        """
+        Updates this node's item's display name.
 
-class NodeConfigType(_NodeBase):
+        Override in subclasses as needed.
+        """
+        if not self.properties["name"].value:
+            self.model_item.setText(self.name)
+            return self.name
+        self.model_item.setText(self.properties["name"].value)
+        return self.properties["name"].value
+
+
+class NodeConfigType(_NodeElement):
     """
     A node for the tag type
     """
@@ -1189,8 +1344,20 @@ class NodeConfigType(_NodeBase):
         )
         super()._init()
 
+    def update_item_name(self):
+        """
+        Updates this node's item's display name.
 
-class NodeConfigInstallPatterns(_NodeBase):
+        Override in subclasses as needed.
+        """
+        if not self.properties["name"].value:
+            self.model_item.setText(self.name)
+            return self.name
+        self.model_item.setText(self.properties["name"].value)
+        return self.properties["name"].value
+
+
+class NodeConfigInstallPatterns(_NodeElement):
     """
     A node for the tag patterns
     """
@@ -1214,7 +1381,7 @@ class NodeConfigInstallPatterns(_NodeBase):
         super()._init()
 
 
-class NodeConfigInstallPattern(_NodeBase):
+class NodeConfigInstallPattern(_NodeElement):
     """
     A node for the tag pattern
     """

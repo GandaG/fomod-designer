@@ -308,9 +308,6 @@
     <property name="title">
      <string>&amp;Tools</string>
     </property>
-    <addaction name="actionExpand_All"/>
-    <addaction name="actionCollapse_All"/>
-    <addaction name="separator"/>
     <addaction name="action_Refresh"/>
     <addaction name="separator"/>
     <addaction name="action_Delete"/>
@@ -616,9 +613,6 @@
    <property name="text">
     <string>Expand All</string>
    </property>
-   <property name="shortcut">
-    <string>Ctrl+*</string>
-   </property>
   </action>
   <action name="actionCollapse_All">
    <property name="icon">
@@ -628,8 +622,35 @@
    <property name="text">
     <string>Collapse All</string>
    </property>
+  </action>
+  <action name="actionHide_Node">
+   <property name="icon">
+    <iconset>
+     <normaloff>../logos/logo_hide.png</normaloff>../logos/logo_hide.png</iconset>
+   </property>
+   <property name="text">
+    <string>Hide Node</string>
+   </property>
+   <property name="toolTip">
+    <string>Hide Node</string>
+   </property>
    <property name="shortcut">
-    <string>Ctrl+.</string>
+    <string>Ctrl+X</string>
+   </property>
+  </action>
+  <action name="actionShow_Node">
+   <property name="icon">
+    <iconset>
+     <normaloff>../logos/logo_show.png</normaloff>../logos/logo_show.png</iconset>
+   </property>
+   <property name="text">
+    <string>Show Node</string>
+   </property>
+   <property name="toolTip">
+    <string>Show Node</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+X</string>
    </property>
   </action>
  </widget>

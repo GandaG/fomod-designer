@@ -16,7 +16,7 @@
 
 from os import listdir, makedirs
 from os.path import join
-from lxml.etree import (PythonElementClassLookup, XMLParser, tostring, fromstring, CommentBase,
+from lxml.etree import (PythonElementClassLookup, XMLParser, tostring, fromstring, CommentBase, Comment,
                         Element, SubElement, parse, ParseError, ElementTree, CustomElementClassLookup)
 from .exceptions import MissingFileError, ParserError, TagNotFound
 
@@ -163,7 +163,7 @@ def _validate_child(child):
     :param child: The child to check.
     :return: True if valid, False if not.
     """
-    if type(child) in child.getparent().allowed_children:
+    if type(child) in child.getparent().allowed_children or child.tag is Comment:
         if child.allowed_instances:
             instances = 0
             for item in child.getparent():
@@ -176,7 +176,7 @@ def _validate_child(child):
     return False
 
 
-def elem_factory(tag, parent):
+def node_factory(tag, parent=None):
     """
     Function meant as a replacement for the default element factory.
 
@@ -188,35 +188,42 @@ def elem_factory(tag, parent):
     :param parent: The parent of the future element.
     :return: The created element with the tag *tag*.
     """
-    list_ = [parent]
-    for elem in parent.iterancestors():
-        list_.append(elem)
+    if tag is Comment:
+        from .nodes import NodeComment
+        return NodeComment()
+    elif parent is not None:
+        list_ = [parent]
+        for elem in parent.iterancestors():
+            list_.append(elem)
 
-    list_ = list_[::-1]
-    list_[0] = Element(list_[0].tag)
-    for elem in list_[1:]:
-        list_[list_.index(elem)] = SubElement(list_[list_.index(elem) - 1], elem.tag)
-    SubElement(list_[len(list_) - 1], tag)
+        list_ = list_[::-1]
+        list_[0] = Element(list_[0].tag)
+        for elem in list_[1:]:
+            list_[list_.index(elem)] = SubElement(list_[list_.index(elem) - 1], elem.tag)
+        SubElement(list_[len(list_) - 1], tag)
 
-    root = fromstring(tostring(list_[0]), module_parser)
-    parsed_list = []
-    for elem in root.iterdescendants():
-        parsed_list.append(elem)
-    return parsed_list[len(parsed_list) - 1]
+        root = fromstring(tostring(list_[0]), module_parser)
+        parsed_list = []
+        for elem in root.iterdescendants():
+            parsed_list.append(elem)
+        return parsed_list[len(parsed_list) - 1]
+    else:
+        return module_parser.makeelement(tag)
 
 
-def copy_element(element_):
-    result = elem_factory(element_.tag, element_.getparent())
-    element_.write_attribs()
-    result.text = element_.text
-    for key in element_.keys():
-        result.set(key, element_.get(key))
+def copy_node(node, parent=None):
+    if parent is None:
+        parent = node.getparent()
+    result = node_factory(node.tag, parent)
+    result.text = node.text
+    for key in node.keys():
+        result.set(key, node.get(key))
     result.parse_attribs()
-    for child in element_:
-        if isinstance(child, CommentBase):
-            result.append(type(child)(child.text))
+    for child in node:
+        if child.tag is Comment:
+            result.append(CommentBase(child.text))
         else:
-            new_child = copy_element(child)
+            new_child = copy_node(child)
             result.add_child(new_child)
     result.load_metadata()
     return result
@@ -245,14 +252,15 @@ def import_(package_path):
         config_root = parse(config_path, parser=module_parser).getroot()
 
         for root in (info_root, config_root):
-            for element in root.iter(tag=Element):
+            root.sort()
+            root.model_item.sortChildren(0)
+            for element in root.iter():
                 element.parse_attribs()
 
                 for elem in element:
-                    if not isinstance(elem, CommentBase):
-                        element.model_item.appendRow(elem.model_item)
-                        if not _validate_child(elem):
-                            element.remove_child(elem)
+                    element.model_item.appendRow(elem.model_item)
+                    if not _validate_child(elem):
+                        element.remove_child(elem)
 
                 element.write_attribs()
                 element.load_metadata()
@@ -284,7 +292,16 @@ def export(info_root, config_root, package_path):
     :param info_root: The root element of the info.xml file.
     :param config_root: The root element of the moduleconfig.xml file.
     :param package_path: The path to save the files to.
+    :param hidden_nodes: The currently hidden nodes in either tree.
     """
+    hidden_nodes_pairs = []
+    for root in (info_root, config_root):
+        for node in root:
+            if node.hidden_children:
+                for hidden_node in node.hidden_children:
+                    hidden_nodes_pairs.append((node, hidden_node, node.index(hidden_node)))
+                    node.remove(hidden_node)
+
     try:
         fomod_folder = _check_file(package_path, "fomod")
     except MissingFileError as e:
@@ -314,15 +331,5 @@ def export(info_root, config_root, package_path):
         config_tree = ElementTree(config_root)
         config_tree.write(configfile, pretty_print=True)
 
-
-def sort_elements(root_element):
-    """
-    Sorts the xml elements according to their sort_order member.
-
-    :param root_element: The root element of xml tree.
-    """
-    for parent in root_element.xpath('//*[./*]'):
-        parent[:] = sorted(
-            parent,
-            key=lambda x: x.sort_order + "." + x.user_sort_order if not isinstance(x, CommentBase) else "0"
-        )
+    for pair in hidden_nodes_pairs:
+        pair[0].insert(pair[2], pair[1])
