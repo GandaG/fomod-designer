@@ -1,6 +1,12 @@
 Changelog
 =========
 
+**0.8.1 (2016-08-11)**
+
+* Fixed remote CI whitelisted builds.
+
+----------------------------------
+
 **0.8.0 (2016-08-11)**
 
 * Documentation is now available.
