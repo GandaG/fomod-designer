@@ -1,6 +1,15 @@
 Changelog
 =========
 
+**0.8.0 (2016-08-11)**
+
+* Documentation is now available.
+* Users are now able to manipulate and add comments.
+* Users are now able to hide non-comment nodes.
+* 32 bit builds are now available.
+
+----------------------------------
+
 **0.7.2 (2016-07-13)**
 
 * Plugin node should now have the correct required child nodes.
