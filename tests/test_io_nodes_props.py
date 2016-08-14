@@ -17,7 +17,7 @@
 import sys, os, lxml, pytest
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.io import import_, export, module_parser, new, copy_node, node_factory
-from src.exceptions import TagNotFound, ParserError, BaseInstanceException
+from src.exceptions import ParserError
 from src.nodes import _NodeElement
 from src.props import _PropertyBase
 
@@ -48,16 +48,16 @@ def test_import_export(tmpdir):
 
 def test_exceptions():
     invalid_fomod = "<boopity/>"
-    with pytest.raises(TagNotFound):
+    with pytest.raises(AssertionError):
         lxml.etree.fromstring(invalid_fomod, parser=module_parser)
 
     with pytest.raises(ParserError):
         import_(os.path.join(os.path.dirname(__file__), "data", "invalid_fomod"))
 
-    with pytest.raises(BaseInstanceException):
+    with pytest.raises(AssertionError):
         _NodeElement()
 
-    with pytest.raises(BaseInstanceException):
+    with pytest.raises(AssertionError):
         _PropertyBase("test", [])
 
     assert (None, None) == import_(os.path.join(os.path.dirname(__file__), "data", "incomplete_fomod"))

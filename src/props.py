@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .exceptions import BaseInstanceException
-
 
 class _PropertyBase(object):
     """
@@ -28,7 +26,7 @@ class _PropertyBase(object):
         :param editable: If the property is editable. If not, it will not be displayed.
         """
         if type(self) is _PropertyBase:
-            raise BaseInstanceException(self)
+            raise AssertionError(str(type(self)) + " is not meant to be instanced. A subclass should be used instead.")
 
         self.name = name
         self.editable = editable

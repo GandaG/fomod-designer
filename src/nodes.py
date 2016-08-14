@@ -25,7 +25,6 @@ from .io import copy_node
 from .wizards import WizardFiles, WizardDepend
 from .props import PropertyCombo, PropertyInt, PropertyText, PropertyFile, PropertyFolder, PropertyColour, \
     PropertyFlagLabel, PropertyFlagValue, PropertyHTML
-from .exceptions import BaseInstanceException
 
 
 class NodeComment(etree.CommentBase):
@@ -80,7 +79,7 @@ class _NodeElement(etree.ElementBase):
     """
     def _init(self):
         if type(self) is _NodeElement:
-            raise BaseInstanceException(self)
+            raise AssertionError(str(type(self)) + " is not meant to be instanced. A subclass should be used instead.")
         super()._init()
 
     def init(self, name, tag, allowed_instances,

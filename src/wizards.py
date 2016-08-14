@@ -22,7 +22,6 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import pyqtSignal
 from . import cur_folder
 from .io import node_factory
-from .exceptions import BaseInstanceException
 from .ui_templates import (wizard_files_01, wizard_files_item, wizard_depend_01, wizard_depend_depend,
                            wizard_depend_depend_depend, wizard_depend_depend_file, wizard_depend_depend_flag,
                            wizard_depend_depend_version, wizard_depend_file, wizard_depend_flag)
@@ -46,7 +45,7 @@ class _WizardBase(QStackedWidget):
         """
         super().__init__(parent)
         if type(self) is _WizardBase:
-            raise BaseInstanceException(self)
+            raise AssertionError(str(type(self)) + " is not meant to be instanced. A subclass should be used instead.")
 
         self.element = element
         self.parent = parent

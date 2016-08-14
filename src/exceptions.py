@@ -91,25 +91,3 @@ class ParserError(DesignerError):
                        msg.split(",")[len(msg.split(",")) - 2] + \
                        ". If you need help visit <a href = http://www.w3schools.com/xml/xml_syntax.asp>W3Schools</a>."
         Exception.__init__(self, self.msg)
-
-
-class TagNotFound(DesignerError):
-    """
-    Exception raised when the element factory did not match the element tag.
-    """
-    def __init__(self, element):
-        self.title = "Tag Lookup Error"
-        self.message = "Tag {} at line {} could not be matched.".format(element.tag, element.sourceline)
-        self.detailed = ""
-        Exception.__init__(self, self.message)
-
-
-class BaseInstanceException(Exception):
-    """
-    Exception raised when trying to instanced base classes (not meant to be used).
-    """
-    def __init__(self, base_instance):
-        self.title = "Instance Error"
-        self.message = "{} is not meant to be instanced. A subclass should be used instead.".format(type(base_instance))
-        self.detailed = ""
-        Exception.__init__(self, self.message)

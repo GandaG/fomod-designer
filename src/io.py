@@ -18,7 +18,7 @@ from os import listdir, makedirs
 from os.path import join
 from lxml.etree import (PythonElementClassLookup, XMLParser, tostring, fromstring, CommentBase, Comment,
                         Element, SubElement, parse, ParseError, ElementTree, CustomElementClassLookup)
-from .exceptions import MissingFileError, ParserError, TagNotFound
+from .exceptions import MissingFileError, ParserError
 
 module_parser = XMLParser(remove_pis=True, remove_blank_text=True)
 
@@ -132,7 +132,7 @@ class _NodeClassLookup(PythonElementClassLookup):
             return nodes.NodeConfigType
 
         else:
-            raise TagNotFound(element)
+            raise AssertionError("Tag {} at line {} could not be matched.".format(element.tag, element.sourceline))
 
 
 module_parser.set_element_class_lookup(_CommentLookup(_NodeClassLookup()))
