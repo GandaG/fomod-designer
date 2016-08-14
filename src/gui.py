@@ -57,15 +57,17 @@ class IntroWindow(QMainWindow, window_intro.Ui_MainWindow):
         self.version.setText("Version " + __version__)
 
         self.settings_dict = read_settings()
-        recent_files = self.settings_dict["Recent Files"]
-        for path in recent_files:
+        paths_to_remove = []
+        for path in self.settings_dict["Recent Files"]:
             if not isdir(path):
-                recent_files.remove(path)
+                paths_to_remove.append(path)
                 continue
             button = QCommandLinkButton(basename(path), path, self)
             button.setIcon(QIcon(join(cur_folder, "resources/logos/logo_enter.png")))
             button.clicked.connect(lambda _, path_=path: self.open_path(path_))
             self.scroll_layout.addWidget(button)
+        for path in paths_to_remove:
+            self.settings_dict["Recent Files"].remove(path)
 
         if not self.settings_dict["General"]["show_intro"]:
             main_window = MainFrame()
