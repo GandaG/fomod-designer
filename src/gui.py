@@ -741,8 +741,7 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                     if self.settings_dict["Load"]["validate"]:
                         try:
                             validate_tree(
-                                parse(BytesIO(tostring(config_root, pretty_print=True))),
-                                join(cur_folder, "resources", "mod_schema.xsd"),
+                                parse(BytesIO(tostring(config_root, pretty_print=True)))
                             )
                         except ValidationError as p:
                             generic_errorbox(p.title, str(p), p.detailed).exec_()
@@ -801,7 +800,6 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
                     try:
                         validate_tree(
                             parse(BytesIO(tostring(self._config_root, pretty_print=True))),
-                            join(cur_folder, "resources", "mod_schema.xsd"),
                         )
                     except ValidationError as e:
                         generic_errorbox(e.title, str(e), e.detailed).exec_()

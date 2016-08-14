@@ -15,11 +15,13 @@
 # limitations under the License.
 
 import sys
+import validator
 from os.path import abspath, dirname, join
 
 
 if getattr(sys, 'frozen', False):
     cur_folder = sys._MEIPASS
+    validator.validate.SCHEMA_FILE_PATH = join(cur_folder, "resources", "mod_schema.xsd")
 else:
     cur_folder = join(dirname(abspath(__file__)), "..")
 

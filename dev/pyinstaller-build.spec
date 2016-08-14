@@ -2,11 +2,13 @@
 
 block_cipher = None
 import os
+import validator.validate
 
 a = Analysis(['pyinstaller-bootstrap.py'],
              pathex=[os.getcwd()],
              binaries=None,
              datas=[('../resources', 'resources'),
+                    (validator.validate.SCHEMA_FILE_PATH, 'resources'),
                     ('../setup.cfg', '.'),],
              hiddenimports=[],
              hookspath=[],
