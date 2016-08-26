@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from os import listdir, makedirs
+from os import listdir, makedirs, rename
 from os.path import join
 from lxml.etree import (PythonElementClassLookup, XMLParser, tostring, fromstring, CommentBase, Comment,
                         Element, SubElement, parse, ParseError, ElementTree, CustomElementClassLookup)
@@ -247,6 +247,8 @@ def import_(package_path):
 
         info_path = join(fomod_folder_path, info_file)
         config_path = join(fomod_folder_path, config_file)
+        rename(info_path, info_path)
+        rename(config_path, config_path)  # check if another app is using these files
 
         info_root = parse(info_path, parser=module_parser).getroot()
         config_root = parse(config_path, parser=module_parser).getroot()
@@ -269,6 +271,8 @@ def import_(package_path):
         raise ParserError(str(e))
     except MissingFileError:
         return None, None
+    except OSError:
+        raise AssertionError("Files are being used by another process. Please shut them down before opening.")
 
     return info_root, config_root
 
@@ -292,7 +296,6 @@ def export(info_root, config_root, package_path):
     :param info_root: The root element of the info.xml file.
     :param config_root: The root element of the moduleconfig.xml file.
     :param package_path: The path to save the files to.
-    :param hidden_nodes: The currently hidden nodes in either tree.
     """
     hidden_nodes_pairs = []
     for root in (info_root, config_root):
