@@ -458,7 +458,10 @@ class MainFrame(QMainWindow, window_mainframe.Ui_MainWindow):
         self.node_tree_model = self.NodeStandardModel()
         self.node_tree_view.setModel(self.node_tree_model)
         self.node_tree_model.itemChanged.connect(lambda item: item.xml_node.save_metadata())
-        self.node_tree_model.itemChanged.connect(lambda item: self.xml_code_changed.emit(item.xml_node))
+        self.node_tree_model.itemChanged.connect(
+            lambda item: self.xml_code_changed.emit(item.xml_node)
+            if self.settings_dict["General"]["code_refresh"] >= 3 else None
+        )
 
         # connect actions to the respective methods
         self.action_Open.triggered.connect(self.open)
